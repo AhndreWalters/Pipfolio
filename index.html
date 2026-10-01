@@ -5,18 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#ffffff">
   <title>Pipfolio</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  >
+
+  <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
   <div id="gate">
     <form id="gf" novalidate>
-      <div class="brand" aria-label="Pipfolio">Pip<b>Folio</b></div>
+      <div class="brand" aria-label="Pipfolio">
+        Pip<b>Folio</b>
+      </div>
+
       <h1 id="gt">Unlock</h1>
 
       <label for="pw" class="sr-only">Password</label>
+
       <input
         type="password"
         id="pw"
@@ -26,14 +36,23 @@
         required
       >
 
-      <button class="b" type="submit">Continue</button>
-      <p id="ge" role="alert" aria-live="polite"></p>
+      <button class="b" type="submit">
+        Continue
+      </button>
+
+      <p
+        id="ge"
+        role="alert"
+        aria-live="polite"
+      ></p>
     </form>
   </div>
 
   <div id="app" class="shell" hidden>
     <aside aria-label="Sidebar">
-      <div class="brand" aria-label="Pipfolio">Pip<b>Folio</b></div>
+      <div class="brand" aria-label="Pipfolio">
+        Pip<b>Folio</b>
+      </div>
 
       <nav id="nav" aria-label="Primary navigation"></nav>
 
@@ -50,10 +69,20 @@
     <div class="rc">
       <header class="top">
         <label for="ta" class="sr-only">Account</label>
-        <select id="ta" name="account" title="Account"></select>
+
+        <select
+          id="ta"
+          name="account"
+          title="Account"
+        ></select>
 
         <label for="tr" class="sr-only">Date range</label>
-        <select id="tr" name="date-range" title="Date range"></select>
+
+        <select
+          id="tr"
+          name="date-range"
+          title="Date range"
+        ></select>
 
         <div class="pw">
           <button
@@ -64,7 +93,12 @@
             aria-expanded="false"
           >
             <span>Filters</span>
-            <i id="tfn" class="bdg" hidden aria-label="Active filters"></i>
+            <i
+              id="tfn"
+              class="bdg"
+              hidden
+              aria-label="Active filters"
+            ></i>
           </button>
 
           <div
@@ -86,9 +120,16 @@
           <kbd>Ctrl K</kbd>
         </button>
 
-        <span class="sp" aria-hidden="true"></span>
+        <span
+          class="sp"
+          aria-hidden="true"
+        ></span>
 
-        <button class="b" id="tn" type="button">
+        <button
+          class="b"
+          id="tn"
+          type="button"
+        >
           <span>Add trade</span>
         </button>
 
@@ -109,20 +150,64 @@
         ></button>
       </header>
 
-      <main id="main" tabindex="-1"></main>
+      <main
+        id="main"
+        tabindex="-1"
+      ></main>
     </div>
   </div>
 
-  <dialog id="dlg" aria-label="Dialog"></dialog>
-  <dialog id="pal" aria-label="Command palette"></dialog>
-  <div id="toasts" aria-live="polite" aria-atomic="true"></div>
+  <dialog
+    id="dlg"
+    aria-label="Dialog"
+  ></dialog>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
-  <script src="js/crypto.js" defer></script>
-  <script src="js/engine.js" defer></script>
-  <script src="js/core.js" defer></script>
-  <script src="js/dashboard.js" defer></script>
-  <script src="js/trades.js" defer></script>
-  <script src="js/misc.js" defer></script>
+  <dialog
+    id="pal"
+    aria-label="Command palette"
+  ></dialog>
+
+  <div
+    id="toasts"
+    aria-live="polite"
+    aria-atomic="true"
+  ></div>
+
+  <!-- Keep defer so the scripts execute after the HTML is parsed,
+       while preserving their order. -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"
+    defer
+  ></script>
+
+  <script
+    src="./js/crypto.js"
+    defer
+  ></script>
+
+  <script
+    src="./js/engine.js"
+    defer
+  ></script>
+
+  <script
+    src="./js/core.js"
+    defer
+  ></script>
+
+  <script
+    src="./js/dashboard.js"
+    defer
+  ></script>
+
+  <script
+    src="./js/trades.js"
+    defer
+  ></script>
+
+  <script
+    src="./js/misc.js"
+    defer
+  ></script>
 </body>
 </html>
