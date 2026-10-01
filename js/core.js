@@ -17,6 +17,25 @@ let LOCKMIN=5;
 
 const PAGES={};
 
+// Toolbar / sidebar buttons use one delegated listener registered up front.
+// It resolves functions at click time (tradeForm lives in trades.js, which
+// loads later) and can't be disabled by an error further down this file.
+document.addEventListener('click',event=>{
+  const button=event.target.closest?.('#tn,#th,#lk,#cl');
+
+  if(!button)return;
+
+  try{
+    if(button.id==='tn')tradeForm();
+    else if(button.id==='th')toggleTheme();
+    else if(button.id==='lk')lock();
+    else if(button.id==='cl')toggleSide();
+  }catch(error){
+    console.error(`Pipfolio: "${button.id}" button failed`,error);
+    if(typeof toast==='function')toast(`Action failed: ${error?.message||error}`);
+  }
+});
+
 const NAV=[
   ['dash','Dashboard'],
   ['trades','Trades'],
@@ -1557,10 +1576,4 @@ $('#tfb').onclick=()=>{
   $('#fp').hidden?openPop():closePop();
 };
 
-// Handlers call functions lazily: tradeForm lives in trades.js, which loads
-// after this file, and must not receive the click event as its "id" argument.
 $('#ts').onclick=()=>openPalette();
-$('#tn').onclick=()=>tradeForm();
-$('#th').onclick=()=>toggleTheme();
-$('#lk').onclick=()=>lock();
-$('#cl').onclick=()=>toggleSide();
