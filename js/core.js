@@ -733,16 +733,45 @@ function render(keep=false){
   }
 }
 
+const syncSide=()=>{
+  const collapsed=$('#app').classList.contains('sc');
+  const button=$('#cl');
+
+  if(!button)return;
+
+  const label=collapsed?'Expand sidebar':'Collapse sidebar';
+
+  button.setAttribute('aria-expanded',String(!collapsed));
+  button.setAttribute('aria-label',label);
+  button.title=label;
+};
+
 const toggleSide=()=>{
   const collapsed=$('#app').classList.toggle('sc');
-  localStorage.setItem('fxj.side',collapsed?'1':'');
+
+  try{
+    localStorage.setItem('fxj.side',collapsed?'1':'');
+  }catch{}
+
+  syncSide();
 };
+
+function applyTheme(light){
+  document.documentElement.dataset.t=light?'light':'';
+
+  const meta=document.querySelector('meta[name="theme-color"]');
+
+  if(meta)meta.setAttribute('content',light?'#ffffff':'#0b0f17');
+}
 
 function toggleTheme(){
   const light=document.documentElement.dataset.t!=='light';
 
-  document.documentElement.dataset.t=light?'light':'';
-  localStorage.setItem('fxj.theme',light?'light':'');
+  applyTheme(light);
+
+  try{
+    localStorage.setItem('fxj.theme',light?'light':'');
+  }catch{}
 
   if(D)render(true);
 }
@@ -1225,6 +1254,8 @@ $('#gf').onsubmit=async event=>{
       Boolean(localStorage.getItem('fxj.side'))
     );
 
+    syncSide();
+
     const hash=location.hash.slice(2);
 
     view=PAGES[hash]?hash:'dash';
@@ -1501,8 +1532,7 @@ addEventListener('keydown',event=>{
   }
 });
 
-document.documentElement.dataset.t=
-  localStorage.getItem('fxj.theme')||'';
+applyTheme(localStorage.getItem('fxj.theme')==='light');
 
 $('#th').innerHTML=ico('sun');
 $('#lk').innerHTML=ico('lock');
@@ -1527,8 +1557,10 @@ $('#tfb').onclick=()=>{
   $('#fp').hidden?openPop():closePop();
 };
 
-$('#ts').onclick=openPalette;
-$('#tn').onclick=tradeForm;
-$('#th').onclick=toggleTheme;
-$('#lk').onclick=lock;
-$('#cl').onclick=toggleSide;
+// Handlers call functions lazily: tradeForm lives in trades.js, which loads
+// after this file, and must not receive the click event as its "id" argument.
+$('#ts').onclick=()=>openPalette();
+$('#tn').onclick=()=>tradeForm();
+$('#th').onclick=()=>toggleTheme();
+$('#lk').onclick=()=>lock();
+$('#cl').onclick=()=>toggleSide();
