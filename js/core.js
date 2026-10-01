@@ -1,748 +1,61 @@
-'use strict';
-
-const $=(s,r=document)=>r.querySelector(s);
-const $$=(s,r=document)=>[...r.querySelectorAll(s)];
-const KEY='fxj.v1';
-const{N,has}=FX;
-
-let D=null;
-let PW=null;
-let TC=null;
-let CH=[];
-let timer=null;
-let MN=null;
-let view='dash';
-let lastView='';
-let LOCKMIN=5;
-
-const PAGES={};
-
-const NAV=[
-  ['dash','Dashboard'],
-  ['trades','Trades'],
-  ['reports','Reports'],
-  ['journal','Journal'],
-  ['playbook','Playbook'],
-  ['progress','Progress'],
-  ['backtest','Backtesting'],
-  ['replay','Replay'],
-  ['insights','Insights'],
-  ['prop','Prop firm'],
-  ['accts','Accounts'],
-  ['risk','Risk tools'],
-  ['set','Settings']
-];
-
-const IC={
-  dash:'<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>',
-  trades:'<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
-  reports:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
-  journal:'<path d="M5 3h14v18H7a2 2 0 0 1-2-2z"/><path d="M9 8h6M9 12h6"/>',
-  playbook:'<path d="M4 5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2z"/><path d="m9 10 2 2 4-4"/>',
-  progress:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
-  backtest:'<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/>',
-  replay:'<circle cx="12" cy="12" r="9"/><path d="m10 8 6 4-6 4z"/>',
-  insights:'<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z"/>',
-  prop:'<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/>',
-  risk:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 7h6M9 12h.01M12 12h.01M15 12h.01M9 16h.01M12 16h.01M15 16h.01"/>',
-  accts:'<path d="M3 7a2 2 0 0 1 2-2h13v4"/><path d="M3 7v11a2 2 0 0 0 2 2h15V9H5a2 2 0 0 1-2-2z"/><circle cx="16" cy="14.5" r="1"/>',
-  set:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/>',
-  search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
-  plus:'<path d="M12 5v14M5 12h14"/>',
-  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
-  lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
-  chev:'<path d="m15 6-6 6 6 6"/>',
-  filter:'<path d="M3 5h18l-7 8v6l-4-2v-4z"/>',
-  kbd:'<rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/>'
-};
-
-const ico=n=>`<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]||''}</svg>`;
-
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({
-  '&':'&amp;',
-  '<':'&lt;',
-  '>':'&gt;',
-  '"':'&quot;',
-  "'":'&#39;'
-}[c]));
-
-const finite=v=>Number.isFinite(Number(v));
-
-const fmt=(v,d=2)=>finite(v)?Number(v).toLocaleString('en-US',{
-  minimumFractionDigits:d,
-  maximumFractionDigits:d
-}):'—';
-
-const nf=(v,d=6)=>finite(v)?Number(v).toLocaleString('en-US',{
-  maximumFractionDigits:d
-}):'';
-
-const sum=a=>a.reduce((x,y)=>x+N(y),0);
-const cls=v=>N(v)>=0?'g':'r';
-const sy=s=>String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
-
-const iso=d=>{
-  const date=d instanceof Date?d:new Date(d);
-  return Number.isNaN(date.getTime())?'':new Date(
-    date-date.getTimezoneOffset()*6e4
-  ).toISOString().slice(0,16);
-};
-
-const SYM={
-  USD:'$',
-  EUR:'€',
-  GBP:'£',
-  JPY:'¥',
-  AUD:'A$',
-  CAD:'C$',
-  CHF:'CHF ',
-  NZD:'NZ$'
-};
-
-const CURS=Object.keys(SYM);
-
-const cur=()=>{
-  const account=D?.accounts?.find(account=>!F.acc||account.id===F.acc);
-  return account?.cur||'USD';
-};
-
-const money=v=>{
-  const value=Math.round(N(v)*100)/100;
-  return(value<0?'-':'')+(SYM[cur()]||`${cur()} `)+fmt(Math.abs(value));
-};
-
-const KF={
-  money:v=>money(v),
-  pct:v=>`${fmt(v,1)}%`,
-  num:v=>fmt(v),
-  int:v=>Math.round(N(v)).toLocaleString('en-US')
-};
-
-const cn=(v,k)=>`
-  <span data-to="${finite(v)?N(v):''}" data-k="${esc(k)}">
-    ${KF[k](v)}
-  </span>
-`;
-
-document.addEventListener('focusout',event=>{
-  const element=event.target;
-
-  if(element?.classList?.contains('num')&&/\d/.test(element.value)){
-    element.value=nf(element.value);
-  }
-});
-
-const num=(name,negative,id,value='')=>`
-  <input
-    class="num"
-    ${id?`id="${esc(id)}"`:''}
-    name="${esc(name)}"
-    inputmode="${negative?'text':'decimal'}"
-    autocomplete="off"
-    value="${esc(value)}"
-  >
-`;
-
-const fld=(label,html,hint)=>`
-  <label>
-    ${label}
-    ${html}
-    ${hint?`<small>${esc(hint)}</small>`:''}
-  </label>
-`;
-
-const PAIRS=[
-  'EURUSD',
-  'GBPUSD',
-  'USDJPY',
-  'AUDUSD',
-  'USDCAD',
-  'USDCHF',
-  'NZDUSD',
-  'EURJPY',
-  'GBPJPY',
-  'EURGBP',
-  'XAUUSD',
-  'XAGUSD',
-  'US30',
-  'NAS100',
-  'SPX500',
-  'BTCUSD'
-];
-
-const save=async()=>{
-  try{
-    localStorage.setItem(KEY,await encrypt(D,PW));
-    return true;
-  }catch{
-    alert('Could not save: browser storage is full. Remove screenshots or export a backup.');
-    return false;
-  }
-};
-
-const RT=()=>{
-  const rates={...FX.DEFR};
-
-  Object.entries(D?.rates||{}).forEach(([key,value])=>{
-    if(N(value)>0)rates[key]=N(value);
-  });
-
-  return rates;
-};
-
-const acctCur=id=>(D.accounts.find(account=>account.id===id)||{cur:'USD'}).cur;
-
-const calc=trade=>{
-  const result=FX.core(
-    trade,
-    acctCur(trade.acc),
-    RT(),
-    D.inst
-  );
-
-  return Object.assign(trade,result||{});
-};
-
-function mig(){
-  if(!Array.isArray(D.accounts))D.accounts=[];
-  if(!Array.isArray(D.trades))D.trades=[];
-  if(!Array.isArray(D.cash))D.cash=[];
-  if(!D.inst||typeof D.inst!=='object')D.inst={};
-  if(!D.rates||typeof D.rates!=='object')D.rates={};
-
-  const automaticDemo=D.accounts.find(account=>
-    account.id==='a1'&&
-    account.name==='Demo'&&
-    account.type==='demo'
-  );
-
-  if(
-    automaticDemo&&
-    !D.trades.some(trade=>trade.acc===automaticDemo.id)&&
-    !D.cash.some(entry=>entry.acc===automaticDemo.id)
-  ){
-    D.accounts=D.accounts.filter(
-      account=>account.id!==automaticDemo.id
-    );
-  }
-
-  D.accounts.forEach(account=>{
-    account.cur||='USD';
-    account.bal=N(account.bal);
-  });
-
-  D.settings=Object.assign(
-    {lock:5},
-    D.settings||{}
-  );
-
-  if(!D.lists||typeof D.lists!=='object')D.lists={};
-
-  if(!Array.isArray(D.lists.sessions)){
-    D.lists.sessions=[
-      'Asia',
-      'London',
-      'New York',
-      'Other'
-    ];
-  }
-
-  if(!Array.isArray(D.lists.pairs)){
-    D.lists.pairs=[...PAIRS];
-  }
-
-  ['strategies','tags','mistakes','emotions'].forEach(key=>{
-    if(!Array.isArray(D.lists[key])){
-      D.lists[key]=[];
-    }
-  });
-
-  if(!D.journal||typeof D.journal!=='object')D.journal={};
-  if(!Array.isArray(D.playbook))D.playbook=[];
-  if(!Array.isArray(D.goals))D.goals=[];
-  if(!D.notes||typeof D.notes!=='object')D.notes={};
-
-  D.trades.forEach(trade=>{
-    if(trade.comm==null)trade.comm=N(trade.fees);
-    if(trade.swap==null)trade.swap=N(trade.swap);
-
-    delete trade.fees;
-
-    trade.swap=N(trade.swap);
-
-    if(!Array.isArray(trade.shots)){
-      trade.shots=[];
-    }
-
-    trade.closeDate||=trade.date;
-    trade.bt=Boolean(trade.bt);
-
-    calc(trade);
-  });
-
-  D.v=2;
-}
-
-const LK={
-  strategies:'strategy',
-  mistakes:'mistake',
-  emotions:'emotion',
-  sessions:'session',
-  pairs:'pair',
-  tags:'tags'
-};
-
-function LIST(key){
-  const separator=[
-    'tags',
-    'mistakes',
-    'emotions'
-  ].includes(key)?',':'\u0000';
-
-  const values=[
-    ...(D.lists[key]||[]),
-    ...D.trades.flatMap(
-      trade=>String(trade[LK[key]]??'').split(separator)
-    )
-  ];
-
-  return[
-    ...new Set(
-      values
-        .map(value=>String(value).trim())
-        .filter(Boolean)
-    )
-  ];
-}
-
-const balAt=(id,key,exclude)=>{
-  const account=D.accounts.find(item=>item.id===id);
-
-  if(!account)return 0;
-
-  return account.bal+
-    sum(
-      D.cash
-        .filter(entry=>entry.acc===id&&entry.date<=key)
-        .map(entry=>entry.amt)
-    )+
-    sum(
-      D.trades
-        .filter(trade=>
-          !trade.bt&&
-          trade.acc===id&&
-          trade.id!==exclude&&
-          ck(trade)<key
-        )
-        .map(trade=>trade.pnl)
-    );
-};
-
-const F={
-  acc:'',
-  range:'all',
-  from:'',
-  to:'',
-  pair:'',
-  strat:'',
-  sess:'',
-  tag:'',
-  dir:'',
-  out:''
-};
-
-const RANGES=[
-  ['all','All time'],
-  ['today','Today'],
-  ['week','This week'],
-  ['month','This month'],
-  ['30d','Last 30 days'],
-  ['90d','Last 90 days'],
-  ['ytd','Year to date'],
-  ['custom','Custom range']
-];
-
-const resetF=()=>Object.assign(F,{
-  acc:'',
-  range:'all',
-  from:'',
-  to:'',
-  pair:'',
-  strat:'',
-  sess:'',
-  tag:'',
-  dir:'',
-  out:''
-});
-
-function dr(){
-  const today=new Date();
-  const format=date=>iso(date).slice(0,10);
-  const start=new Date(today);
-
-  switch(F.range){
-    case'today':
-      return[format(today),format(today)];
-
-    case'week':
-      start.setDate(
-        today.getDate()-(today.getDay()+6)%7
-      );
-      return[format(start),format(today)];
-
-    case'month':
-      return[
-        format(new Date(
-          today.getFullYear(),
-          today.getMonth(),
-          1
-        )),
-        format(today)
-      ];
-
-    case'30d':
-      start.setDate(today.getDate()-29);
-      return[format(start),format(today)];
-
-    case'90d':
-      start.setDate(today.getDate()-89);
-      return[format(start),format(today)];
-
-    case'ytd':
-      return[
-        `${today.getFullYear()}-01-01`,
-        format(today)
-      ];
-
-    case'custom':
-      return[F.from,F.to];
-
-    default:
-      return['',''];
-  }
-}
-
-const ck=trade=>String(trade.closeDate||trade.date||'');
-
-const tagsOf=trade=>
-  String(trade.tags||'')
-    .split(',')
-    .map(value=>value.trim())
-    .filter(Boolean);
-
-const okF=trade=>
-  (!F.acc||trade.acc===F.acc)&&
-  (!F.pair||trade.pair===F.pair)&&
-  (!F.strat||trade.strategy===F.strat)&&
-  (!F.sess||trade.session===F.sess)&&
-  (!F.tag||tagsOf(trade).includes(F.tag))&&
-  (!F.dir||trade.dir===F.dir)&&
-  (
-    !F.out||
-    (F.out==='win'&&N(trade.pnl)>0)||
-    (F.out==='loss'&&N(trade.pnl)<0)||
-    (F.out==='be'&&N(trade.pnl)===0)
-  );
-
-const inR=trade=>{
-  const[from,to]=dr();
-  const key=ck(trade).slice(0,10);
-
-  return(!from||key>=from)&&(!to||key<=to);
-};
-
-const filt=(backtest=false)=>D.trades
-  .filter(trade=>
-    Boolean(trade.bt)===backtest&&
-    okF(trade)&&
-    inR(trade)
-  )
-  .sort((a,b)=>ck(a)<ck(b)?-1:ck(a)>ck(b)?1:0);
-
-const selAccts=()=>D.accounts.filter(
-  account=>!F.acc||account.id===F.acc
-);
-
-function S(trades){
-  const accounts=selAccts();
-  const ids=accounts.map(account=>account.id);
-  const[from,to]=dr();
-
-  let start=sum(accounts.map(account=>account.bal));
-
-  const cash=D.cash.filter(entry=>ids.includes(entry.acc));
-
-  if(from){
-    start+=sum(
-      cash
-        .filter(entry=>String(entry.date).slice(0,10)<from)
-        .map(entry=>entry.amt)
-    );
-
-    start+=sum(
-      D.trades
-        .filter(trade=>
-          !trade.bt&&
-          ids.includes(trade.acc)&&
-          ck(trade).slice(0,10)<from
-        )
-        .map(trade=>trade.pnl)
-    );
-  }
-
-  return FX.stats(
-    trades,
-    cash.filter(entry=>{
-      const key=String(entry.date).slice(0,10);
-      return(!from||key>=from)&&(!to||key<=to);
-    }),
-    start
-  );
-}
-
-function openPop(){
-  const popup=$('#fp');
-
-  const optionGroup=(key,label,values)=>{
-    const options=values.map(item=>{
-      const value=Array.isArray(item)?item[0]:item;
-      const text=Array.isArray(item)?item[1]:item;
-
-      return`
-        <option value="${esc(value)}" ${F[key]===value?'selected':''}>
-          ${esc(text)}
-        </option>
-      `;
-    }).join('');
-
-    return`
-      <label>
-        ${esc(label)}
-        <select data-f="${esc(key)}">
-          <option value="">Any</option>
-          ${options}
-        </select>
-      </label>
-    `;
-  };
-
-  popup.innerHTML=`
-    <div class="pg">
-      ${optionGroup(
-        'pair',
-        'Pair',
-        [...new Set(D.trades.map(trade=>trade.pair).filter(Boolean))].sort()
-      )}
-      ${optionGroup('strat','Strategy',LIST('strategies'))}
-      ${optionGroup('sess','Session',LIST('sessions'))}
-      ${optionGroup('tag','Tag',LIST('tags'))}
-      ${optionGroup('dir','Direction',['Long','Short'])}
-      ${optionGroup(
-        'out',
-        'Outcome',
-        [
-          ['win','Winners'],
-          ['loss','Losers'],
-          ['be','Breakeven']
-        ]
-      )}
-      <label>
-        From
-        <input type="date" data-f="from" value="${esc(F.from)}">
-      </label>
-      <label>
-        To
-        <input type="date" data-f="to" value="${esc(F.to)}">
-      </label>
-    </div>
-
-    <div class="acts">
-      <button class="s" id="fr" type="button">Reset all</button>
-      <button class="b" id="fd" type="button">Done</button>
-    </div>
-  `;
-
-  popup.hidden=false;
-  $('#tfb').setAttribute('aria-expanded','true');
-
-  $$('[data-f]',popup).forEach(element=>{
-    element.onchange=()=>{
-      F[element.dataset.f]=element.value;
-
-      if(
-        element.dataset.f==='from'||
-        element.dataset.f==='to'
-      ){
-        F.range='custom';
-      }
-
-      render(true);
-    };
-  });
-
-  $('#fr').onclick=()=>{
-    resetF();
-    render(true);
-    openPop();
-  };
-
-  $('#fd').onclick=closePop;
-}
-
-const closePop=()=>{
-  const popup=$('#fp');
-
-  if(popup)popup.hidden=true;
-
-  const button=$('#tfb');
-
-  if(button)button.setAttribute('aria-expanded','false');
-};
-
-function buildNav(){
-  $('#nav').innerHTML=NAV
-    .filter(item=>PAGES[item[0]])
-    .map(item=>`
-      <button
-        class="nv ${item[0]===view?'on':''}"
-        data-v="${esc(item[0])}"
-        title="${esc(item[1])}"
-        type="button"
-      >
-        ${ico(item[0])}
-        <span>${esc(item[1])}</span>
-      </button>
-    `)
-    .join('');
-
-  $$('#nav .nv').forEach(button=>{
-    button.onclick=()=>go(button.dataset.v);
-  });
-}
-
-function buildTop(){
-  $('#ta').innerHTML=
-    '<option value="">All accounts</option>'+
-    D.accounts.map(account=>`
-      <option value="${esc(account.id)}" ${F.acc===account.id?'selected':''}>
-        ${esc(account.name)} · ${esc(account.cur)}
-      </option>
-    `).join('');
-
-  $('#tr').innerHTML=RANGES
-    .map(range=>`
-      <option value="${esc(range[0])}" ${F.range===range[0]?'selected':''}>
-        ${esc(range[1])}
-      </option>
-    `)
-    .join('');
-
-  const activeFilters=[
-    'pair',
-    'strat',
-    'sess',
-    'tag',
-    'dir',
-    'out',
-    'from',
-    'to'
-  ].filter(key=>F[key]).length;
-
-  $('#tfn').textContent=activeFilters;
-  $('#tfn').hidden=!activeFilters;
-}
-
-function go(target){
-  const next=PAGES[target]?target:'dash';
-
-  if(location.hash===`#/${next}`){
-    view=next;
-    render();
-  }else{
-    location.hash=`#/${next}`;
-  }
-}
-
-addEventListener('hashchange',()=>{
-  if(!PW)return;
-
-  const target=location.hash.slice(2);
-
-  if(PAGES[target]&&target!==view){
-    view=target;
-    render();
-  }
-});
-
-const skel=()=>`
-  <div class="sk" style="height:32px;width:220px;margin-bottom:24px"></div>
-  <div class="grid">${'<div class="sk" style="height:108px"></div>'.repeat(8)}</div>
-  <div class="sk" style="height:320px;margin-top:16px"></div>
-`;
-
-function render(keep=false){
-  closeMenu();
-
-  if(!keep)closePop();
-
-  theme();
-  buildNav();
-  buildTop();
-
-  const main=$('#main');
-  const fresh=view!==lastView;
-
-  lastView=view;
-
-  const run=()=>{
-    CH.forEach(chart=>{
-      try{
-        chart.destroy();
-      }catch{}
-    });
-
-    CH=[];
-
-    try{
-      if(typeof PAGES[view]==='function'){
-        PAGES[view]();
-      }
-    }catch(error){
-      console.error(error);
-
-      main.innerHTML=empty(
-        'Something went wrong',
-        esc(error?.message||'An unknown error occurred.')
-      );
-    }
-
-    runCounters();
-  };
-
-  if(fresh){
-    main.innerHTML=skel();
-    main.classList.remove('in');
-
-    requestAnimationFrame(()=>{
-      run();
-      main.classList.add('in');
-      scrollTo(0,0);
-    });
-  }else{
-    run();
-  }
-}
-
 const toggleSide=()=>{
-  const collapsed=$('#app').classList.toggle('sc');
-  localStorage.setItem('fxj.side',collapsed?'1':'');
+  const app=$('#app');
+  const button=$('#cl');
+
+  if(!app)return;
+
+  const collapsed=app.classList.toggle('sc');
+
+  localStorage.setItem(
+    'fxj.side',
+    collapsed?'1':''
+  );
+
+  if(button){
+    button.setAttribute(
+      'aria-expanded',
+      String(!collapsed)
+    );
+
+    button.setAttribute(
+      'aria-label',
+      collapsed?
+        'Expand sidebar':
+        'Collapse sidebar'
+    );
+
+    button.title=collapsed?
+      'Expand sidebar':
+      'Collapse sidebar';
+  }
 };
 
 function toggleTheme(){
-  const light=document.documentElement.dataset.t!=='light';
+  const light=
+    document.documentElement.dataset.t!=='light';
 
-  document.documentElement.dataset.t=light?'light':'';
-  localStorage.setItem('fxj.theme',light?'light':'');
+  document.documentElement.dataset.t=
+    light?'light':'';
+
+  localStorage.setItem(
+    'fxj.theme',
+    light?'light':''
+  );
+
+  const button=$('#th');
+
+  if(button){
+    button.setAttribute(
+      'aria-label',
+      light?
+        'Switch to dark mode':
+        'Switch to light mode'
+    );
+
+    button.title=light?
+      'Switch to dark mode':
+      'Switch to light mode';
+  }
 
   if(D)render(true);
 }
@@ -1220,10 +533,34 @@ $('#gf').onsubmit=async event=>{
     $('#gate').hidden=true;
     $('#app').hidden=false;
 
+    const sideCollapsed=Boolean(
+      localStorage.getItem('fxj.side')
+    );
+
     $('#app').classList.toggle(
       'sc',
-      Boolean(localStorage.getItem('fxj.side'))
+      sideCollapsed
     );
+
+    const sideButton=$('#cl');
+
+    if(sideButton){
+      sideButton.setAttribute(
+        'aria-expanded',
+        String(!sideCollapsed)
+      );
+
+      sideButton.setAttribute(
+        'aria-label',
+        sideCollapsed?
+          'Expand sidebar':
+          'Collapse sidebar'
+      );
+
+      sideButton.title=sideCollapsed?
+        'Expand sidebar':
+        'Collapse sidebar';
+    }
 
     const hash=location.hash.slice(2);
 
@@ -1504,12 +841,102 @@ addEventListener('keydown',event=>{
 document.documentElement.dataset.t=
   localStorage.getItem('fxj.theme')||'';
 
-$('#th').innerHTML=ico('sun');
-$('#lk').innerHTML=ico('lock');
-$('#cl').innerHTML=ico('chev');
-$('#ts').insertAdjacentHTML('afterbegin',ico('search'));
-$('#tn').insertAdjacentHTML('afterbegin',ico('plus'));
-$('#tfb').insertAdjacentHTML('afterbegin',ico('filter'));
+const th=$('#th');
+const lk=$('#lk');
+const cl=$('#cl');
+const ts=$('#ts');
+const tn=$('#tn');
+const tfb=$('#tfb');
+
+if(th){
+  th.innerHTML=ico('sun');
+  th.onclick=toggleTheme;
+
+  const light=
+    document.documentElement.dataset.t==='light';
+
+  th.setAttribute(
+    'aria-label',
+    light?
+      'Switch to dark mode':
+      'Switch to light mode'
+  );
+
+  th.title=light?
+    'Switch to dark mode':
+    'Switch to light mode';
+}
+
+if(lk){
+  lk.innerHTML=ico('lock');
+  lk.onclick=lock;
+}
+
+if(cl){
+  cl.innerHTML=ico('chev');
+  cl.onclick=toggleSide;
+
+  const collapsed=
+    $('#app')?.classList.contains('sc');
+
+  cl.setAttribute(
+    'aria-expanded',
+    String(!collapsed)
+  );
+
+  cl.setAttribute(
+    'aria-label',
+    collapsed?
+      'Expand sidebar':
+      'Collapse sidebar'
+  );
+
+  cl.title=collapsed?
+    'Expand sidebar':
+    'Collapse sidebar';
+}
+
+if(ts){
+  ts.insertAdjacentHTML(
+    'afterbegin',
+    ico('search')
+  );
+
+  ts.onclick=openPalette;
+}
+
+if(tn){
+  tn.insertAdjacentHTML(
+    'afterbegin',
+    ico('plus')
+  );
+
+  /*
+   * Do not use:
+   * tn.onclick=tradeForm;
+   *
+   * tradeForm is defined in js/trades.js,
+   * which loads after js/core.js.
+   */
+  tn.onclick=()=>{
+    if(typeof tradeForm==='function'){
+      tradeForm();
+    }
+  };
+}
+
+if(tfb){
+  tfb.insertAdjacentHTML(
+    'afterbegin',
+    ico('filter')
+  );
+
+  tfb.onclick=()=>{
+    $('#fp').hidden?
+      openPop():
+      closePop();
+  };
+}
 
 $('#ta').onchange=event=>{
   F.acc=event.target.value;
@@ -1520,15 +947,7 @@ $('#tr').onchange=event=>{
   F.range=event.target.value;
   render();
 
-  if(F.range==='custom')openPop();
+  if(F.range==='custom'){
+    openPop();
+  }
 };
-
-$('#tfb').onclick=()=>{
-  $('#fp').hidden?openPop():closePop();
-};
-
-$('#ts').onclick=openPalette;
-$('#tn').onclick=tradeForm;
-$('#th').onclick=toggleTheme;
-$('#lk').onclick=lock;
-$('#cl').onclick=toggleSide;
