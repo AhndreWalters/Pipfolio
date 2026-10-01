@@ -178,8 +178,9 @@ PAGES.accts=function(){
                     <tr>
                       <th>Date</th>
                       <th>Account</th>
+                      <th>Type</th>
                       <th>Amount</th>
-                      <th>Actions</th>
+                      <th style="width:48px"></th>
                     </tr>
                   </thead>
 
@@ -193,24 +194,37 @@ PAGES.accts=function(){
                           item=>item.id===entry.acc
                         );
 
+                        const kind=entry.kind||
+                          (N(entry.amt)>=0?'Deposit':'Withdrawal');
+
                         return`
                           <tr>
                             <td>
                               ${esc(String(entry.date).slice(0,10))}
                             </td>
+
                             <td>
                               ${esc(account?.name||'Unknown account')}
                             </td>
-                            <td class="${cls(entry.amt)}">
-                              ${fmt(entry.amt)}
+
+                            <td>
+                              <span class="tag">
+                                ${esc(kind)}
+                              </span>
                             </td>
+
+                            <td class="${cls(entry.amt)}">
+                              ${fmt(Math.abs(N(entry.amt)))}
+                            </td>
+
                             <td>
                               <button
-                                class="x"
+                                class="dots"
                                 type="button"
-                                data-dc="${esc(entry.id)}"
+                                data-cm="${esc(entry.id)}"
+                                aria-label="Cash entry actions"
                               >
-                                Remove
+                                ⋯
                               </button>
                             </td>
                           </tr>
@@ -261,6 +275,7 @@ PAGES.accts=function(){
       id:newId(),
       acc:entry.acc,
       date:`${entry.date}T00:00`,
+      kind:entry.kind,
       amt:entry.kind==='Deposit'?amount:-amount
     });
 
@@ -336,33 +351,111 @@ PAGES.accts=function(){
     };
   });
 
-  $$('[data-dc]').forEach(button=>{
-    button.onclick=async()=>{
-      const index=D.cash.findIndex(
-        entry=>entry.id===button.dataset.dc
+  $$('[data-cm]').forEach(button=>{
+    button.onclick=()=>{
+      const entry=D.cash.find(
+        item=>item.id===button.dataset.cm
       );
 
-      if(index<0)return;
+      if(!entry)return;
 
-      const removed=D.cash.splice(index,1)[0];
+      const account=D.accounts.find(
+        item=>item.id===entry.acc
+      );
 
-      await save();
-      render();
+      const original={
+        ...entry
+      };
 
-      toast(
-        'Entry removed',
-        'Undo',
-        async()=>{
-          D.cash.splice(
-            Math.min(index,D.cash.length),
-            0,
-            removed
-          );
+      const currentKind=entry.kind||
+        (N(entry.amt)>=0?'Deposit':'Withdrawal');
 
-          await save();
-          render();
+      openMenu(button,[
+        {
+          l:'Edit',
+          a:async()=>{
+            const kind=prompt(
+              'Type: Deposit or Withdrawal',
+              currentKind
+            );
+
+            if(kind===null)return;
+
+            const normalizedKind=
+              kind.trim().toLowerCase()==='withdrawal'?
+                'Withdrawal':
+                'Deposit';
+
+            const amount=prompt(
+              'Amount:',
+              fmt(Math.abs(N(entry.amt)))
+            );
+
+            if(amount===null)return;
+
+            const date=prompt(
+              'Date (YYYY-MM-DD):',
+              String(entry.date||'').slice(0,10)
+            );
+
+            if(date===null)return;
+
+            const numericAmount=Math.abs(N(amount));
+
+            if(!numericAmount||!date){
+              alert('Enter a valid amount and date.');
+              return;
+            }
+
+            entry.kind=normalizedKind;
+            entry.amt=normalizedKind==='Deposit'?
+              numericAmount:
+              -numericAmount;
+            entry.date=`${date}T00:00`;
+
+            await save();
+            render();
+            toast('Entry updated');
+          }
+        },
+        {
+          l:'Delete',
+          d:true,
+          a:async()=>{
+            if(!confirm(
+              `Delete this ${currentKind.toLowerCase()} entry${account?.name?` from ${account.name}`:''}?`
+            )){
+              return;
+            }
+
+            const index=D.cash.findIndex(
+              item=>item.id===entry.id
+            );
+
+            if(index<0)return;
+
+            D.cash.splice(index,1);
+
+            await save();
+            render();
+
+            toast(
+              'Entry deleted',
+              'Undo',
+              async()=>{
+                D.cash.splice(
+                  Math.min(index,D.cash.length),
+                  0,
+                  original
+                );
+
+                await save();
+                render();
+              }
+            );
+          }
         }
-      );
+      ]);
     };
   });
 };
