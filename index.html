@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <title>Pipfolio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="gate">
+    <form id="gf" novalidate>
+      <div class="brand" aria-label="Pipfolio">Pip<b>Folio</b></div>
+      <h1 id="gt">Unlock</h1>
+
+      <label for="pw" class="sr-only">Password</label>
+      <input
+        type="password"
+        id="pw"
+        name="password"
+        placeholder="Password"
+        autocomplete="current-password"
+        required
+      >
+
+      <button class="b" type="submit">Continue</button>
+      <p id="ge" role="alert" aria-live="polite"></p>
+    </form>
+  </div>
+
+  <div id="app" class="shell" hidden>
+    <aside aria-label="Sidebar">
+      <div class="brand" aria-label="Pipfolio">Pip<b>Folio</b></div>
+
+      <nav id="nav" aria-label="Primary navigation"></nav>
+
+      <button
+        class="nv cl"
+        id="cl"
+        type="button"
+        title="Collapse sidebar"
+        aria-label="Collapse sidebar"
+        aria-expanded="true"
+      ></button>
+    </aside>
+
+    <div class="rc">
+      <header class="top">
+        <label for="ta" class="sr-only">Account</label>
+        <select id="ta" name="account" title="Account"></select>
+
+        <label for="tr" class="sr-only">Date range</label>
+        <select id="tr" name="date-range" title="Date range"></select>
+
+        <div class="pw">
+          <button
+            class="s"
+            id="tfb"
+            type="button"
+            aria-controls="fp"
+            aria-expanded="false"
+          >
+            <span>Filters</span>
+            <i id="tfn" class="bdg" hidden aria-label="Active filters"></i>
+          </button>
+
+          <div
+            class="pop"
+            id="fp"
+            hidden
+            role="dialog"
+            aria-label="Filters"
+          ></div>
+        </div>
+
+        <button
+          class="s srch"
+          id="ts"
+          type="button"
+          aria-label="Search"
+        >
+          <span>Search</span>
+          <kbd>Ctrl K</kbd>
+        </button>
+
+        <span class="sp" aria-hidden="true"></span>
+
+        <button class="b" id="tn" type="button">
+          <span>Add trade</span>
+        </button>
+
+        <button
+          class="s ib"
+          id="th"
+          type="button"
+          title="Toggle theme"
+          aria-label="Toggle theme"
+        ></button>
+
+        <button
+          class="s ib"
+          id="lk"
+          type="button"
+          title="Lock"
+          aria-label="Lock application"
+        ></button>
+      </header>
+
+      <main id="main" tabindex="-1"></main>
+    </div>
+  </div>
+
+  <dialog id="dlg" aria-label="Dialog"></dialog>
+  <dialog id="pal" aria-label="Command palette"></dialog>
+  <div id="toasts" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+  <script src="js/crypto.js" defer></script>
+  <script src="js/engine.js" defer></script>
+  <script src="js/core.js" defer></script>
+  <script src="js/dashboard.js" defer></script>
+  <script src="js/trades.js" defer></script>
+  <script src="js/misc.js" defer></script>
+</body>
+</html>
