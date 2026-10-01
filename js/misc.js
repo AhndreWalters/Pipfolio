@@ -523,7 +523,6 @@ PAGES.risk=function(){
             ${fld(
               'Current price',
               num('price',0,'k6'),
-              'Required when the pair base currency matches your account currency'
             )}
 
             ${fld(
