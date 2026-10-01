@@ -520,10 +520,13 @@ PAGES.risk=function(){
               `
             )}
 
-            ${fld(
-              'Current price',
-              num('price',0,'k6'),
-            )}
+            <label>
+              <span style="display:flex;align-items:center;gap:6px">
+                Current price
+                ${tip('Required when the pair base currency matches your account currency')}
+              </span>
+              ${num('price',0,'k6')}
+            </label>
 
             ${fld(
               'Account currency',
