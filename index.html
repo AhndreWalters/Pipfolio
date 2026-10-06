@@ -76,6 +76,16 @@ dialog::backdrop{background:rgba(10,14,20,.5)}
 .toast{padding:12px 16px;border-radius:8px;background:var(--tx);color:var(--bg);font-weight:500}.toast.error{background:var(--neg);color:#fff}
 @media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}.c3,.c2{grid-column:1/-1}.kv{grid-template-columns:1fr 1fr}}
 @media(max-width:600px){.top{flex-wrap:wrap}.grid2,.two{grid-template-columns:1fr}.calc{grid-template-columns:1fr 1fr}.filters{flex-direction:column}.filters select{width:100%}.stat{padding:16px}.val{font-size:20px}.page-h{flex-wrap:wrap}.dh,.db,.df{padding-left:16px;padding-right:16px}.df{flex-wrap:wrap}}
+.hsel{width:220px}.subl{margin:-8px 0 16px;color:var(--mut)}
+.badge.Open{color:var(--ac)}
+.calc{grid-template-columns:repeat(3,1fr)}
+.sec{font-weight:600;padding-top:16px;border-top:1px solid var(--bd)}.sec small{display:block;font-weight:400;color:var(--mut);font-size:12px}
+.accs{display:grid;gap:16px}.acc{border:1px solid var(--bd);border-radius:10px;padding:16px}
+.acc-h{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:16px;flex-wrap:wrap}
+.kv4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.kv4 b{display:block;font-weight:600;color:var(--tx)}
+table{min-width:900px}
+@media(max-width:900px){.kv4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.calc{grid-template-columns:1fr 1fr}.hsel{width:100%}.acc-h .row{width:100%}}
 </style>
 </head>
 <body>
@@ -86,7 +96,7 @@ dialog::backdrop{background:rgba(10,14,20,.5)}
 'use strict';
 const K={data:'pipfolio:v1',auth:'pipfolio:auth',theme:'pipfolio:theme'};
 const SIDES=['Buy','Sell'],SESS=['Asian','London','New York','London/NY Overlap','Other'],ITER=200000;
-const S={trades:[],settings:{currency:'$',startBalance:0},view:'dashboard',q:'',res:'all',importMode:'main'};
+const S={trades:[],settings:{accounts:[]},view:'dashboard',acc:'all',tacc:'all',lastAcc:'',q:'',res:'all',importMode:'main'};
 const $=(s,r=document)=>r.querySelector(s);
 const app=$('#app'),dlg=$('#dlg');
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -109,31 +119,45 @@ const checkPw=async(pw,a)=>(await derive(pw,unb64(a.salt),a.iter))===a.hash;
 /* ---------- data ---------- */
 const defPip=p=>/JPY/.test(p)?0.01:/XAU|GOLD/.test(p)?0.1:0.0001;
 const num=v=>v===''||v==null?null:(Number.isFinite(+v)?+v:NaN);
+const ACCT=['Demo','Live','Prop Firm','Other'];
+const ms=s=>Date.UTC(+s.slice(0,4),+s.slice(5,7)-1,+s.slice(8,10),+s.slice(11,13),+s.slice(14,16));
+const okDt=s=>/^\d{4}-\d\d-\d\dT\d\d:\d\d$/.test(s)&&new Date(ms(s)).toISOString().slice(0,16)===s;
+const dur=(a,b)=>{let m=Math.round((ms(b)-ms(a))/6e4);const d=Math.floor(m/1440),h=Math.floor(m%1440/60);m%=60;return[d&&d+'d',(d||h)&&h+'h',m+'m'].filter(Boolean).join(' ')};
+const fdt=s=>s?s.replace('T',' '):'\u2014';
+function cleanAcc(a){if(!a||typeof a!=='object')return null;const b=Number(a.balance),o={id:String(a.id||''),name:String(a.name||'').trim().slice(0,40),balance:b,currency:String(a.currency||'').trim().slice(0,3),broker:String(a.broker||'').trim().slice(0,40),type:ACCT.includes(a.type)?a.type:'Other',created:Number(a.created)||Date.now()};return o.id&&o.name&&o.currency&&Number.isFinite(b)&&b>=0?o:null}
+function cleanSettings(s){s=s&&typeof s==='object'?s:{};const seen=new Set(),acc=(Array.isArray(s.accounts)?s.accounts:[]).map(cleanAcc).filter(a=>a&&!seen.has(a.id)&&seen.add(a.id));
+ if(!acc.length){const b=Number(s.startBalance);acc.push({id:'acc-default',name:'Main account',balance:Number.isFinite(b)&&b>=0?b:0,currency:String(s.currency||'$').slice(0,3)||'$',broker:'',type:'Other',created:Date.now()})}
+ return{accounts:acc}}
+function norm(trades,st){const fb=(st.accounts.find(a=>a.id==='acc-default')||st.accounts[0]).id;return trades.map(t=>st.accounts.some(a=>a.id===t.account)?t:{...t,account:fb})}
 function clean(t){
  if(!t||typeof t!=='object')return null;
- const o={id:String(t.id||''),dt:String(t.dt||'').slice(0,16),pair:String(t.pair||'').trim().toUpperCase().slice(0,20),side:t.side,entry:num(t.entry),sl:num(t.sl),tp:num(t.tp),exit:num(t.exit),lots:num(t.lots),risk:num(t.risk)??0,pl:num(t.pl),comm:num(t.comm)??0,pipSize:num(t.pipSize),session:SESS.includes(t.session)?t.session:'Other',setup:String(t.setup||'').trim().slice(0,100),tf:String(t.tf||'').trim().slice(0,20),notes:String(t.notes||'').slice(0,5000),created:Number(t.created)||Date.now(),updated:Number(t.updated)||Date.now()};
- if(!o.id||!/^\d{4}-\d\d-\d\dT\d\d:\d\d$/.test(o.dt)||!o.pair||!SIDES.includes(o.side))return null;
- for(const k of['entry','exit','lots','pl'])if(o[k]==null||isNaN(o[k]))return null;
- for(const k of['sl','tp','risk','comm'])if(isNaN(o[k]))return null;
- if(!(o.entry>0&&o.exit>0&&o.lots>0)||o.risk<0||o.comm<0)return null;
+ const legacy=!('xdt' in t)&&t.exit!=null&&t.exit!==''&&t.pl!=null&&t.pl!=='';
+ const o={id:String(t.id||''),account:String(t.account||''),dt:String(t.dt||'').slice(0,16),xdt:String(legacy?t.dt:t.xdt||'').slice(0,16),pair:String(t.pair||'').trim().toUpperCase().slice(0,20),side:t.side,entry:num(t.entry),sl:num(t.sl),tp:num(t.tp),exit:num(t.exit),lots:num(t.lots),risk:num(t.risk)??0,pl:num(t.pl),comm:num(t.comm)??0,pipSize:num(t.pipSize),session:SESS.includes(t.session)?t.session:'Other',setup:String(t.setup||'').trim().slice(0,100),tf:String(t.tf||'').trim().slice(0,20),notes:String(t.notes||'').slice(0,5000),created:Number(t.created)||Date.now(),updated:Number(t.updated)||Date.now()};
+ if(!o.id||!okDt(o.dt)||!o.pair||!SIDES.includes(o.side))return null;
+ if(o.xdt&&(!okDt(o.xdt)||o.xdt<o.dt))return null;
+ for(const k of['entry','lots'])if(o[k]==null||isNaN(o[k]))return null;
+ for(const k of['sl','tp','risk','comm','exit','pl'])if(isNaN(o[k]))return null;
+ if(!(o.entry>0&&o.lots>0)||(o.exit!=null&&o.exit<=0)||o.risk<0||o.comm<0)return null;
  if(!(o.pipSize>0))o.pipSize=defPip(o.pair);
  return o}
-function cleanSettings(s){s=s&&typeof s==='object'?s:{};const b=Number(s.startBalance);return{currency:String(s.currency??'$').slice(0,3),startBalance:Number.isFinite(b)?b:0}}
-function load(){const raw=ls.get(K.data);if(!raw)return;try{const d=JSON.parse(raw);S.trades=(Array.isArray(d.trades)?d.trades:[]).map(clean).filter(Boolean);S.settings=cleanSettings(d.settings)}catch{ls.set('pipfolio:corrupt-copy',raw);toast('Stored data could not be read. A raw copy was kept in browser storage.','error')}}
-const persist=(trades,settings)=>ls.set(K.data,JSON.stringify({version:1,trades,settings}));
+function load(){const raw=ls.get(K.data);S.settings=cleanSettings();S.trades=[];S.acc=S.tacc='all';if(!raw)return;try{const d=JSON.parse(raw);S.settings=cleanSettings(d.settings);S.trades=norm((Array.isArray(d.trades)?d.trades:[]).map(clean).filter(Boolean),S.settings)}catch{ls.set('pipfolio:corrupt-copy',raw);toast('Stored data could not be read. A raw copy was kept in browser storage.','error')}}
+const persist=(trades,settings)=>ls.set(K.data,JSON.stringify({version:2,trades,settings}));
 function commit(trades,settings=S.settings){if(!persist(trades,settings)){toast('Could not save. Browser storage is full or blocked.','error');return false}S.trades=trades;S.settings=settings;return true}
-const calc=t=>{const d=t.side==='Buy'?1:-1,net=r2(t.pl-t.comm);return{pips:Math.round(d*(t.exit-t.entry)/t.pipSize*10)/10,net,rr:t.sl!=null&&t.tp!=null&&t.sl!==t.entry?Math.round(Math.abs(t.tp-t.entry)/Math.abs(t.entry-t.sl)*100)/100:null,R:t.risk>0?Math.round(net/t.risk*100)/100:null,res:net>0?'Win':net<0?'Loss':'Breakeven'}};
-const sorted=()=>[...S.trades].sort((a,b)=>a.dt<b.dt?-1:a.dt>b.dt?1:a.created-b.created).map(t=>({t,...calc(t)}));
-const cur=()=>S.settings.currency;
-const fm=(n,plus)=>(n<0?'\u2212':plus&&n>0?'+':'')+cur()+Math.abs(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+const closed=t=>t.exit!=null&&t.pl!=null&&!!t.xdt;
+const calc=t=>{const d=t.side==='Buy'?1:-1,c=closed(t),net=c?r2(t.pl-t.comm):null;return{c,net,pips:t.exit!=null?Math.round(d*(t.exit-t.entry)/t.pipSize*10)/10:null,rr:t.sl!=null&&t.tp!=null&&t.sl!==t.entry?Math.round(Math.abs(t.tp-t.entry)/Math.abs(t.entry-t.sl)*100)/100:null,R:c&&t.risk>0?Math.round(net/t.risk*100)/100:null,dur:t.xdt?dur(t.dt,t.xdt):null,res:!c?'Open':net>0?'Win':net<0?'Loss':'Breakeven'}};
+const calcAll=l=>l.map(t=>({t,...calc(t)}));
+const acc=id=>S.settings.accounts.find(a=>a.id===id);
+const ccy=t=>acc(t.account)?.currency||'';
+let CTX='$';
+const fm=(n,plus,c=CTX)=>(n<0?'\u2212':plus&&n>0?'+':'')+(c.length>1?c+' ':c)+Math.abs(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
 const cls=n=>n>0?'pos':n<0?'neg':'';
 const short=v=>Math.abs(v)>=1000?(v/1000).toLocaleString(undefined,{maximumFractionDigits:1})+'k':String(v);
 const nowLocal=()=>{const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16)};
-function stats(){
- const ts=sorted(),w=ts.filter(x=>x.res==='Win'),l=ts.filter(x=>x.res==='Loss'),sum=a=>r2(a.reduce((s,x)=>s+x.net,0));
+function stats(list){
+ const all=calcAll(list),ts=all.filter(x=>x.c).sort((a,b)=>a.t.xdt<b.t.xdt?-1:a.t.xdt>b.t.xdt?1:a.t.created-b.t.created),w=ts.filter(x=>x.res==='Win'),l=ts.filter(x=>x.res==='Loss'),sum=a=>r2(a.reduce((s,x)=>s+x.net,0));
  const gw=sum(w),gl=Math.abs(sum(l)),rrs=ts.filter(x=>x.rr!=null);
  let st=0,sr='';if(ts.length){sr=ts[ts.length-1].res;if(sr!=='Breakeven')for(let i=ts.length-1;i>=0&&ts[i].res===sr;i--)st++}
- return{ts,w,l,n:ts.length,be:ts.length-w.length-l.length,net:sum(ts),wr:ts.length?w.length/ts.length*100:0,aw:w.length?r2(gw/w.length):0,al:l.length?r2(-gl/l.length):0,pf:gl?gw/gl:(gw?Infinity:null),rr:rrs.length?rrs.reduce((s,x)=>s+x.rr,0)/rrs.length:null,best:ts.length?ts.reduce((a,b)=>b.net>a.net?b:a):null,worst:ts.length?ts.reduce((a,b)=>b.net<a.net?b:a):null,st,sr}}
+ return{ts,w,l,n:ts.length,open:all.length-ts.length,be:ts.length-w.length-l.length,net:sum(ts),wr:ts.length?w.length/ts.length*100:0,aw:w.length?r2(gw/w.length):0,al:l.length?r2(-gl/l.length):0,pf:gl?gw/gl:(gw?Infinity:null),rr:rrs.length?rrs.reduce((s,x)=>s+x.rr,0)/rrs.length:null,best:ts.length?ts.reduce((a,b)=>b.net>a.net?b:a):null,worst:ts.length?ts.reduce((a,b)=>b.net<a.net?b:a):null,st,sr}}
 
 /* ---------- dialogs ---------- */
 const closeDlg=()=>{dlg.onclose=null;if(dlg.open)dlg.close()};
@@ -166,15 +190,23 @@ function render(){
  <main>${v==='dashboard'?dashboard():v==='trades'?tradesView():settingsView()}</main></div>`;
  if(v==='dashboard'&&S.trades.length)drawCharts()}
 const emptyState=()=>`<div class="card empty"><h2>No trades yet</h2><p>Add your first trade to start tracking your performance.</p><button class="btn primary" data-act="add">Add trade</button></div>`;
+const scope=()=>S.trades.filter(t=>S.acc==='all'||t.account===S.acc);
+const scopeAccs=()=>S.acc==='all'?S.settings.accounts:S.settings.accounts.filter(a=>a.id===S.acc);
+const accOpts=(v)=>`<option value="all">All accounts</option>${S.settings.accounts.map(a=>`<option value="${esc(a.id)}" ${v===a.id?'selected':''}>${esc(a.name)}</option>`).join('')}`;
 function dashboard(){
- if(!S.trades.length)return`<div class="page-h"><h1>Dashboard</h1></div>${emptyState()}`;
- const s=stats(),c=[
- ['Total trades',s.n,s.be?s.be+' breakeven':''],['Winning trades',s.w.length,'','pos'],['Losing trades',s.l.length,'','neg'],['Win rate',s.wr.toFixed(1)+'%'],
+ if(S.acc!=='all'&&!acc(S.acc))S.acc='all';
+ const as=scopeAccs(),cs=[...new Set(as.map(a=>a.currency))];CTX=cs.length===1?cs[0]:'';
+ const list=scope(),s=stats(list),start=r2(as.reduce((x,a)=>x+a.balance,0));
+ const head=`<div class="page-h"><h1>Dashboard</h1><select id="accf" class="hsel" aria-label="Filter by account">${accOpts(S.acc)}</select></div><div class="subl">${cs.length===1?`Balance ${fm(r2(start+s.net))} \u00b7 Starting balance ${fm(start)}`:'Accounts use different currencies. Totals are not converted, so filter by account for exact figures.'}</div>`;
+ if(!S.trades.length)return head+emptyState();
+ if(!s.n)return head+`<div class="card empty"><h2>No closed trades yet</h2><p>${s.open?s.open+' open trade'+(s.open>1?'s':'')+'. Add exit details to include '+(s.open>1?'them':'it')+' in your statistics.':'There are no trades for this account yet.'}</p><button class="btn primary" data-act="${s.open?'view':'add'}" data-v="trades">${s.open?'View trades':'Add trade'}</button></div>`;
+ const c=[
+ ['Total trades',s.n,[s.be&&s.be+' breakeven',s.open&&s.open+' open'].filter(Boolean).join(' \u00b7 ')],['Winning trades',s.w.length,'','pos'],['Losing trades',s.l.length,'','neg'],['Win rate',s.wr.toFixed(1)+'%'],
  ['Net P&L',fm(s.net,1),'',cls(s.net)],['Average win',fm(s.aw),'','pos'],['Average loss',fm(s.al),'',s.al?'neg':''],['Profit factor',s.pf==null?'\u2014':s.pf===Infinity?'\u221e':s.pf.toFixed(2)],
  ['Average R:R',s.rr==null?'\u2014':'1:'+s.rr.toFixed(2),'Planned, where SL and TP are set'],['Best trade',fm(s.best.net,1),esc(s.best.t.pair),cls(s.best.net)],['Worst trade',fm(s.worst.net,1),esc(s.worst.t.pair),cls(s.worst.net)],
  ['Current streak',s.st?s.st+' '+(s.sr==='Win'?'win':'loss')+(s.st>1?'s':''):'None','',s.st?(s.sr==='Win'?'pos':'neg'):'']];
- return`<div class="page-h"><h1>Dashboard</h1></div><div class="stats">${c.map(([l,v,sub,k])=>`<div class="card stat"><div class="lbl">${l}</div><div class="val ${k||''}">${v}</div><div class="sub">${sub||'&nbsp;'}</div></div>`).join('')}</div>
- <div class="charts">${[['Equity curve','eq','c3'],['P&L over time (by day)','day','c3'],['Win vs. loss','wl','c2'],['Performance by pair','pair','c2'],['Performance by session','sess','c2']].map(([t,id,k])=>`<div class="card ${k}"><h2>${t}</h2><div class="chart" data-chart="${id}"></div></div>`).join('')}</div>`}
+ return head+`<div class="stats">${c.map(([l,v,sub,k])=>`<div class="card stat"><div class="lbl">${l}</div><div class="val ${k||''}">${v}</div><div class="sub">${sub||'&nbsp;'}</div></div>`).join('')}</div>
+ <div class="charts">${[['Equity curve','eq','c3'],['P&L over time (by close date)','day','c3'],['Win vs. loss','wl','c2'],['Performance by pair','pair','c2'],['Performance by session','sess','c2']].map(([t,id,k])=>`<div class="card ${k}"><h2>${t}</h2><div class="chart" data-chart="${id}"></div></div>`).join('')}</div>`}
 
 const CH=240,M={l:52,r:14,t:14,b:30};
 const niceStep=x=>{const p=10**Math.floor(Math.log10(x)),f=x/p;return(f<=1?1:f<=2?2:f<=5?5:10)*p};
@@ -192,84 +224,110 @@ function donut(w,s){const parts=[['Wins',s.w.length,'var(--pos)'],['Losses',s.l.
  const seg=parts.filter(p=>p[1]).map(p=>{const len=p[1]/s.n*C,e=`<circle cx="${cx}" cy="100" r="${r}" fill="none" stroke="${p[2]}" stroke-width="22" stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-off}" transform="rotate(-90 ${cx} 100)"><title>${p[0]}: ${p[1]}</title></circle>`;off+=len;return e}).join('');
  return`<svg viewBox="0 0 ${w} ${CH}" width="${w}" height="${CH}">${seg}<text x="${cx}" y="106" text-anchor="middle" style="fill:var(--tx);font-size:18px;font-weight:650">${s.wr.toFixed(0)}%</text>${parts.map((p,i)=>{const x=w*(2*i+1)/6;return`<circle cx="${x-24}" cy="${CH-14}" r="4" fill="${p[2]}"/><text class="tick" x="${x-16}" y="${CH-10}">${p[0]} ${p[1]}</text>`}).join('')}</svg>`}
 function group(ts,key){const m=new Map();ts.forEach(x=>m.set(key(x),r2((m.get(key(x))||0)+x.net)));return[...m].map(([l,v])=>({l,v}))}
-function drawCharts(){const s=stats();if(!s.n)return;
- let run=S.settings.startBalance;const eq=[{l:'Start',v:r2(run)},...s.ts.map(x=>({l:x.t.dt.slice(5,10),v:(run=r2(run+x.net))}))];
- const day=group(s.ts,x=>x.t.dt.slice(0,10)).slice(-20).map(i=>({l:i.l.slice(5),v:i.v}));
+function drawCharts(){const s=stats(scope());if(!s.n)return;
+ let run=r2(scopeAccs().reduce((x,a)=>x+a.balance,0));const eq=[{l:'Start',v:run},...s.ts.map(x=>({l:x.t.xdt.slice(5,10),v:(run=r2(run+x.net))}))];
+ const day=group(s.ts,x=>x.t.xdt.slice(0,10)).slice(-20).map(i=>({l:i.l.slice(5),v:i.v}));
  const pair=group(s.ts,x=>x.t.pair).sort((a,b)=>b.v-a.v).slice(0,8),sess=group(s.ts,x=>x.t.session).sort((a,b)=>SESS.indexOf(a.l)-SESS.indexOf(b.l));
  const f={eq:w=>lineChart(w,eq),day:w=>barChart(w,day),wl:w=>donut(w,s),pair:w=>barChart(w,pair),sess:w=>barChart(w,sess)};
  document.querySelectorAll('[data-chart]').forEach(el=>{const w=Math.max(240,Math.floor(el.clientWidth));el.innerHTML=f[el.dataset.chart](w)})}
 let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{if(S.view==='dashboard'&&$('[data-chart]'))drawCharts()},150)});
 
+const tfilter=()=>{const q=S.q.trim().toLowerCase();return calcAll(S.trades).sort((a,b)=>a.t.dt<b.t.dt?1:a.t.dt>b.t.dt?-1:b.t.created-a.t.created).filter(x=>(S.res==='all'||x.res===S.res)&&(S.tacc==='all'||x.t.account===S.tacc)&&(!q||(x.t.pair+' '+x.t.setup+' '+x.t.notes).toLowerCase().includes(q)))};
 function tradesView(){
- const rows=sorted().reverse(),q=S.q.trim().toLowerCase(),fl=rows.filter(x=>(S.res==='all'||x.res===S.res)&&(!q||(x.t.pair+' '+x.t.setup+' '+x.t.notes).toLowerCase().includes(q)));
  const head=`<div class="page-h"><h1>Trades</h1></div>`;
- if(!rows.length)return head+emptyState();
- return head+`<div class="filters"><input id="q" type="search" placeholder="Search pair, setup or notes" value="${esc(S.q)}" aria-label="Search trades"><select id="res" aria-label="Filter by result">${['all','Win','Loss','Breakeven'].map(r=>`<option value="${r}" ${S.res===r?'selected':''}>${r==='all'?'All results':r}</option>`).join('')}</select></div>
- <div id="tl">${tradeTable(fl,rows.length)}</div>`}
+ if(!S.trades.length)return head+emptyState();
+ return head+`<div class="filters"><input id="q" type="search" placeholder="Search pair, setup or notes" value="${esc(S.q)}" aria-label="Search trades"><select id="tacc" aria-label="Filter by account">${accOpts(S.tacc)}</select><select id="res" aria-label="Filter by result">${['all','Open','Win','Loss','Breakeven'].map(r=>`<option value="${r}" ${S.res===r?'selected':''}>${r==='all'?'All results':r}</option>`).join('')}</select></div><div id="tl">${tradeTable(tfilter(),S.trades.length)}</div>`}
 function tradeTable(fl,total){
- if(!fl.length)return`<div class="card empty"><h2>No matching trades</h2><p>Try a different search or result filter.</p></div>`;
- return`<div class="card tw"><table><thead><tr><th>Date</th><th>Pair</th><th>Side</th><th class="n">Pips</th><th class="n">R:R</th><th class="n">Net P&L</th><th>Result</th><th>Session</th></tr></thead><tbody>${fl.map(x=>`<tr data-act="detail" data-id="${esc(x.t.id)}" tabindex="0"><td>${x.t.dt.replace('T',' ')}</td><td><b>${esc(x.t.pair)}</b></td><td>${x.t.side}</td><td class="n ${cls(x.pips)}">${x.pips}</td><td class="n">${x.rr==null?'\u2014':'1:'+x.rr}</td><td class="n ${cls(x.net)}">${fm(x.net,1)}</td><td><span class="badge ${x.res}">${x.res}</span></td><td>${esc(x.t.session)}</td></tr>`).join('')}</tbody></table></div><div class="count">Showing ${fl.length} of ${total} trade${total>1?'s':''}</div>`}
-
+ if(!fl.length)return`<div class="card empty"><h2>No matching trades</h2><p>Try a different search, account or result filter.</p></div>`;
+ return`<div class="card tw"><table><thead><tr><th>Entry</th><th>Pair</th><th>Side</th><th>Account</th><th>Duration</th><th class="n">Pips</th><th class="n">Net P&L</th><th>Result</th></tr></thead><tbody>${fl.map(x=>`<tr data-act="detail" data-id="${esc(x.t.id)}" tabindex="0"><td>${fdt(x.t.dt)}</td><td><b>${esc(x.t.pair)}</b></td><td>${x.t.side}</td><td>${esc(acc(x.t.account)?.name||'')}</td><td>${x.dur||'\u2014'}</td><td class="n ${cls(x.pips)}">${x.pips??'\u2014'}</td><td class="n ${cls(x.net)}">${x.net==null?'\u2014':fm(x.net,1,ccy(x.t))}</td><td><span class="badge ${x.res}">${x.res}</span></td></tr>`).join('')}</tbody></table></div><div class="count">Showing ${fl.length} of ${total} trade${total>1?'s':''}</div>`}
+function accCard(a){
+ const mine=S.trades.filter(t=>t.account===a.id),s=stats(mine),c=a.currency,dash='\u2014';
+ const kv=[['Current balance',fm(r2(a.balance+s.net),0,c)],['Starting balance',fm(a.balance,0,c)],['Net P&L',`<span class="${cls(s.net)}">${fm(s.net,1,c)}</span>`],['Return',a.balance>0&&s.n?`<span class="${cls(s.net)}">${(s.net/a.balance*100).toFixed(1)}%</span>`:dash],['Win rate',s.n?s.wr.toFixed(1)+'%':dash],['Trades',mine.length+(s.open?` (${s.open} open)`:'')],['Profit factor',s.pf==null?dash:s.pf===Infinity?'\u221e':s.pf.toFixed(2)],['Average R:R',s.rr==null?dash:'1:'+s.rr.toFixed(2)]];
+ return`<div class="acc"><div class="acc-h"><div><b>${esc(a.name)}</b> <span class="badge">${a.type}</span><div class="sub">${esc(a.broker)||'No broker'} \u00b7 ${esc(c)}</div></div><div class="row"><button class="btn" data-act="accview" data-id="${esc(a.id)}">Dashboard</button><button class="btn" data-act="accedit" data-id="${esc(a.id)}">Edit</button><button class="btn danger" data-act="accdel" data-id="${esc(a.id)}">Delete</button></div></div><div class="kv4">${kv.map(([k,v])=>`<div class="lbl">${k}<b>${v}</b></div>`).join('')}</div></div>`}
 function settingsView(){
  return`<div class="page-h"><h1>Settings</h1></div><div class="stack">
- <div class="card"><h2>Backup and restore</h2><p>Export everything (trades, settings and password) to one file. Import it in any browser or device to restore your journal.</p><div class="row"><button class="btn primary" data-act="export">Export backup</button><button class="btn" data-act="import">Import backup</button></div></div>
- <div class="card"><h2>Preferences</h2><p>Used for formatting and the equity curve.</p><form id="pf" novalidate><div class="grid2"><label class="f"><span>Currency symbol</span><input name="cur" maxlength="3" value="${esc(S.settings.currency)}"><small class="err"></small></label><label class="f"><span>Starting balance</span><input name="bal" type="number" step="any" value="${S.settings.startBalance}"><small class="err"></small></label></div><div class="row" style="margin-top:16px"><button class="btn primary">Save preferences</button></div></form></div>
+ <div class="card"><div class="page-h" style="margin:0 0 16px"><div><h2>Accounts</h2><p style="margin:0">Each account keeps its own balance and statistics.</p></div><button class="btn primary" data-act="accadd">Add account</button></div><div class="accs">${S.settings.accounts.map(accCard).join('')}</div></div>
+ <div class="card"><h2>Backup and restore</h2><p>Export everything (accounts, trades, settings and password) to one file. Import it in any browser or device to restore your journal.</p><div class="row"><button class="btn primary" data-act="export">Export backup</button><button class="btn" data-act="import">Import backup</button></div></div>
  <div class="card"><h2>Security</h2><p>The password locks the journal when it is opened. Data stays in this browser's storage and is not encrypted, so avoid using shared computers.</p><div class="row"><button class="btn" data-act="chpw">Change password</button><button class="btn" data-act="lock">Lock now</button></div></div>
- <div class="card"><h2>Erase journal</h2><p>Permanently deletes all trades, settings and the password from this browser. Export a backup first.</p><button class="btn danger" data-act="erase">Erase all data</button></div></div>`}
+ <div class="card"><h2>Erase journal</h2><p>Permanently deletes all accounts, trades, settings and the password from this browser. Export a backup first.</p><button class="btn danger" data-act="erase">Erase all data</button></div></div>`}
 
 /* ---------- trade form ---------- */
 const F=(n,l,inp,hint)=>`<label class="f" data-f="${n}"><span>${l}</span>${inp}<small class="err"></small>${hint?`<small class="hint">${hint}</small>`:''}</label>`;
 const nin=(n,v,ph='')=>`<input name="${n}" type="number" step="any" inputmode="decimal" value="${v??''}" placeholder="${ph}">`;
-function tradeForm(t){
- const e=!!t,v=t||{dt:nowLocal(),side:'Buy',session:'',risk:'',comm:''};
+const showErrs=(root,e)=>root.querySelectorAll('[data-f]').forEach(l=>{l.classList.toggle('bad',!!e[l.dataset.f]);$('.err',l).textContent=e[l.dataset.f]||''});
+function tradeForm(t,focus){
+ const e=!!t,n=nowLocal(),v=t||{dt:n,side:'Buy',session:'',risk:'',comm:'',account:S.acc!=='all'?S.acc:(acc(S.lastAcc)?S.lastAcc:S.settings.accounts[0].id)};
+ const[ed,et]=v.dt.split('T'),[xd,xt]=(v.xdt||'T').split('T'),today=n.slice(0,10);
  const pairs=[...new Set(['EURUSD','GBPUSD','USDJPY','AUDUSD','USDCAD','USDCHF','NZDUSD','XAUUSD','GBPJPY','EURJPY',...S.trades.map(x=>x.pair)])],setups=[...new Set(S.trades.map(x=>x.setup).filter(Boolean))];
  openDlg(`<div class="dh"><h2>${e?'Edit trade':'Add trade'}</h2></div><form id="tf" novalidate style="display:contents"><div class="db"><div class="grid2">
- ${F('dt','Date and time',`<input name="dt" type="datetime-local" value="${v.dt}" max="${nowLocal()}">`)}
+ ${F('account','Account',`<select name="account">${S.settings.accounts.map(a=>`<option value="${esc(a.id)}" ${a.id===v.account?'selected':''}>${esc(a.name)} (${a.type})</option>`).join('')}</select>`)}
  ${F('pair','Pair / instrument',`<input name="pair" list="pl" value="${esc(v.pair||'')}" placeholder="EURUSD" autocapitalize="characters" maxlength="20"><datalist id="pl">${pairs.map(p=>`<option value="${esc(p)}">`).join('')}</datalist>`)}
  ${F('side','Direction',`<select name="side">${SIDES.map(s=>`<option ${v.side===s?'selected':''}>${s}</option>`).join('')}</select>`)}
  ${F('lots','Lot size',nin('lots',v.lots,'0.10'))}
- ${F('entry','Entry price',nin('entry',v.entry))}${F('exit','Exit price',nin('exit',v.exit))}
- ${F('sl','Stop loss',nin('sl',v.sl),'Optional')}${F('tp','Take profit',nin('tp',v.tp),'Optional')}
- ${F('risk','Risk ('+esc(cur())+')',nin('risk',v.risk,'0.00'),'Amount risked. Used for realized R.')}${F('pipSize','Pip size',nin('pipSize',e?v.pipSize:'','Auto'),'Leave blank for auto (JPY 0.01, XAU 0.1, others 0.0001)')}
- ${F('pl','Profit / loss ('+esc(cur())+')',nin('pl',v.pl,'0.00'),'Before commission. Use a negative number for a loss.')}${F('comm','Commission ('+esc(cur())+')',nin('comm',v.comm,'0.00'),'Enter as a positive cost')}
+ ${F('ed','Entry date',`<input name="ed" type="date" value="${ed}" max="${today}">`)}${F('et','Entry time',`<input name="et" type="time" value="${et}">`)}
+ ${F('entry','Entry price',nin('entry',v.entry))}${F('sl','Stop loss',nin('sl',v.sl),'Optional')}
+ ${F('tp','Take profit',nin('tp',v.tp),'Optional')}${F('risk','Risk <span class="ccy"></span>',nin('risk',v.risk,'0.00'),'Amount risked. Used for realized R.')}
  ${F('session','Trading session',`<select name="session"><option value="">Select session</option>${SESS.map(s=>`<option ${v.session===s?'selected':''}>${s}</option>`).join('')}</select>`)}
  ${F('tf','Timeframe',`<input name="tf" value="${esc(v.tf||'')}" maxlength="20" placeholder="H1">`)}
  <div class="full">${F('setup','Setup / strategy',`<input name="setup" list="sl" value="${esc(v.setup||'')}" maxlength="100" placeholder="Breakout, trend pullback\u2026"><datalist id="sl">${setups.map(p=>`<option value="${esc(p)}">`).join('')}</datalist>`)}</div>
+ <div class="full sec">Exit details<small>Leave these blank while the trade is open. A trade is closed once exit date, exit time, exit price and profit / loss are all filled in.</small></div>
+ ${F('xd','Exit date',`<input name="xd" type="date" value="${xd||''}" max="${today}">`)}${F('xt','Exit time',`<input name="xt" type="time" value="${xt||''}">`)}
+ ${F('exit','Exit price',nin('exit',v.exit))}${F('pl','Gross profit / loss <span class="ccy"></span>',nin('pl',v.pl,'0.00'),'Before commission. Negative for a loss.')}
+ ${F('comm','Commission <span class="ccy"></span>',nin('comm',v.comm,'0.00'),'Enter as a positive cost')}${F('pipSize','Pip size',nin('pipSize',e?v.pipSize:'','Auto'),'Blank for auto (JPY 0.01, XAU 0.1, others 0.0001)')}
  <div class="full">${F('notes','Notes',`<textarea name="notes" maxlength="5000" placeholder="Why you took the trade, how you managed it, what you learned">${esc(v.notes||'')}</textarea>`)}</div>
- <div class="full calc"><div class="lbl">Pips<b id="c-pips">\u2014</b></div><div class="lbl">Planned R:R<b id="c-rr">\u2014</b></div><div class="lbl">Net P&L<b id="c-net">\u2014</b></div><div class="lbl">Result<b id="c-res">\u2014</b></div></div>
+ <div class="full calc">${[['dur','Duration'],['pips','Pips'],['rr','Planned R:R'],['net','Net P&L'],['R','Realized R'],['res','Result']].map(([i,l])=>`<div class="lbl">${l}<b id="c-${i}">\u2014</b></div>`).join('')}</div>
  </div></div><div class="df"><button type="button" class="btn" data-act="close">Cancel</button><button class="btn primary" id="sv">${e?'Save changes':'Add trade'}</button></div></form>`);
- const form=$('#tf'),upd=()=>{const f=new FormData(form),{trade}=validate(f,'x',true);const set=(i,t,c='')=>{const el=$('#'+i);el.textContent=t;el.className=c};
-  if(!trade){['pips','rr','net','res'].forEach(i=>set('c-'+i,'\u2014'));return}const c=calc(trade);set('c-pips',c.pips,cls(c.pips));set('c-rr',c.rr==null?'\u2014':'1:'+c.rr);set('c-net',fm(c.net,1),cls(c.net));set('c-res',c.res,cls(c.net))};
- form.oninput=upd;upd();
- form.onsubmit=ev=>{ev.preventDefault();const f=new FormData(form),{errs,trade}=validate(f,t?.id);
-  form.querySelectorAll('[data-f]').forEach(l=>{const m=errs[l.dataset.f];l.classList.toggle('bad',!!m);$('.err',l).textContent=m||''});
+ const form=$('#tf'),upd=()=>{const f=new FormData(form),a=acc(f.get('account')),{trade}=validate(f,'x'),set=(i,x,c='')=>{const el=$('#c-'+i);el.textContent=x;el.className=c};
+  dlg.querySelectorAll('.ccy').forEach(x=>x.textContent=a?'('+a.currency+')':'');
+  if(!trade){['dur','pips','rr','net','R','res'].forEach(i=>set(i,'\u2014'));return}
+  const c=calc(trade);set('dur',c.dur||'\u2014');set('pips',c.pips??'\u2014',cls(c.pips));set('rr',c.rr==null?'\u2014':'1:'+c.rr);set('net',c.net==null?'\u2014':fm(c.net,1,a.currency),cls(c.net));set('R',c.R==null?'\u2014':c.R+'R');set('res',c.res,cls(c.net))};
+ form.oninput=upd;upd();if(focus)$(`[name="${focus}"]`,form)?.focus();
+ form.onsubmit=ev=>{ev.preventDefault();const f=new FormData(form),{errs,trade}=validate(f,t?.id);showErrs(form,errs);
   if(Object.keys(errs).length){form.querySelector('.bad input,.bad select')?.focus();return}
   const list=e?S.trades.map(x=>x.id===t.id?{...trade,id:t.id,created:t.created}:x):[...S.trades,trade];
-  if(commit(list)){closeDlg();toast(e?'Trade saved':'Trade added');render()}}}
-function validate(f,id,quiet){
- const e={},g=n=>String(f.get(n)||'').trim();
+  if(commit(list)){S.lastAcc=trade.account;closeDlg();toast(e?'Trade saved':'Trade added');render()}}}
+function validate(f,id){
+ const e={},g=n=>String(f.get(n)||'').trim(),now=nowLocal();
  const req=n=>{const v=g(n);if(v===''){e[n]='Required';return null}const x=Number(v);if(!Number.isFinite(x)){e[n]='Enter a valid number';return null}return x};
  const opt=n=>{const v=g(n);if(v==='')return null;const x=Number(v);if(!Number.isFinite(x)){e[n]='Enter a valid number';return null}return x};
- const dt=g('dt'),pair=g('pair').toUpperCase(),side=g('side'),session=g('session');
- if(!dt)e.dt='Required';else if(dt>nowLocal())e.dt='Date cannot be in the future';
+ const ed=g('ed'),et=g('et'),xd=g('xd'),xt=g('xt'),pair=g('pair').toUpperCase(),side=g('side'),session=g('session'),dt=ed&&et?ed+'T'+et:'';let xdt='';
+ if(!acc(g('account')))e.account='Select an account';
+ if(!ed)e.ed='Required';if(!et)e.et='Required';
+ if(dt&&dt>now)e.ed='Entry cannot be in the future';
+ if(xd||xt){if(!xd)e.xd='Add the exit date';if(!xt)e.xt='Add the exit time';
+  if(xd&&xt){xdt=xd+'T'+xt;if(xdt>now)e.xd='Exit cannot be in the future';else if(dt&&xdt<dt)e.xd='Exit cannot be before entry'}}
  if(!pair)e.pair='Required';
  if(!session)e.session='Select a session';
- const entry=req('entry'),exit=req('exit'),lots=req('lots'),pl=req('pl'),sl=opt('sl'),tp=opt('tp'),risk=opt('risk'),comm=opt('comm'),ps=opt('pipSize');
+ const entry=req('entry'),lots=req('lots'),exit=opt('exit'),pl=opt('pl'),sl=opt('sl'),tp=opt('tp'),risk=opt('risk'),comm=opt('comm'),ps=opt('pipSize');
  for(const[n,x]of[['entry',entry],['exit',exit],['lots',lots],['sl',sl],['tp',tp],['pipSize',ps]])if(x!=null&&x<=0&&!e[n])e[n]='Must be greater than 0';
  for(const[n,x]of[['risk',risk],['comm',comm]])if(x!=null&&x<0)e[n]='Cannot be negative';
  if(entry>0){const d=side==='Buy'?1:-1;if(sl>0&&!e.sl&&d*(entry-sl)<=0)e.sl=side==='Buy'?'Must be below entry for a buy':'Must be above entry for a sell';if(tp>0&&!e.tp&&d*(tp-entry)<=0)e.tp=side==='Buy'?'Must be above entry for a buy':'Must be below entry for a sell'}
  if(Object.keys(e).length)return{errs:e,trade:null};
- const now=Date.now(),trade=clean({id:id||uid(),dt,pair,side,entry,sl,tp,exit,lots,risk:risk??0,pl,comm:comm??0,pipSize:ps,session,setup:g('setup'),tf:g('tf'),notes:f.get('notes')||'',created:now,updated:now});
+ const t=Date.now(),trade=clean({id:id||uid(),account:g('account'),dt,xdt,pair,side,entry,sl,tp,exit,lots,risk:risk??0,pl,comm:comm??0,pipSize:ps,session,setup:g('setup'),tf:g('tf'),notes:f.get('notes')||'',created:t,updated:t});
  return{errs:trade?{}:{pair:'Trade data is invalid'},trade}}
-
+function accForm(a){
+ const e=!!a,v=a||{type:'Demo',currency:'$',balance:''};
+ openDlg(`<div class="dh"><h2>${e?'Edit account':'Add account'}</h2></div><form id="af" novalidate style="display:contents"><div class="db"><div class="grid2">
+ ${F('name','Account name',`<input name="name" maxlength="40" value="${esc(v.name||'')}" placeholder="Main account">`)}${F('type','Account type',`<select name="type">${ACCT.map(x=>`<option ${v.type===x?'selected':''}>${x}</option>`).join('')}</select>`)}
+ ${F('balance','Starting balance',nin('balance',v.balance,'0.00'))}${F('currency','Currency',`<input name="currency" maxlength="3" value="${esc(v.currency)}" placeholder="USD">`,'Symbol or code, up to 3 characters')}
+ <div class="full">${F('broker','Broker (optional)',`<input name="broker" maxlength="40" value="${esc(v.broker||'')}">`)}</div></div></div>
+ <div class="df"><button type="button" class="btn" data-act="close">Cancel</button><button class="btn primary">${e?'Save changes':'Add account'}</button></div></form>`);
+ $('#af').onsubmit=ev=>{ev.preventDefault();const f=new FormData(ev.target),g=n=>String(f.get(n)).trim(),er={},b=g('balance'),n=Number(b);
+  if(!g('name'))er.name='Required';else if(S.settings.accounts.some(x=>x.id!==a?.id&&x.name.toLowerCase()===g('name').toLowerCase()))er.name='An account with this name exists';
+  if(b==='')er.balance='Required';else if(!Number.isFinite(n)||n<0)er.balance='Enter 0 or a positive number';
+  if(!g('currency'))er.currency='Required';
+  showErrs(ev.target,er);if(Object.keys(er).length)return;
+  const o={id:a?.id||uid(),name:g('name'),type:g('type'),balance:n,currency:g('currency'),broker:g('broker'),created:a?.created||Date.now()};
+  const st={accounts:e?S.settings.accounts.map(x=>x.id===a.id?o:x):[...S.settings.accounts,o]};
+  if(commit(S.trades,st)){closeDlg();toast(e?'Account saved':'Account added');render()}}}
 function detail(id){
- const t=S.trades.find(x=>x.id===id);if(!t)return;const c=calc(t),dash='\u2014';
- const kv=[['Date and time',t.dt.replace('T',' ')],['Pair',esc(t.pair)],['Direction',t.side],['Lot size',t.lots],['Entry price',t.entry],['Exit price',t.exit],['Stop loss',t.sl??dash],['Take profit',t.tp??dash],['Pip size',t.pipSize],['Pips',`<span class="${cls(c.pips)}">${c.pips}</span>`],['Planned R:R',c.rr==null?dash:'1:'+c.rr],['Risk',t.risk?fm(t.risk):dash],['Realized R',c.R==null?dash:c.R+'R'],['Profit / loss',`<span class="${cls(t.pl)}">${fm(t.pl,1)}</span>`],['Commission',fm(t.comm)],['Net P&L',`<span class="${cls(c.net)}">${fm(c.net,1)}</span>`],['Result',`<span class="badge ${c.res}">${c.res}</span>`],['Session',esc(t.session)],['Timeframe',esc(t.tf)||dash],['Setup / strategy',esc(t.setup)||dash]];
- openDlg(`<div class="dh"><h2>${esc(t.pair)} \u00b7 ${t.side}</h2></div><div class="db"><div class="kv">${kv.map(([k,v])=>`<div class="lbl">${k}<b style="color:var(--tx)">${v}</b></div>`).join('')}</div><div class="lbl" style="margin:24px 0 4px">Notes</div>${t.notes?`<div class="notes">${esc(t.notes)}</div>`:'<div class="mp">No notes added.</div>'}</div><div class="df"><button class="btn danger l" data-act="del" data-id="${esc(id)}">Delete</button><button class="btn" data-act="close">Close</button><button class="btn primary" data-act="edit" data-id="${esc(id)}">Edit</button></div>`)}
+ const t=S.trades.find(x=>x.id===id);if(!t)return;const c=calc(t),a=acc(t.account),k=a?.currency||'',dash='\u2014';
+ const kv=[['Account',esc(a?.name||'Unknown')],['Pair',esc(t.pair)],['Direction',t.side],['Entry date and time',fdt(t.dt)],['Exit date and time',fdt(t.xdt)],['Duration',c.dur||dash],['Lot size',t.lots],['Entry price',t.entry],['Exit price',t.exit??dash],['Stop loss',t.sl??dash],['Take profit',t.tp??dash],['Pip size',t.pipSize],['Pips',c.pips==null?dash:`<span class="${cls(c.pips)}">${c.pips}</span>`],['Planned R:R',c.rr==null?dash:'1:'+c.rr],['Realized R',c.R==null?dash:c.R+'R'],['Risk',t.risk?fm(t.risk,0,k):dash],['Profit / loss',t.pl==null?dash:`<span class="${cls(t.pl)}">${fm(t.pl,1,k)}</span>`],['Commission',fm(t.comm,0,k)],['Net P&L',c.net==null?dash:`<span class="${cls(c.net)}">${fm(c.net,1,k)}</span>`],['Result',`<span class="badge ${c.res}">${c.res}</span>`],['Session',esc(t.session)],['Timeframe',esc(t.tf)||dash],['Setup / strategy',esc(t.setup)||dash],['Broker',esc(a?.broker)||dash]];
+ openDlg(`<div class="dh"><h2>${esc(t.pair)} \u00b7 ${t.side}</h2></div><div class="db"><div class="kv">${kv.map(([k,v])=>`<div class="lbl">${k}<b style="color:var(--tx)">${v}</b></div>`).join('')}</div><div class="lbl" style="margin:24px 0 4px">Notes</div>${t.notes?`<div class="notes">${esc(t.notes)}</div>`:'<div class="mp">No notes added.</div>'}</div><div class="df"><button class="btn danger l" data-act="del" data-id="${esc(id)}">Delete</button><button class="btn" data-act="close">Close</button><button class="btn ${c.c?'primary':''}" data-act="edit" data-id="${esc(id)}">Edit</button>${c.c?'':`<button class="btn primary" data-act="exit" data-id="${esc(id)}">Add exit details</button>`}</div>`)}
 
 /* ---------- backup ---------- */
 function exportData(){
- const d={app:'Pipfolio',version:1,exportedAt:new Date().toISOString(),theme:document.documentElement.dataset.theme,auth:getAuth(),settings:S.settings,trades:S.trades};
+ const d={app:'Pipfolio',version:2,exportedAt:new Date().toISOString(),theme:document.documentElement.dataset.theme,auth:getAuth(),settings:S.settings,trades:S.trades};
  const a=document.createElement('a'),u=URL.createObjectURL(new Blob([JSON.stringify(d,null,2)],{type:'application/json'}));
  a.href=u;a.download=`pipfolio-backup-${nowLocal().slice(0,10)}.json`;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1000);toast('Backup exported')}
 async function importFile(file){
@@ -278,26 +336,27 @@ async function importFile(file){
  if(file.size>10*1024*1024)return fail('Import failed: file is larger than 10 MB.');
  let d;try{const txt=await file.text();if(!txt.trim())return fail('Import failed: the file is empty.');d=JSON.parse(txt)}catch{return fail('Import failed: the file is not valid JSON.')}
  if(!d||d.app!=='Pipfolio'||!Array.isArray(d.trades))return fail('Import failed: this is not a Pipfolio backup file.');
- const ok=d.trades.map(clean).filter(Boolean),skipped=d.trades.length-ok.length;
- const dup=new Map();ok.forEach(t=>{const o=dup.get(t.id);if(!o||t.updated>=o.updated)dup.set(t.id,t)});const trades=[...dup.values()];
- if(d.trades.length&&!trades.length)return fail('Import failed: no valid trades were found in this file.');
- const note=`${trades.length} trade${trades.length===1?'':'s'} found${skipped?`, ${skipped} invalid skipped`:''}.`;
+ const ok=d.trades.map(clean).filter(Boolean),skipped=d.trades.length-ok.length,dup=new Map();
+ ok.forEach(t=>{const o=dup.get(t.id);if(!o||t.updated>=o.updated)dup.set(t.id,t)});
+ if(d.trades.length&&!dup.size)return fail('Import failed: no valid trades were found in this file.');
+ const st=cleanSettings(d.settings),trades=norm([...dup.values()],st);
+ const note=`${trades.length} trade${trades.length===1?'':'s'} and ${st.accounts.length} account${st.accounts.length===1?'':'s'} found${skipped?`, ${skipped} invalid trade${skipped>1?'s':''} skipped`:''}.`;
  if(S.importMode==='setup'){
   if(!goodAuth(d.auth))return fail('Import failed: this backup does not contain a password.');
-  if(!persist(trades,cleanSettings(d.settings))||!ls.set(K.auth,JSON.stringify(d.auth)))return fail('Could not save. Browser storage is full or blocked.');
+  if(!persist(trades,st)||!ls.set(K.auth,JSON.stringify(d.auth)))return fail('Could not save. Browser storage is full or blocked.');
   if(d.theme==='dark'||d.theme==='light')setTheme(d.theme);
   return lockScreen('Backup restored. Enter your backup password to open the journal.')}
- const ch=await ask('Import backup',`${note}<br><br><b>Merge</b> adds new trades and keeps your current data. <b>Replace</b> overwrites all trades and settings with the backup.`,[{label:'Cancel',val:null},{label:'Merge',val:'m'},{label:'Replace',cls:'primary',val:'r'}]);
+ const ch=await ask('Import backup',`${note}<br><br><b>Merge</b> adds new accounts and trades and keeps your current data. <b>Replace</b> overwrites all accounts, trades and settings with the backup.`,[{label:'Cancel',val:null},{label:'Merge',val:'m'},{label:'Replace',cls:'primary',val:'r'}]);
  if(!ch)return;
- if(ch==='m'){const m=new Map(S.trades.map(t=>[t.id,t]));let add=0,upd=0;trades.forEach(t=>{const o=m.get(t.id);if(!o){m.set(t.id,t);add++}else if(t.updated>o.updated){m.set(t.id,t);upd++}});
-  if(commit([...m.values()])){toast(`Merged: ${add} added, ${upd} updated`);render()}return}
- const sure=await confirmDel('Replace all data?','This overwrites every trade and setting in this browser. Export a backup first if you might need the current data.','Replace data');
- if(!sure)return;
+ if(ch==='m'){const am=new Map(S.settings.accounts.map(a=>[a.id,a]));st.accounts.forEach(a=>am.has(a.id)||am.set(a.id,a));const ns={accounts:[...am.values()]},m=new Map(S.trades.map(t=>[t.id,t]));let add=0,upd=0;
+  trades.forEach(t=>{const o=m.get(t.id);if(!o){m.set(t.id,t);add++}else if(t.updated>o.updated){m.set(t.id,t);upd++}});
+  if(commit(norm([...m.values()],ns),ns)){toast(`Merged: ${add} added, ${upd} updated`);render()}return}
+ if(!await confirmDel('Replace all data?','This overwrites every account, trade and setting in this browser. Export a backup first if you might need the current data.','Replace data'))return;
  const prev=ls.get(K.auth);
- if(!commit(trades,cleanSettings(d.settings)))return;
+ if(!commit(trades,st))return;
  if(goodAuth(d.auth)&&!ls.set(K.auth,JSON.stringify(d.auth))){if(prev)ls.set(K.auth,prev)}
  if(d.theme==='dark'||d.theme==='light')setTheme(d.theme);
- toast('Backup restored'+(goodAuth(d.auth)?'. Your password is now the one from the backup.':''));render()}
+ S.acc=S.tacc='all';toast('Backup restored'+(goodAuth(d.auth)?'. Your password is now the one from the backup.':''));render()}
 
 /* ---------- actions ---------- */
 const act={
@@ -309,11 +368,18 @@ const act={
  detail:d=>detail(d.id),
  edit:d=>tradeForm(S.trades.find(t=>t.id===d.id)),
  del:async d=>{const t=S.trades.find(x=>x.id===d.id);if(!t)return;if(await confirmDel('Delete this trade?',`${esc(t.pair)} ${t.side} on ${t.dt.replace('T',' ')} will be permanently deleted.`,'Delete trade')&&commit(S.trades.filter(x=>x.id!==d.id))){toast('Trade deleted');render()}},
+ accadd:()=>accForm(),
+ accedit:d=>accForm(acc(d.id)),
+ accview:d=>{S.acc=d.id;S.view='dashboard';render()},
+ accdel:async d=>{const a=acc(d.id);if(!a)return;if(S.settings.accounts.length<2)return toast('Keep at least one account. Add another before deleting this one.','error');
+  const n=S.trades.filter(t=>t.account===d.id).length;
+  if(await confirmDel('Delete this account?',`${esc(a.name)} will be deleted${n?` along with its ${n} trade${n>1?'s':''}`:''}. This cannot be undone. Export a backup first if you might need it.`,'Delete account')){const st={accounts:S.settings.accounts.filter(x=>x.id!==d.id)};if(commit(S.trades.filter(t=>t.account!==d.id),st)){if(S.acc===d.id)S.acc='all';if(S.tacc===d.id)S.tacc='all';toast('Account deleted');render()}}},
+ exit:d=>tradeForm(S.trades.find(t=>t.id===d.id),'xd'),
  export:exportData,
  import:()=>{S.importMode='main';$('#file').click()},
  restore:()=>{S.importMode='setup';$('#file').click()},
  forgot:async()=>{if(await confirmDel('Erase journal?','Passwords cannot be recovered. You can erase this browser\'s journal and start over, or restore from a backup file afterwards. All data here will be deleted.','Erase all data')){[K.data,K.auth].forEach(ls.del);lockScreen('Journal erased. Create a new password.')}},
- erase:async()=>{if(await confirmDel('Erase all data?','All trades, settings and your password will be permanently deleted from this browser.','Erase all data')){[K.data,K.auth].forEach(ls.del);S.trades=[];S.settings=cleanSettings();closeDlg();lockScreen('Journal erased. Create a new password.')}},
+ erase:async()=>{if(await confirmDel('Erase all data?','All trades, settings and your password will be permanently deleted from this browser.','Erase all data')){[K.data,K.auth].forEach(ls.del);S.trades=[];S.settings=cleanSettings();S.acc=S.tacc='all';closeDlg();lockScreen('Journal erased. Create a new password.')}},
  chpw:()=>{openDlg(`<div class="dh"><h2>Change password</h2></div><form id="cf" novalidate style="display:contents"><div class="db"><div class="grid2"><div class="full">${F('cur','Current password','<input type="password" name="cur" autocomplete="current-password">')}</div>${F('n1','New password','<input type="password" name="n1" autocomplete="new-password">')}${F('n2','Confirm new password','<input type="password" name="n2" autocomplete="new-password">')}</div></div><div class="df"><button type="button" class="btn" data-act="close">Cancel</button><button class="btn primary" id="cb">Change password</button></div></form>`);
   $('#cf').onsubmit=async ev=>{ev.preventDefault();const f=new FormData(ev.target),e={};
    if(!window.crypto?.subtle)e.cur='Secure hashing is unavailable in this context';
@@ -325,11 +391,7 @@ const act={
 };
 document.addEventListener('click',e=>{const a=e.target.closest('[data-act]');if(a&&act[a.dataset.act])act[a.dataset.act](a.dataset)});
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches('tr[data-act]'))act.detail(e.target.dataset)});
-document.addEventListener('input',e=>{if(e.target.id==='q'||e.target.id==='res'){S.q=$('#q').value;S.res=$('#res').value;const rows=sorted().reverse(),q=S.q.trim().toLowerCase();$('#tl').innerHTML=tradeTable(rows.filter(x=>(S.res==='all'||x.res===S.res)&&(!q||(x.t.pair+' '+x.t.setup+' '+x.t.notes).toLowerCase().includes(q))),rows.length)}});
-document.addEventListener('submit',e=>{if(e.target.id!=='pf')return;e.preventDefault();const f=new FormData(e.target),er={},cu=String(f.get('cur')).trim(),b=String(f.get('bal')).trim(),n=Number(b);
- if(!cu)er.cur='Required';if(b===''||!Number.isFinite(n))er.bal='Enter a valid number';
- e.target.querySelectorAll('.f').forEach((l,i)=>{const k=['cur','bal'][i];l.classList.toggle('bad',!!er[k]);$('.err',l).textContent=er[k]||''});
- if(!Object.keys(er).length&&commit(S.trades,{currency:cu,startBalance:n}))toast('Preferences saved')});
+document.addEventListener('input',e=>{const i=e.target.id;if(i==='q'||i==='res'||i==='tacc'){S.q=$('#q').value;S.res=$('#res').value;S.tacc=$('#tacc').value;$('#tl').innerHTML=tradeTable(tfilter(),S.trades.length)}if(i==='accf'){S.acc=e.target.value;render()}});
 $('#file').onchange=async e=>{const f=e.target.files[0];e.target.value='';await importFile(f)};
 
 /* ---------- start ---------- */
