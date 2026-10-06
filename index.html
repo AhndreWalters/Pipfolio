@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pipfolio</title>
+<style>
+:root{--bg:#f6f7f9;--bg2:#eceff4;--card:#fff;--bd:#e2e5ea;--tx:#1a2230;--mut:#667085;--ac:#2f5fd0;--acx:#fff;--acs:#eaf0fd;--pos:#1a9a5f;--neg:#d04444;--in:#fff;--hov:#f3f5f8}
+[data-theme=dark]{--bg:#0e1218;--bg2:#141a24;--card:#171d27;--bd:#262e3a;--tx:#e7eaf0;--mut:#8b95a5;--ac:#6c96f2;--acx:#0e1218;--acs:#1c2740;--pos:#3dc28a;--neg:#f06b6b;--in:#10151d;--hov:#1d2531}
+*{box-sizing:border-box;margin:0}
+body{font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--tx);background:var(--bg) linear-gradient(180deg,var(--bg2),var(--bg) 360px) no-repeat;min-height:100vh;font-variant-numeric:tabular-nums}
+h1{font-size:22px;line-height:28px;font-weight:650}h2{font-size:16px;line-height:24px;font-weight:600}
+.wrap{max-width:1120px;margin:0 auto;padding:24px 16px 48px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px}
+.brand{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:700;letter-spacing:-.2px}
+.logo{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--ac),#5b86e8);color:var(--acx);display:grid;place-items:center;font-size:16px;font-weight:700}
+.acts,.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--bd);margin-bottom:24px}
+.tab{height:40px;padding:0 16px;border:0;border-bottom:2px solid transparent;background:none;color:var(--mut);font:inherit;font-weight:500;cursor:pointer}
+.tab.on{color:var(--ac);border-color:var(--ac)}
+.btn{height:38px;padding:0 16px;border-radius:8px;border:1px solid var(--bd);background:var(--card);color:var(--tx);font:inherit;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
+.btn:hover{background:var(--hov)}.btn:disabled{opacity:.6;cursor:default}
+.btn.primary{background:var(--ac);border-color:var(--ac);color:var(--acx)}.btn.primary:hover{filter:brightness(1.07)}
+.btn.danger{color:var(--neg)}.btn.danger.solid{background:var(--neg);border-color:var(--neg);color:#fff}
+.btn.block{width:100%}
+:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:20px}
+.page-h{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:16px;min-height:38px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px}
+.stat{padding:16px 20px;min-height:92px}
+.lbl{color:var(--mut);font-size:13px;line-height:20px}
+.val{font-size:22px;line-height:32px;font-weight:650;margin-top:4px}
+.sub{color:var(--mut);font-size:12px;line-height:16px}
+.pos{color:var(--pos)}.neg{color:var(--neg)}
+.charts{display:grid;grid-template-columns:repeat(6,1fr);gap:16px}
+.c3{grid-column:span 3}.c2{grid-column:span 2}
+.chart{height:240px;margin-top:12px;position:relative}.chart svg{display:block}
+.chart-empty{height:100%;display:grid;place-items:center;color:var(--mut);text-align:center}
+svg .grid{stroke:var(--bd);stroke-width:1}svg .zero{stroke:var(--mut);stroke-width:1}
+svg .tick{fill:var(--mut);font-size:11px}svg rect.pos{fill:var(--pos)}svg rect.neg{fill:var(--neg)}
+svg .ln{fill:none;stroke:var(--ac);stroke-width:2;stroke-linejoin:round}svg .dot{fill:var(--ac)}
+.empty{text-align:center;padding:48px 20px}.empty p{color:var(--mut);margin:4px 0 16px}
+.filters{display:flex;gap:8px;margin-bottom:16px}
+input,select,textarea{width:100%;height:38px;padding:0 12px;border:1px solid var(--bd);border-radius:8px;background:var(--in);color:var(--tx);font:inherit}
+textarea{height:96px;padding:8px 12px;resize:vertical}
+.filters input{flex:1}.filters select{width:160px}
+.tw{overflow-x:auto;padding:0}
+table{width:100%;border-collapse:collapse;min-width:760px}
+th,td{padding:12px 16px;text-align:left;border-bottom:1px solid var(--bd);white-space:nowrap}
+th{color:var(--mut);font-weight:500;font-size:13px}tr:last-child td{border-bottom:0}
+td.n,th.n{text-align:right}tbody tr{cursor:pointer}tbody tr:hover{background:var(--hov)}
+.badge{display:inline-block;padding:2px 10px;border-radius:99px;font-size:12px;font-weight:600;background:var(--hov)}
+.badge.Win{color:var(--pos)}.badge.Loss{color:var(--neg)}.badge.Breakeven{color:var(--mut)}
+.count{color:var(--mut);font-size:13px;margin-top:12px}
+.stack{display:grid;gap:16px;max-width:720px}.stack p{color:var(--mut);margin:4px 0 16px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+dialog{border:1px solid var(--bd);border-radius:14px;padding:0;background:var(--card);color:var(--tx);width:min(680px,calc(100vw - 24px));max-height:calc(100vh - 24px);margin:auto;overflow:hidden}
+dialog[open]{display:flex;flex-direction:column}dialog.sm{width:min(440px,calc(100vw - 24px))}
+dialog::backdrop{background:rgba(10,14,20,.5)}
+.dh{padding:20px 24px;border-bottom:1px solid var(--bd)}.db{padding:24px;overflow-y:auto}
+.df{padding:16px 24px;border-top:1px solid var(--bd);display:flex;gap:8px;justify-content:flex-end}.df .l{margin-right:auto}
+.mp{color:var(--mut)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.full{grid-column:1/-1}
+.f{display:block}.f>span{display:block;font-size:13px;font-weight:500;margin-bottom:4px}
+.f.bad input,.f.bad select{border-color:var(--neg)}.err{display:block;color:var(--neg);font-size:12px;margin-top:4px}
+.f small.hint{display:block;color:var(--mut);font-size:12px;margin-top:4px}
+.calc{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;padding:12px 16px;border:1px solid var(--bd);border-radius:8px;background:var(--hov)}
+.calc b{display:block;font-size:15px;font-weight:600}
+.kv{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 24px}.kv b{display:block;font-weight:600;word-break:break-word}
+.notes{white-space:pre-wrap;padding:12px 16px;border:1px solid var(--bd);border-radius:8px;background:var(--hov)}
+.lock{min-height:100vh;display:grid;place-items:center;padding:16px}
+.lock .card{width:min(400px,100%);padding:32px}.lock form{display:grid;gap:16px;margin-top:24px}
+.lock .brand{margin-bottom:8px}.lock a{color:var(--ac);cursor:pointer;background:none;border:0;font:inherit}
+.links{display:flex;justify-content:space-between;margin-top:16px;font-size:13px}
+#toasts{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);display:grid;gap:8px;z-index:99;width:min(420px,calc(100vw - 24px))}
+.toast{padding:12px 16px;border-radius:8px;background:var(--tx);color:var(--bg);font-weight:500}.toast.error{background:var(--neg);color:#fff}
+@media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}.c3,.c2{grid-column:1/-1}.kv{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.top{flex-wrap:wrap}.grid2,.two{grid-template-columns:1fr}.calc{grid-template-columns:1fr 1fr}.filters{flex-direction:column}.filters select{width:100%}.stat{padding:16px}.val{font-size:20px}.page-h{flex-wrap:wrap}.dh,.db,.df{padding-left:16px;padding-right:16px}.df{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<noscript><p style="padding:24px">Pipfolio needs JavaScript enabled.</p></noscript>
+<div id="app"></div><dialog id="dlg"></dialog><div id="toasts" role="status"></div>
+<input type="file" id="file" accept=".json,application/json" hidden>
+<script>
+'use strict';
+const K={data:'pipfolio:v1',auth:'pipfolio:auth',theme:'pipfolio:theme'};
+const SIDES=['Buy','Sell'],SESS=['Asian','London','New York','London/NY Overlap','Other'],ITER=200000;
+const S={trades:[],settings:{currency:'$',startBalance:0},view:'dashboard',q:'',res:'all',importMode:'main'};
+const $=(s,r=document)=>r.querySelector(s);
+const app=$('#app'),dlg=$('#dlg');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const r2=x=>Math.round((x+Number.EPSILON)*100)/100;
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,9);
+const ls={get(k){try{return localStorage.getItem(k)}catch{return null}},set(k,v){try{localStorage.setItem(k,v);return true}catch{return false}},del(k){try{localStorage.removeItem(k)}catch{}}};
+function toast(m,type=''){const t=document.createElement('div');t.className='toast '+type;t.textContent=m;$('#toasts').append(t);setTimeout(()=>t.remove(),type?5000:3000)}
+function setTheme(t,save=true){document.documentElement.dataset.theme=t;if(save)ls.set(K.theme,t)}
+setTheme(ls.get(K.theme)||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'),false);
+
+/* ---------- password ---------- */
+const b64=b=>btoa(String.fromCharCode(...new Uint8Array(b)));
+const unb64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function derive(pw,salt,iter=ITER){const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveBits']);return b64(await crypto.subtle.deriveBits({name:'PBKDF2',salt,iterations:iter,hash:'SHA-256'},k,256))}
+async function makeAuth(pw){const salt=crypto.getRandomValues(new Uint8Array(16));return{salt:b64(salt),hash:await derive(pw,salt),iter:ITER}}
+const goodAuth=a=>a&&typeof a.salt==='string'&&typeof a.hash==='string'&&Number.isInteger(a.iter)&&a.iter>=1000&&a.iter<=2e6;
+function getAuth(){try{const a=JSON.parse(ls.get(K.auth));return goodAuth(a)?a:null}catch{return null}}
+const checkPw=async(pw,a)=>(await derive(pw,unb64(a.salt),a.iter))===a.hash;
+
+/* ---------- data ---------- */
+const defPip=p=>/JPY/.test(p)?0.01:/XAU|GOLD/.test(p)?0.1:0.0001;
+const num=v=>v===''||v==null?null:(Number.isFinite(+v)?+v:NaN);
+function clean(t){
+ if(!t||typeof t!=='object')return null;
+ const o={id:String(t.id||''),dt:String(t.dt||'').slice(0,16),pair:String(t.pair||'').trim().toUpperCase().slice(0,20),side:t.side,entry:num(t.entry),sl:num(t.sl),tp:num(t.tp),exit:num(t.exit),lots:num(t.lots),risk:num(t.risk)??0,pl:num(t.pl),comm:num(t.comm)??0,pipSize:num(t.pipSize),session:SESS.includes(t.session)?t.session:'Other',setup:String(t.setup||'').trim().slice(0,100),tf:String(t.tf||'').trim().slice(0,20),notes:String(t.notes||'').slice(0,5000),created:Number(t.created)||Date.now(),updated:Number(t.updated)||Date.now()};
+ if(!o.id||!/^\d{4}-\d\d-\d\dT\d\d:\d\d$/.test(o.dt)||!o.pair||!SIDES.includes(o.side))return null;
+ for(const k of['entry','exit','lots','pl'])if(o[k]==null||isNaN(o[k]))return null;
+ for(const k of['sl','tp','risk','comm'])if(isNaN(o[k]))return null;
+ if(!(o.entry>0&&o.exit>0&&o.lots>0)||o.risk<0||o.comm<0)return null;
+ if(!(o.pipSize>0))o.pipSize=defPip(o.pair);
+ return o}
+function cleanSettings(s){s=s&&typeof s==='object'?s:{};const b=Number(s.startBalance);return{currency:String(s.currency??'$').slice(0,3),startBalance:Number.isFinite(b)?b:0}}
+function load(){const raw=ls.get(K.data);if(!raw)return;try{const d=JSON.parse(raw);S.trades=(Array.isArray(d.trades)?d.trades:[]).map(clean).filter(Boolean);S.settings=cleanSettings(d.settings)}catch{ls.set('pipfolio:corrupt-copy',raw);toast('Stored data could not be read. A raw copy was kept in browser storage.','error')}}
+const persist=(trades,settings)=>ls.set(K.data,JSON.stringify({version:1,trades,settings}));
+function commit(trades,settings=S.settings){if(!persist(trades,settings)){toast('Could not save. Browser storage is full or blocked.','error');return false}S.trades=trades;S.settings=settings;return true}
+const calc=t=>{const d=t.side==='Buy'?1:-1,net=r2(t.pl-t.comm);return{pips:Math.round(d*(t.exit-t.entry)/t.pipSize*10)/10,net,rr:t.sl!=null&&t.tp!=null&&t.sl!==t.entry?Math.round(Math.abs(t.tp-t.entry)/Math.abs(t.entry-t.sl)*100)/100:null,R:t.risk>0?Math.round(net/t.risk*100)/100:null,res:net>0?'Win':net<0?'Loss':'Breakeven'}};
+const sorted=()=>[...S.trades].sort((a,b)=>a.dt<b.dt?-1:a.dt>b.dt?1:a.created-b.created).map(t=>({t,...calc(t)}));
+const cur=()=>S.settings.currency;
+const fm=(n,plus)=>(n<0?'\u2212':plus&&n>0?'+':'')+cur()+Math.abs(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+const cls=n=>n>0?'pos':n<0?'neg':'';
+const short=v=>Math.abs(v)>=1000?(v/1000).toLocaleString(undefined,{maximumFractionDigits:1})+'k':String(v);
+const nowLocal=()=>{const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16)};
+function stats(){
+ const ts=sorted(),w=ts.filter(x=>x.res==='Win'),l=ts.filter(x=>x.res==='Loss'),sum=a=>r2(a.reduce((s,x)=>s+x.net,0));
+ const gw=sum(w),gl=Math.abs(sum(l)),rrs=ts.filter(x=>x.rr!=null);
+ let st=0,sr='';if(ts.length){sr=ts[ts.length-1].res;if(sr!=='Breakeven')for(let i=ts.length-1;i>=0&&ts[i].res===sr;i--)st++}
+ return{ts,w,l,n:ts.length,be:ts.length-w.length-l.length,net:sum(ts),wr:ts.length?w.length/ts.length*100:0,aw:w.length?r2(gw/w.length):0,al:l.length?r2(-gl/l.length):0,pf:gl?gw/gl:(gw?Infinity:null),rr:rrs.length?rrs.reduce((s,x)=>s+x.rr,0)/rrs.length:null,best:ts.length?ts.reduce((a,b)=>b.net>a.net?b:a):null,worst:ts.length?ts.reduce((a,b)=>b.net<a.net?b:a):null,st,sr}}
+
+/* ---------- dialogs ---------- */
+const closeDlg=()=>{dlg.onclose=null;if(dlg.open)dlg.close()};
+function openDlg(html,c=''){dlg.onclose=null;dlg.className=c;dlg.innerHTML=html;if(!dlg.open)dlg.showModal()}
+function ask(title,msg,btns){return new Promise(res=>{openDlg(`<div class="dh"><h2>${title}</h2></div><div class="db"><p class="mp">${msg}</p></div><div class="df">${btns.map((b,i)=>`<button class="btn ${b.cls||''}" data-i="${i}">${b.label}</button>`).join('')}</div>`,'sm');dlg.onclose=()=>res(null);dlg.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>{closeDlg();res(btns[b.dataset.i].val)})})}
+const confirmDel=(t,m,label)=>ask(t,m,[{label:'Cancel',val:false},{label,cls:'danger solid',val:true}]);
+
+/* ---------- lock screen ---------- */
+function lockScreen(note){
+ const a=getAuth(),setup=!a;
+ app.innerHTML=`<div class="lock"><div class="card"><div class="brand"><span class="logo">P</span>Pipfolio</div><p class="mp">${setup?'Create a password to protect your journal. It is stored only in this browser.':'Enter your password to open your journal.'}</p>${note?`<p class="pos" style="margin-top:8px">${note}</p>`:''}
+ <form id="lf" novalidate><label class="f"><span>${setup?'New password':'Password'}</span><input type="password" name="pw" autocomplete="${setup?'new-password':'current-password'}" autofocus></label>
+ ${setup?'<label class="f"><span>Confirm password</span><input type="password" name="pw2" autocomplete="new-password"><small class="hint">At least 8 characters. There is no recovery if you forget it, so keep an exported backup.</small></label>':''}
+ <small class="err" id="lerr"></small><button class="btn primary block" id="lb">${setup?'Create password':'Unlock'}</button></form>
+ <div class="links">${setup?'<a data-act="restore">Restore from backup</a>':'<a data-act="forgot">Forgot password?</a>'}<span></span></div></div></div>`;
+ $('#lf').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target),pw=f.get('pw'),er=$('#lerr'),b=$('#lb');er.textContent='';
+  if(!window.crypto?.subtle){er.textContent='This browser blocks secure hashing. Open Pipfolio over HTTPS (such as GitHub Pages) or localhost.';return}
+  if(setup){if(pw.length<8){er.textContent='Password must be at least 8 characters.';return}if(pw!==f.get('pw2')){er.textContent='Passwords do not match.';return}}
+  else if(!pw){er.textContent='Enter your password.';return}
+  const lab=b.textContent;b.disabled=true;b.textContent=setup?'Creating\u2026':'Unlocking\u2026';await new Promise(r=>setTimeout(r,30));
+  try{if(setup){if(!ls.set(K.auth,JSON.stringify(await makeAuth(pw)))){er.textContent='Could not save. Browser storage is blocked.';return}}
+   else if(!await checkPw(pw,a)){er.textContent='Incorrect password.';return}
+   load();S.view='dashboard';render()}catch{er.textContent='Something went wrong. Please try again.'}finally{b.disabled=false;b.textContent=lab}}}
+
+/* ---------- shell & views ---------- */
+function render(){
+ const v=S.view;
+ app.innerHTML=`<div class="wrap"><div class="top"><div class="brand"><span class="logo">P</span>Pipfolio</div><div class="acts"><button class="btn" data-act="theme">${document.documentElement.dataset.theme==='dark'?'Light mode':'Dark mode'}</button><button class="btn" data-act="lock">Lock</button><button class="btn primary" data-act="add">Add trade</button></div></div>
+ <nav class="tabs">${[['dashboard','Dashboard'],['trades','Trades'],['settings','Settings']].map(([k,l])=>`<button class="tab ${v===k?'on':''}" data-act="view" data-v="${k}">${l}</button>`).join('')}</nav>
+ <main>${v==='dashboard'?dashboard():v==='trades'?tradesView():settingsView()}</main></div>`;
+ if(v==='dashboard'&&S.trades.length)drawCharts()}
+const emptyState=()=>`<div class="card empty"><h2>No trades yet</h2><p>Add your first trade to start tracking your performance.</p><button class="btn primary" data-act="add">Add trade</button></div>`;
+function dashboard(){
+ if(!S.trades.length)return`<div class="page-h"><h1>Dashboard</h1></div>${emptyState()}`;
+ const s=stats(),c=[
+ ['Total trades',s.n,s.be?s.be+' breakeven':''],['Winning trades',s.w.length,'','pos'],['Losing trades',s.l.length,'','neg'],['Win rate',s.wr.toFixed(1)+'%'],
+ ['Net P&L',fm(s.net,1),'',cls(s.net)],['Average win',fm(s.aw),'','pos'],['Average loss',fm(s.al),'',s.al?'neg':''],['Profit factor',s.pf==null?'\u2014':s.pf===Infinity?'\u221e':s.pf.toFixed(2)],
+ ['Average R:R',s.rr==null?'\u2014':'1:'+s.rr.toFixed(2),'Planned, where SL and TP are set'],['Best trade',fm(s.best.net,1),esc(s.best.t.pair),cls(s.best.net)],['Worst trade',fm(s.worst.net,1),esc(s.worst.t.pair),cls(s.worst.net)],
+ ['Current streak',s.st?s.st+' '+(s.sr==='Win'?'win':'loss')+(s.st>1?'s':''):'None','',s.st?(s.sr==='Win'?'pos':'neg'):'']];
+ return`<div class="page-h"><h1>Dashboard</h1></div><div class="stats">${c.map(([l,v,sub,k])=>`<div class="card stat"><div class="lbl">${l}</div><div class="val ${k||''}">${v}</div><div class="sub">${sub||'&nbsp;'}</div></div>`).join('')}</div>
+ <div class="charts">${[['Equity curve','eq','c3'],['P&L over time (by day)','day','c3'],['Win vs. loss','wl','c2'],['Performance by pair','pair','c2'],['Performance by session','sess','c2']].map(([t,id,k])=>`<div class="card ${k}"><h2>${t}</h2><div class="chart" data-chart="${id}"></div></div>`).join('')}</div>`}
+
+const CH=240,M={l:52,r:14,t:14,b:30};
+const niceStep=x=>{const p=10**Math.floor(Math.log10(x)),f=x/p;return(f<=1?1:f<=2?2:f<=5?5:10)*p};
+function axis(min,max){if(min===max){min-=1;max+=1}const st=niceStep((max-min)/4),lo=Math.floor(min/st)*st,hi=Math.ceil(max/st)*st,ticks=[];for(let v=lo;v<=hi+st/2;v+=st)ticks.push(Math.round(v*1e6)/1e6);return{lo,hi:ticks[ticks.length-1],ticks}}
+function frame(w,ax){const ih=CH-M.t-M.b,y=v=>M.t+ih*(1-(v-ax.lo)/(ax.hi-ax.lo));return{y,g:ax.ticks.map(v=>`<line class="grid" x1="${M.l}" x2="${w-M.r}" y1="${y(v)}" y2="${y(v)}"/><text class="tick" x="${M.l-8}" y="${y(v)+4}" text-anchor="end">${short(v)}</text>`).join('')}}
+function xl(w,labels,xf){const step=Math.ceil(labels.length/Math.max(1,Math.floor((w-M.l-M.r)/64)));return labels.map((l,i)=>i%step?'':`<text class="tick" x="${xf(i)}" y="${CH-8}" text-anchor="middle">${esc(l.length>9?l.slice(0,8)+'\u2026':l)}</text>`).join('')}
+const noData=m=>`<div class="chart-empty">${m}</div>`;
+function barChart(w,items){if(!items.length)return noData('No data yet');
+ const vs=items.map(i=>i.v),ax=axis(Math.min(0,...vs),Math.max(0,...vs)),{y,g}=frame(w,ax),n=items.length,iw=(w-M.l-M.r)/n,bw=Math.min(40,iw*.6),xc=i=>M.l+iw*(i+.5);
+ return`<svg viewBox="0 0 ${w} ${CH}" width="${w}" height="${CH}">${g}<line class="zero" x1="${M.l}" x2="${w-M.r}" y1="${y(0)}" y2="${y(0)}"/>${items.map((it,i)=>{const a=y(0),b=y(it.v);return`<rect class="${it.v>=0?'pos':'neg'}" x="${xc(i)-bw/2}" y="${Math.min(a,b)}" width="${bw}" height="${Math.max(1,Math.abs(b-a))}" rx="3"><title>${esc(it.l)}: ${fm(it.v,1)}</title></rect>`}).join('')}${xl(w,items.map(i=>i.l),xc)}</svg>`}
+function lineChart(w,pts){if(pts.length<2)return noData('Add trades to see this chart');
+ const vs=pts.map(p=>p.v),ax=axis(Math.min(...vs),Math.max(...vs)),{y,g}=frame(w,ax),n=pts.length,x=i=>M.l+(w-M.l-M.r)*i/(n-1),d=pts.map((p,i)=>`${i?'L':'M'}${x(i).toFixed(1)} ${y(p.v).toFixed(1)}`).join('');
+ return`<svg viewBox="0 0 ${w} ${CH}" width="${w}" height="${CH}"><defs><linearGradient id="eg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--ac);stop-opacity:.22"/><stop offset="1" style="stop-color:var(--ac);stop-opacity:0"/></linearGradient></defs>${g}<path d="${d}L${x(n-1)} ${y(ax.lo)}L${x(0)} ${y(ax.lo)}Z" fill="url(#eg)"/><path class="ln" d="${d}"/>${n<=40?pts.map((p,i)=>`<circle class="dot" cx="${x(i)}" cy="${y(p.v)}" r="3"><title>${esc(p.l)}: ${fm(p.v)}</title></circle>`).join(''):''}${xl(w,pts.map(p=>p.l),x)}</svg>`}
+function donut(w,s){const parts=[['Wins',s.w.length,'var(--pos)'],['Losses',s.l.length,'var(--neg)'],['Breakeven',s.be,'var(--mut)']],r=62,C=2*Math.PI*r,cx=w/2;let off=0;
+ const seg=parts.filter(p=>p[1]).map(p=>{const len=p[1]/s.n*C,e=`<circle cx="${cx}" cy="100" r="${r}" fill="none" stroke="${p[2]}" stroke-width="22" stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-off}" transform="rotate(-90 ${cx} 100)"><title>${p[0]}: ${p[1]}</title></circle>`;off+=len;return e}).join('');
+ return`<svg viewBox="0 0 ${w} ${CH}" width="${w}" height="${CH}">${seg}<text x="${cx}" y="106" text-anchor="middle" style="fill:var(--tx);font-size:18px;font-weight:650">${s.wr.toFixed(0)}%</text>${parts.map((p,i)=>{const x=w*(2*i+1)/6;return`<circle cx="${x-24}" cy="${CH-14}" r="4" fill="${p[2]}"/><text class="tick" x="${x-16}" y="${CH-10}">${p[0]} ${p[1]}</text>`}).join('')}</svg>`}
+function group(ts,key){const m=new Map();ts.forEach(x=>m.set(key(x),r2((m.get(key(x))||0)+x.net)));return[...m].map(([l,v])=>({l,v}))}
+function drawCharts(){const s=stats();if(!s.n)return;
+ let run=S.settings.startBalance;const eq=[{l:'Start',v:r2(run)},...s.ts.map(x=>({l:x.t.dt.slice(5,10),v:(run=r2(run+x.net))}))];
+ const day=group(s.ts,x=>x.t.dt.slice(0,10)).slice(-20).map(i=>({l:i.l.slice(5),v:i.v}));
+ const pair=group(s.ts,x=>x.t.pair).sort((a,b)=>b.v-a.v).slice(0,8),sess=group(s.ts,x=>x.t.session).sort((a,b)=>SESS.indexOf(a.l)-SESS.indexOf(b.l));
+ const f={eq:w=>lineChart(w,eq),day:w=>barChart(w,day),wl:w=>donut(w,s),pair:w=>barChart(w,pair),sess:w=>barChart(w,sess)};
+ document.querySelectorAll('[data-chart]').forEach(el=>{const w=Math.max(240,Math.floor(el.clientWidth));el.innerHTML=f[el.dataset.chart](w)})}
+let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{if(S.view==='dashboard'&&$('[data-chart]'))drawCharts()},150)});
+
+function tradesView(){
+ const rows=sorted().reverse(),q=S.q.trim().toLowerCase(),fl=rows.filter(x=>(S.res==='all'||x.res===S.res)&&(!q||(x.t.pair+' '+x.t.setup+' '+x.t.notes).toLowerCase().includes(q)));
+ const head=`<div class="page-h"><h1>Trades</h1></div>`;
+ if(!rows.length)return head+emptyState();
+ return head+`<div class="filters"><input id="q" type="search" placeholder="Search pair, setup or notes" value="${esc(S.q)}" aria-label="Search trades"><select id="res" aria-label="Filter by result">${['all','Win','Loss','Breakeven'].map(r=>`<option value="${r}" ${S.res===r?'selected':''}>${r==='all'?'All results':r}</option>`).join('')}</select></div>
+ <div id="tl">${tradeTable(fl,rows.length)}</div>`}
+function tradeTable(fl,total){
+ if(!fl.length)return`<div class="card empty"><h2>No matching trades</h2><p>Try a different search or result filter.</p></div>`;
+ return`<div class="card tw"><table><thead><tr><th>Date</th><th>Pair</th><th>Side</th><th class="n">Pips</th><th class="n">R:R</th><th class="n">Net P&L</th><th>Result</th><th>Session</th></tr></thead><tbody>${fl.map(x=>`<tr data-act="detail" data-id="${esc(x.t.id)}" tabindex="0"><td>${x.t.dt.replace('T',' ')}</td><td><b>${esc(x.t.pair)}</b></td><td>${x.t.side}</td><td class="n ${cls(x.pips)}">${x.pips}</td><td class="n">${x.rr==null?'\u2014':'1:'+x.rr}</td><td class="n ${cls(x.net)}">${fm(x.net,1)}</td><td><span class="badge ${x.res}">${x.res}</span></td><td>${esc(x.t.session)}</td></tr>`).join('')}</tbody></table></div><div class="count">Showing ${fl.length} of ${total} trade${total>1?'s':''}</div>`}
+
+function settingsView(){
+ return`<div class="page-h"><h1>Settings</h1></div><div class="stack">
+ <div class="card"><h2>Backup and restore</h2><p>Export everything (trades, settings and password) to one file. Import it in any browser or device to restore your journal.</p><div class="row"><button class="btn primary" data-act="export">Export backup</button><button class="btn" data-act="import">Import backup</button></div></div>
+ <div class="card"><h2>Preferences</h2><p>Used for formatting and the equity curve.</p><form id="pf" novalidate><div class="grid2"><label class="f"><span>Currency symbol</span><input name="cur" maxlength="3" value="${esc(S.settings.currency)}"><small class="err"></small></label><label class="f"><span>Starting balance</span><input name="bal" type="number" step="any" value="${S.settings.startBalance}"><small class="err"></small></label></div><div class="row" style="margin-top:16px"><button class="btn primary">Save preferences</button></div></form></div>
+ <div class="card"><h2>Security</h2><p>The password locks the journal when it is opened. Data stays in this browser's storage and is not encrypted, so avoid using shared computers.</p><div class="row"><button class="btn" data-act="chpw">Change password</button><button class="btn" data-act="lock">Lock now</button></div></div>
+ <div class="card"><h2>Erase journal</h2><p>Permanently deletes all trades, settings and the password from this browser. Export a backup first.</p><button class="btn danger" data-act="erase">Erase all data</button></div></div>`}
+
+/* ---------- trade form ---------- */
+const F=(n,l,inp,hint)=>`<label class="f" data-f="${n}"><span>${l}</span>${inp}<small class="err"></small>${hint?`<small class="hint">${hint}</small>`:''}</label>`;
+const nin=(n,v,ph='')=>`<input name="${n}" type="number" step="any" inputmode="decimal" value="${v??''}" placeholder="${ph}">`;
+function tradeForm(t){
+ const e=!!t,v=t||{dt:nowLocal(),side:'Buy',session:'',risk:'',comm:''};
+ const pairs=[...new Set(['EURUSD','GBPUSD','USDJPY','AUDUSD','USDCAD','USDCHF','NZDUSD','XAUUSD','GBPJPY','EURJPY',...S.trades.map(x=>x.pair)])],setups=[...new Set(S.trades.map(x=>x.setup).filter(Boolean))];
+ openDlg(`<div class="dh"><h2>${e?'Edit trade':'Add trade'}</h2></div><form id="tf" novalidate style="display:contents"><div class="db"><div class="grid2">
+ ${F('dt','Date and time',`<input name="dt" type="datetime-local" value="${v.dt}" max="${nowLocal()}">`)}
+ ${F('pair','Pair / instrument',`<input name="pair" list="pl" value="${esc(v.pair||'')}" placeholder="EURUSD" autocapitalize="characters" maxlength="20"><datalist id="pl">${pairs.map(p=>`<option value="${esc(p)}">`).join('')}</datalist>`)}
+ ${F('side','Direction',`<select name="side">${SIDES.map(s=>`<option ${v.side===s?'selected':''}>${s}</option>`).join('')}</select>`)}
+ ${F('lots','Lot size',nin('lots',v.lots,'0.10'))}
+ ${F('entry','Entry price',nin('entry',v.entry))}${F('exit','Exit price',nin('exit',v.exit))}
+ ${F('sl','Stop loss',nin('sl',v.sl),'Optional')}${F('tp','Take profit',nin('tp',v.tp),'Optional')}
+ ${F('risk','Risk ('+esc(cur())+')',nin('risk',v.risk,'0.00'),'Amount risked. Used for realized R.')}${F('pipSize','Pip size',nin('pipSize',e?v.pipSize:'','Auto'),'Leave blank for auto (JPY 0.01, XAU 0.1, others 0.0001)')}
+ ${F('pl','Profit / loss ('+esc(cur())+')',nin('pl',v.pl,'0.00'),'Before commission. Use a negative number for a loss.')}${F('comm','Commission ('+esc(cur())+')',nin('comm',v.comm,'0.00'),'Enter as a positive cost')}
+ ${F('session','Trading session',`<select name="session"><option value="">Select session</option>${SESS.map(s=>`<option ${v.session===s?'selected':''}>${s}</option>`).join('')}</select>`)}
+ ${F('tf','Timeframe',`<input name="tf" value="${esc(v.tf||'')}" maxlength="20" placeholder="H1">`)}
+ <div class="full">${F('setup','Setup / strategy',`<input name="setup" list="sl" value="${esc(v.setup||'')}" maxlength="100" placeholder="Breakout, trend pullback\u2026"><datalist id="sl">${setups.map(p=>`<option value="${esc(p)}">`).join('')}</datalist>`)}</div>
+ <div class="full">${F('notes','Notes',`<textarea name="notes" maxlength="5000" placeholder="Why you took the trade, how you managed it, what you learned">${esc(v.notes||'')}</textarea>`)}</div>
+ <div class="full calc"><div class="lbl">Pips<b id="c-pips">\u2014</b></div><div class="lbl">Planned R:R<b id="c-rr">\u2014</b></div><div class="lbl">Net P&L<b id="c-net">\u2014</b></div><div class="lbl">Result<b id="c-res">\u2014</b></div></div>
+ </div></div><div class="df"><button type="button" class="btn" data-act="close">Cancel</button><button class="btn primary" id="sv">${e?'Save changes':'Add trade'}</button></div></form>`);
+ const form=$('#tf'),upd=()=>{const f=new FormData(form),{trade}=validate(f,'x',true);const set=(i,t,c='')=>{const el=$('#'+i);el.textContent=t;el.className=c};
+  if(!trade){['pips','rr','net','res'].forEach(i=>set('c-'+i,'\u2014'));return}const c=calc(trade);set('c-pips',c.pips,cls(c.pips));set('c-rr',c.rr==null?'\u2014':'1:'+c.rr);set('c-net',fm(c.net,1),cls(c.net));set('c-res',c.res,cls(c.net))};
+ form.oninput=upd;upd();
+ form.onsubmit=ev=>{ev.preventDefault();const f=new FormData(form),{errs,trade}=validate(f,t?.id);
+  form.querySelectorAll('[data-f]').forEach(l=>{const m=errs[l.dataset.f];l.classList.toggle('bad',!!m);$('.err',l).textContent=m||''});
+  if(Object.keys(errs).length){form.querySelector('.bad input,.bad select')?.focus();return}
+  const list=e?S.trades.map(x=>x.id===t.id?{...trade,id:t.id,created:t.created}:x):[...S.trades,trade];
+  if(commit(list)){closeDlg();toast(e?'Trade saved':'Trade added');render()}}}
+function validate(f,id,quiet){
+ const e={},g=n=>String(f.get(n)||'').trim();
+ const req=n=>{const v=g(n);if(v===''){e[n]='Required';return null}const x=Number(v);if(!Number.isFinite(x)){e[n]='Enter a valid number';return null}return x};
+ const opt=n=>{const v=g(n);if(v==='')return null;const x=Number(v);if(!Number.isFinite(x)){e[n]='Enter a valid number';return null}return x};
+ const dt=g('dt'),pair=g('pair').toUpperCase(),side=g('side'),session=g('session');
+ if(!dt)e.dt='Required';else if(dt>nowLocal())e.dt='Date cannot be in the future';
+ if(!pair)e.pair='Required';
+ if(!session)e.session='Select a session';
+ const entry=req('entry'),exit=req('exit'),lots=req('lots'),pl=req('pl'),sl=opt('sl'),tp=opt('tp'),risk=opt('risk'),comm=opt('comm'),ps=opt('pipSize');
+ for(const[n,x]of[['entry',entry],['exit',exit],['lots',lots],['sl',sl],['tp',tp],['pipSize',ps]])if(x!=null&&x<=0&&!e[n])e[n]='Must be greater than 0';
+ for(const[n,x]of[['risk',risk],['comm',comm]])if(x!=null&&x<0)e[n]='Cannot be negative';
+ if(entry>0){const d=side==='Buy'?1:-1;if(sl>0&&!e.sl&&d*(entry-sl)<=0)e.sl=side==='Buy'?'Must be below entry for a buy':'Must be above entry for a sell';if(tp>0&&!e.tp&&d*(tp-entry)<=0)e.tp=side==='Buy'?'Must be above entry for a buy':'Must be below entry for a sell'}
+ if(Object.keys(e).length)return{errs:e,trade:null};
+ const now=Date.now(),trade=clean({id:id||uid(),dt,pair,side,entry,sl,tp,exit,lots,risk:risk??0,pl,comm:comm??0,pipSize:ps,session,setup:g('setup'),tf:g('tf'),notes:f.get('notes')||'',created:now,updated:now});
+ return{errs:trade?{}:{pair:'Trade data is invalid'},trade}}
+
+function detail(id){
+ const t=S.trades.find(x=>x.id===id);if(!t)return;const c=calc(t),dash='\u2014';
+ const kv=[['Date and time',t.dt.replace('T',' ')],['Pair',esc(t.pair)],['Direction',t.side],['Lot size',t.lots],['Entry price',t.entry],['Exit price',t.exit],['Stop loss',t.sl??dash],['Take profit',t.tp??dash],['Pip size',t.pipSize],['Pips',`<span class="${cls(c.pips)}">${c.pips}</span>`],['Planned R:R',c.rr==null?dash:'1:'+c.rr],['Risk',t.risk?fm(t.risk):dash],['Realized R',c.R==null?dash:c.R+'R'],['Profit / loss',`<span class="${cls(t.pl)}">${fm(t.pl,1)}</span>`],['Commission',fm(t.comm)],['Net P&L',`<span class="${cls(c.net)}">${fm(c.net,1)}</span>`],['Result',`<span class="badge ${c.res}">${c.res}</span>`],['Session',esc(t.session)],['Timeframe',esc(t.tf)||dash],['Setup / strategy',esc(t.setup)||dash]];
+ openDlg(`<div class="dh"><h2>${esc(t.pair)} \u00b7 ${t.side}</h2></div><div class="db"><div class="kv">${kv.map(([k,v])=>`<div class="lbl">${k}<b style="color:var(--tx)">${v}</b></div>`).join('')}</div><div class="lbl" style="margin:24px 0 4px">Notes</div>${t.notes?`<div class="notes">${esc(t.notes)}</div>`:'<div class="mp">No notes added.</div>'}</div><div class="df"><button class="btn danger l" data-act="del" data-id="${esc(id)}">Delete</button><button class="btn" data-act="close">Close</button><button class="btn primary" data-act="edit" data-id="${esc(id)}">Edit</button></div>`)}
+
+/* ---------- backup ---------- */
+function exportData(){
+ const d={app:'Pipfolio',version:1,exportedAt:new Date().toISOString(),theme:document.documentElement.dataset.theme,auth:getAuth(),settings:S.settings,trades:S.trades};
+ const a=document.createElement('a'),u=URL.createObjectURL(new Blob([JSON.stringify(d,null,2)],{type:'application/json'}));
+ a.href=u;a.download=`pipfolio-backup-${nowLocal().slice(0,10)}.json`;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1000);toast('Backup exported')}
+async function importFile(file){
+ if(!file)return;
+ const fail=m=>toast(m,'error');
+ if(file.size>10*1024*1024)return fail('Import failed: file is larger than 10 MB.');
+ let d;try{const txt=await file.text();if(!txt.trim())return fail('Import failed: the file is empty.');d=JSON.parse(txt)}catch{return fail('Import failed: the file is not valid JSON.')}
+ if(!d||d.app!=='Pipfolio'||!Array.isArray(d.trades))return fail('Import failed: this is not a Pipfolio backup file.');
+ const ok=d.trades.map(clean).filter(Boolean),skipped=d.trades.length-ok.length;
+ const dup=new Map();ok.forEach(t=>{const o=dup.get(t.id);if(!o||t.updated>=o.updated)dup.set(t.id,t)});const trades=[...dup.values()];
+ if(d.trades.length&&!trades.length)return fail('Import failed: no valid trades were found in this file.');
+ const note=`${trades.length} trade${trades.length===1?'':'s'} found${skipped?`, ${skipped} invalid skipped`:''}.`;
+ if(S.importMode==='setup'){
+  if(!goodAuth(d.auth))return fail('Import failed: this backup does not contain a password.');
+  if(!persist(trades,cleanSettings(d.settings))||!ls.set(K.auth,JSON.stringify(d.auth)))return fail('Could not save. Browser storage is full or blocked.');
+  if(d.theme==='dark'||d.theme==='light')setTheme(d.theme);
+  return lockScreen('Backup restored. Enter your backup password to open the journal.')}
+ const ch=await ask('Import backup',`${note}<br><br><b>Merge</b> adds new trades and keeps your current data. <b>Replace</b> overwrites all trades and settings with the backup.`,[{label:'Cancel',val:null},{label:'Merge',val:'m'},{label:'Replace',cls:'primary',val:'r'}]);
+ if(!ch)return;
+ if(ch==='m'){const m=new Map(S.trades.map(t=>[t.id,t]));let add=0,upd=0;trades.forEach(t=>{const o=m.get(t.id);if(!o){m.set(t.id,t);add++}else if(t.updated>o.updated){m.set(t.id,t);upd++}});
+  if(commit([...m.values()])){toast(`Merged: ${add} added, ${upd} updated`);render()}return}
+ const sure=await confirmDel('Replace all data?','This overwrites every trade and setting in this browser. Export a backup first if you might need the current data.','Replace data');
+ if(!sure)return;
+ const prev=ls.get(K.auth);
+ if(!commit(trades,cleanSettings(d.settings)))return;
+ if(goodAuth(d.auth)&&!ls.set(K.auth,JSON.stringify(d.auth))){if(prev)ls.set(K.auth,prev)}
+ if(d.theme==='dark'||d.theme==='light')setTheme(d.theme);
+ toast('Backup restored'+(goodAuth(d.auth)?'. Your password is now the one from the backup.':''));render()}
+
+/* ---------- actions ---------- */
+const act={
+ view:d=>{S.view=d.v;render()},
+ theme:()=>{setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');render()},
+ lock:()=>{S.trades=[];closeDlg();lockScreen()},
+ add:()=>tradeForm(),
+ close:closeDlg,
+ detail:d=>detail(d.id),
+ edit:d=>tradeForm(S.trades.find(t=>t.id===d.id)),
+ del:async d=>{const t=S.trades.find(x=>x.id===d.id);if(!t)return;if(await confirmDel('Delete this trade?',`${esc(t.pair)} ${t.side} on ${t.dt.replace('T',' ')} will be permanently deleted.`,'Delete trade')&&commit(S.trades.filter(x=>x.id!==d.id))){toast('Trade deleted');render()}},
+ export:exportData,
+ import:()=>{S.importMode='main';$('#file').click()},
+ restore:()=>{S.importMode='setup';$('#file').click()},
+ forgot:async()=>{if(await confirmDel('Erase journal?','Passwords cannot be recovered. You can erase this browser\'s journal and start over, or restore from a backup file afterwards. All data here will be deleted.','Erase all data')){[K.data,K.auth].forEach(ls.del);lockScreen('Journal erased. Create a new password.')}},
+ erase:async()=>{if(await confirmDel('Erase all data?','All trades, settings and your password will be permanently deleted from this browser.','Erase all data')){[K.data,K.auth].forEach(ls.del);S.trades=[];S.settings=cleanSettings();closeDlg();lockScreen('Journal erased. Create a new password.')}},
+ chpw:()=>{openDlg(`<div class="dh"><h2>Change password</h2></div><form id="cf" novalidate style="display:contents"><div class="db"><div class="grid2"><div class="full">${F('cur','Current password','<input type="password" name="cur" autocomplete="current-password">')}</div>${F('n1','New password','<input type="password" name="n1" autocomplete="new-password">')}${F('n2','Confirm new password','<input type="password" name="n2" autocomplete="new-password">')}</div></div><div class="df"><button type="button" class="btn" data-act="close">Cancel</button><button class="btn primary" id="cb">Change password</button></div></form>`);
+  $('#cf').onsubmit=async ev=>{ev.preventDefault();const f=new FormData(ev.target),e={};
+   if(!window.crypto?.subtle)e.cur='Secure hashing is unavailable in this context';
+   else{const a=getAuth();if(!f.get('cur')||!a||!await checkPw(f.get('cur'),a))e.cur='Incorrect password';
+    if(String(f.get('n1')).length<8)e.n1='At least 8 characters';else if(f.get('n1')!==f.get('n2'))e.n2='Passwords do not match'}
+   dlg.querySelectorAll('[data-f]').forEach(l=>{l.classList.toggle('bad',!!e[l.dataset.f]);$('.err',l).textContent=e[l.dataset.f]||''});
+   if(Object.keys(e).length)return;const b=$('#cb');b.disabled=true;b.textContent='Saving\u2026';
+   if(ls.set(K.auth,JSON.stringify(await makeAuth(f.get('n1'))))){closeDlg();toast('Password changed')}else{b.disabled=false;b.textContent='Change password';toast('Could not save. Browser storage is blocked.','error')}}}
+};
+document.addEventListener('click',e=>{const a=e.target.closest('[data-act]');if(a&&act[a.dataset.act])act[a.dataset.act](a.dataset)});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches('tr[data-act]'))act.detail(e.target.dataset)});
+document.addEventListener('input',e=>{if(e.target.id==='q'||e.target.id==='res'){S.q=$('#q').value;S.res=$('#res').value;const rows=sorted().reverse(),q=S.q.trim().toLowerCase();$('#tl').innerHTML=tradeTable(rows.filter(x=>(S.res==='all'||x.res===S.res)&&(!q||(x.t.pair+' '+x.t.setup+' '+x.t.notes).toLowerCase().includes(q))),rows.length)}});
+document.addEventListener('submit',e=>{if(e.target.id!=='pf')return;e.preventDefault();const f=new FormData(e.target),er={},cu=String(f.get('cur')).trim(),b=String(f.get('bal')).trim(),n=Number(b);
+ if(!cu)er.cur='Required';if(b===''||!Number.isFinite(n))er.bal='Enter a valid number';
+ e.target.querySelectorAll('.f').forEach((l,i)=>{const k=['cur','bal'][i];l.classList.toggle('bad',!!er[k]);$('.err',l).textContent=er[k]||''});
+ if(!Object.keys(er).length&&commit(S.trades,{currency:cu,startBalance:n}))toast('Preferences saved')});
+$('#file').onchange=async e=>{const f=e.target.files[0];e.target.value='';await importFile(f)};
+
+/* ---------- start ---------- */
+if(!ls.set('pipfolio:probe','1'))app.innerHTML='<div class="lock"><div class="card"><div class="brand"><span class="logo">P</span>Pipfolio</div><p class="neg" style="margin-top:16px">Browser storage is blocked. Enable cookies / site data for this page (and leave private mode) so the journal can be saved.</p></div></div>';
+else{ls.del('pipfolio:probe');lockScreen()}
+</script>
+</body>
+</html>
