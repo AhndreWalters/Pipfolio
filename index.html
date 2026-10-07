@@ -169,7 +169,7 @@ const confirmDel=(t,m,label)=>ask(t,m,[{label:'Cancel',val:false},{label,cls:'da
 /* ---------- lock screen ---------- */
 function lockScreen(note){
  const a=getAuth(),setup=!a;
- app.innerHTML=`<div class="lock"><div class="card"><div class="brand">Pipfolio</div><p class="mp">${setup?'Create a password to protect your journal. It is stored only in this browser.':'Enter your password to open your journal.'}</p>${note?`<p class="pos" style="margin-top:8px">${note}</p>`:''}
+ app.innerHTML=`<div class="lock"><div class="card"><div class="brand"><img src="./money.png" width="35px">Pipfolio</div><p class="mp">${setup?'Create a password to protect your journal. It is stored only in this browser.':'Enter your password to open your journal.'}</p>${note?`<p class="pos" style="margin-top:8px">${note}</p>`:''}
  <form id="lf" novalidate><label class="f"><span>${setup?'New password':'Password'}</span><input type="password" name="pw" autocomplete="${setup?'new-password':'current-password'}" autofocus></label>
  ${setup?'<label class="f"><span>Confirm password</span><input type="password" name="pw2" autocomplete="new-password"><small class="hint">At least 8 characters. There is no recovery if you forget it, so keep an exported backup.</small></label>':''}
  <small class="err" id="lerr"></small><button class="btn primary block" id="lb">${setup?'Create password':'Unlock'}</button></form>
@@ -186,7 +186,7 @@ function lockScreen(note){
 /* ---------- shell & views ---------- */
 function render(){
  const v=S.view;
- app.innerHTML=`<div class="wrap"><div class="top"><div class="brand"></div><div class="acts"><button class="btn" data-act="theme">${document.documentElement.dataset.theme==='dark'?'Light mode':'Dark mode'}</button><button class="btn" data-act="lock">Lock</button><button class="btn primary" data-act="add">Add trade</button></div></div>
+ app.innerHTML=`<div class="wrap"><div class="top"><div class="brand"><img src="./money.png" width="35px">Pipfolio</div><div class="acts"><button class="btn" data-act="theme">${document.documentElement.dataset.theme==='dark'?'Light mode':'Dark mode'}</button><button class="btn" data-act="lock">Lock</button><button class="btn primary" data-act="add">Add trade</button></div></div>
  <nav class="tabs">${[['dashboard','Dashboard'],['trades','Trades'],['settings','Settings']].map(([k,l])=>`<button class="tab ${v===k?'on':''}" data-act="view" data-v="${k}">${l}</button>`).join('')}</nav>
  <main>${v==='dashboard'?dashboard():v==='trades'?tradesView():settingsView()}</main></div>`;
  if(v==='dashboard'&&S.trades.length)drawCharts()}
