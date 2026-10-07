@@ -20,6 +20,8 @@
         --neg: #d04444;
         --in: #fff;
         --hov: #f3f5f8;
+        --posbg: #e6f6ee;
+        --negbg: #fbeaea;
       }
       [data-theme='dark'] {
         --bg: #0e1218;
@@ -35,6 +37,8 @@
         --neg: #f06b6b;
         --in: #10151d;
         --hov: #1d2531;
+        --posbg: #15352a;
+        --negbg: #3b2024;
       }
       * {
         box-sizing: border-box;
@@ -661,6 +665,145 @@
       .footer a:hover {
         text-decoration: underline;
       }
+          .cal-card {
+        margin-bottom: 16px;
+      }
+      .cal-h {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+      }
+      .cal-nav {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .cal-nav select {
+        width: 140px;
+      }
+      .cal-nav input {
+        width: 88px;
+      }
+      .btn.icon {
+        width: 38px;
+        padding: 0;
+      }
+      .cal-sum {
+        color: var(--mut);
+        margin-bottom: 12px;
+      }
+      .cal-grid {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 8px;
+      }
+      .cal-wd {
+        text-align: center;
+        color: var(--mut);
+        font-size: 12px;
+        line-height: 20px;
+      }
+      .cal-d {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        height: 76px;
+        min-width: 0;
+        padding: 8px;
+        overflow: hidden;
+        border: 1px solid var(--bd);
+        border-radius: 8px;
+        background: var(--card);
+        color: var(--tx);
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+      .cal-d:hover {
+        background: var(--hov);
+      }
+      .cal-d.pos {
+        background: var(--posbg);
+        border-color: var(--pos);
+        color: var(--pos);
+      }
+      .cal-d.neg {
+        background: var(--negbg);
+        border-color: var(--neg);
+        color: var(--neg);
+      }
+      .cal-d.be {
+        color: var(--mut);
+      }
+      .cal-d.sel {
+        outline: 2px solid var(--ac);
+        outline-offset: 1px;
+      }
+      .cal-num {
+        color: var(--tx);
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .cal-d.today .cal-num {
+        color: var(--ac);
+        font-weight: 700;
+      }
+      .cal-v {
+        overflow: hidden;
+        font-size: 13px;
+        font-weight: 650;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+      .cal-n {
+        overflow: hidden;
+        color: var(--mut);
+        font-size: 11px;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+      .cal-hint {
+        margin-top: 16px;
+        color: var(--mut);
+      }
+      .cal-day {
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid var(--bd);
+      }
+      .cal-day .kv4 {
+        margin-top: 16px;
+      }
+      .cal-day .card {
+        margin-top: 16px;
+      }
+      @media (max-width: 600px) {
+        .cal-card {
+          padding: 16px;
+        }
+        .cal-grid {
+          gap: 4px;
+        }
+        .cal-d {
+          height: 56px;
+          padding: 4px 6px;
+        }
+        .cal-v {
+          font-size: 11px;
+        }
+        .cal-n {
+          display: none;
+        }
+        .cal-nav select {
+          flex: 1;
+          width: auto;
+        }
+      }
+
     </style>
   </head>
   <body>
@@ -836,6 +979,7 @@
               .slice(0, 40),
             type: ACCT.includes(a.type) ? a.type : 'Other',
             created: Number(a.created) || Date.now(),
+            sample: a.sample === true,
           };
         return o.id && o.name && o.currency && Number.isFinite(b) && b >= 0
           ? o
@@ -908,6 +1052,7 @@
           notes: String(t.notes || '').slice(0, 5000),
           created: Number(t.created) || Date.now(),
           updated: Number(t.updated) || Date.now(),
+          sample: t.sample === true,
         };
         if (!o.id || !okDt(o.dt) || !o.pair || !SIDES.includes(o.side))
           return null;
@@ -1275,6 +1420,7 @@
           `<div class="stats">${c.map(([l, v, sub, k]) => `<div class="card stat">
             <div class="lbl">${l}</div><div class="val ${k || ''}">${v}</div>
             <div class="sub">${sub || '&nbsp;'}</div></div>`).join('')}</div>
+            <div class="card cal-card" id="cal">${calendar()}</div>
             <div class="charts">${[
    ['Equity curve', 'eq', 'c3'],
    ['P&L over time (by close date)', 'day', 'c3'],
@@ -1464,6 +1610,357 @@
         }, 150);
       });
 
+      /* ---------- calendar ---------- */
+      const MONTHS = [
+        'January',
+        'February',
+        'March',
+        'April',
+        'May',
+        'June',
+        'July',
+        'August',
+        'September',
+        'October',
+        'November',
+        'December',
+      ];
+      const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      const DAY_NAMES = [
+        'Sunday',
+        'Monday',
+        'Tuesday',
+        'Wednesday',
+        'Thursday',
+        'Friday',
+        'Saturday',
+      ];
+      const CAL_MIN = 1900;
+      const CAL_MAX = 2100;
+      const pad = (n, w = 2) => String(n).padStart(w, '0');
+      const dayKey = (y, m, d) => `${pad(y, 4)}-${pad(m + 1)}-${pad(d)}`;
+      S.cal = {
+        y: +nowLocal().slice(0, 4),
+        m: +nowLocal().slice(5, 7) - 1,
+      };
+      S.calDay = '';
+
+      function dayMap(list) {
+        const map = new Map();
+        const entry = (key) => {
+          if (!map.has(key)) map.set(key, { net: 0, closed: [], open: [] });
+          return map.get(key);
+        };
+        calcAll(list).forEach((x) => {
+          if (x.c) {
+            const e = entry(x.t.xdt.slice(0, 10));
+            e.net = r2(e.net + x.net);
+            e.closed.push(x);
+          } else {
+            entry(x.t.dt.slice(0, 10)).open.push(x);
+          }
+        });
+        return map;
+      }
+      function calAmt(n) {
+        const a = Math.abs(n);
+        const v =
+          a >= 1000 ? short(a) : a >= 100 ? String(Math.round(a)) : a.toFixed(2);
+        const c = CTX.length > 1 ? CTX + ' ' : CTX;
+        return (n < 0 ? '\u2212' : n > 0 ? '+' : '') + c + v;
+      }
+      function calCell(key, e, today) {
+        const closed = e ? e.closed.length : 0;
+        const open = e ? e.open.length : 0;
+        const tone = !closed ? '' : e.net > 0 ? 'pos' : e.net < 0 ? 'neg' : 'be';
+        const note = [
+          closed && `${closed} trade${closed > 1 ? 's' : ''}`,
+          open && `${open} open`,
+        ]
+          .filter(Boolean)
+          .join(' \u00b7 ');
+        const label = closed
+          ? `${key}: ${fm(e.net, 1)} from ${closed} closed
+            trade${closed > 1 ? 's' : ''}`
+          : `${key}: ${open ? open + ' open' : 'no trades'}`;
+        const classes = ['cal-d', tone];
+        if (key === today) classes.push('today');
+        if (key === S.calDay) classes.push('sel');
+        return `<button class="${classes.join(' ')}" data-act="calday"
+          data-d="${key}" title="${label}" aria-label="${label}"
+          aria-pressed="${key === S.calDay}">
+          <span class="cal-num">${+key.slice(8)}</span>
+          ${closed ? `<span class="cal-v">${calAmt(e.net)}</span>` : ''}
+          <span class="cal-n">${note}</span></button>`;
+      }
+      function calendar() {
+        const { y, m } = S.cal;
+        const days = dayMap(scope());
+        const lead = (new Date(Date.UTC(y, m, 1)).getUTCDay() + 6) % 7;
+        const count = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+        const today = nowLocal().slice(0, 10);
+        const cells = Array(lead).fill('<div></div>');
+        let net = 0;
+        let trades = 0;
+        let green = 0;
+        let red = 0;
+        for (let d = 1; d <= count; d++) {
+          const key = dayKey(y, m, d);
+          const e = days.get(key);
+          if (e && e.closed.length) {
+            net = r2(net + e.net);
+            trades += e.closed.length;
+            if (e.net > 0) green++;
+            if (e.net < 0) red++;
+          }
+          cells.push(calCell(key, e, today));
+        }
+        const name = S.acc === 'all' ? 'All accounts' : esc(acc(S.acc)?.name || '');
+        const summary = trades
+          ? `<b class="${cls(net)}">${fm(net, 1)}</b> \u00b7 ${trades} closed
+            trade${trades > 1 ? 's' : ''} \u00b7 ${green} green and ${red} red
+            day${green + red === 1 ? '' : 's'}`
+          : 'No closed trades in this month.';
+        return `<div class="cal-h"><div><h2>Trading calendar</h2>
+          <div class="sub">${name} \u00b7 daily results by close date</div></div>
+          <div class="cal-nav">
+          <button class="btn icon" data-act="calprevy" aria-label="Previous year"
+            ${y <= CAL_MIN ? 'disabled' : ''}>\u00ab</button>
+          <button class="btn icon" data-act="calprev" aria-label="Previous month"
+            ${y <= CAL_MIN && m === 0 ? 'disabled' : ''}>\u2039</button>
+          <select id="cm" aria-label="Month">${MONTHS.map(
+            (n, i) =>
+              `<option value="${i}" ${i === m ? 'selected' : ''}>${n}</option>`,
+          ).join('')}</select>
+          <input id="cy" type="number" min="${CAL_MIN}" max="${CAL_MAX}" step="1"
+            value="${y}" aria-label="Year">
+          <button class="btn icon" data-act="calnext" aria-label="Next month"
+            ${y >= CAL_MAX && m === 11 ? 'disabled' : ''}>\u203a</button>
+          <button class="btn icon" data-act="calnexty" aria-label="Next year"
+            ${y >= CAL_MAX ? 'disabled' : ''}>\u00bb</button>
+          <button class="btn" data-act="caltoday">Today</button></div></div>
+          <div class="cal-sum">${MONTHS[m]} ${y}: ${summary}</div>
+          <div class="cal-grid">${WEEKDAYS.map(
+            (w) => `<div class="cal-wd">${w}</div>`,
+          ).join('')}${cells.join('')}</div>
+          ${
+            S.calDay
+              ? dayPanel(S.calDay, days)
+              : `<p class="cal-hint">Select a day to see its trades and result.</p>`
+          }`;
+      }
+      function dayPanel(key, days) {
+        const e = days.get(key) || { net: 0, closed: [], open: [] };
+        const rows = [...e.closed, ...e.open].sort((a, b) =>
+          a.t.dt < b.t.dt ? -1 : a.t.dt > b.t.dt ? 1 : a.t.created - b.t.created,
+        );
+        const weekday = DAY_NAMES[new Date(`${key}T00:00:00Z`).getUTCDay()];
+        const head = `<div class="cal-day"><h2>${key} \u00b7 ${weekday}</h2>`;
+        if (!rows.length)
+          return `${head}<p class="mp">No trades on this day.</p></div>`;
+        const n = e.closed.length;
+        const wins = e.closed.filter((x) => x.res === 'Win').length;
+        const losses = e.closed.filter((x) => x.res === 'Loss').length;
+        const nets = e.closed.map((x) => x.net);
+        const pips =
+          Math.round(e.closed.reduce((t, x) => t + (x.pips ?? 0), 0) * 10) / 10;
+        const comm = r2(e.closed.reduce((t, x) => t + x.t.comm, 0));
+        const dash = '\u2014';
+        const tone = (v, text) => `<span class="${cls(v)}">${text}</span>`;
+        const kv = [
+          ['Daily P&L', n ? tone(e.net, fm(e.net, 1)) : dash],
+          ['Closed trades', n],
+          ['Wins / losses', `${wins} / ${losses}`],
+          ['Win rate', n ? ((wins / n) * 100).toFixed(1) + '%' : dash],
+          ['Best trade', n ? tone(Math.max(...nets), fm(Math.max(...nets), 1)) : dash],
+          ['Worst trade', n ? tone(Math.min(...nets), fm(Math.min(...nets), 1)) : dash],
+          ['Total pips', n ? tone(pips, pips) : dash],
+          ['Commission', n ? fm(comm) : dash],
+        ];
+        const open = e.open.length
+          ? `<p class="sub" style="margin-top:12px">${e.open.length} trade${e.open.length > 1 ? 's' : ''}
+            opened on this day ${e.open.length > 1 ? 'are' : 'is'} still open and not
+            counted in the daily result.</p>`
+          : '';
+        return `${head}<div class="kv4">${kv
+          .map(([k, v]) => `<div class="lbl">${k}<b>${v}</b></div>`)
+          .join('')}</div>${open}${tradeTable(rows, rows.length, false)}</div>`;
+      }
+      function refreshCal() {
+        const el = $('#cal');
+        if (el) el.innerHTML = calendar();
+      }
+      function calGo(y, m) {
+        y += Math.floor(m / 12);
+        m = ((m % 12) + 12) % 12;
+        if (y < CAL_MIN || y > CAL_MAX) return;
+        S.cal = { y, m };
+        S.calDay = '';
+        refreshCal();
+      }
+
+      /* ---------- sample data ---------- */
+      const SAMPLE_ACCOUNTS = [
+        {
+          id: 'sample-acc-demo',
+          name: 'Sample Demo',
+          type: 'Demo',
+          balance: 10000,
+          risk: 0.01,
+          broker: 'Sample Broker',
+        },
+        {
+          id: 'sample-acc-live',
+          name: 'Sample Live',
+          type: 'Live',
+          balance: 5000,
+          risk: 0.01,
+          broker: 'Sample Markets',
+        },
+        {
+          id: 'sample-acc-prop',
+          name: 'Sample Prop Firm',
+          type: 'Prop Firm',
+          balance: 25000,
+          risk: 0.005,
+          broker: 'Sample Capital',
+        },
+      ];
+      const SAMPLE_PAIRS = [
+        { pair: 'EURUSD', base: 1.085, dp: 5, pip: 0.0001, pv: 10, sl: [8, 20] },
+        { pair: 'GBPUSD', base: 1.27, dp: 5, pip: 0.0001, pv: 10, sl: [10, 25] },
+        { pair: 'USDJPY', base: 150.2, dp: 3, pip: 0.01, pv: 6.7, sl: [12, 30] },
+        { pair: 'AUDUSD', base: 0.655, dp: 5, pip: 0.0001, pv: 10, sl: [8, 18] },
+        { pair: 'GBPJPY', base: 190.5, dp: 3, pip: 0.01, pv: 6.7, sl: [15, 40] },
+        { pair: 'XAUUSD', base: 2350, dp: 2, pip: 0.1, pv: 10, sl: [30, 80] },
+      ];
+      const SAMPLE_SESSIONS = [
+        ['Asian', 60, 360],
+        ['London', 480, 660],
+        ['New York', 810, 1020],
+        ['London/NY Overlap', 780, 840],
+      ];
+      const SAMPLE_SETUPS = [
+        'Breakout',
+        'Trend pullback',
+        'Support / resistance',
+        'News fade',
+      ];
+      const SAMPLE_WIN_NOTES = [
+        'Waited for confirmation and followed the plan.',
+        'Clean entry at the level, managed the trade well.',
+        'Patience paid off, held to the target.',
+      ];
+      const SAMPLE_LOSS_NOTES = [
+        'Stopped out, setup invalidated. Risk was respected.',
+        'Entered a little early, will wait for the close next time.',
+        'Choppy conditions, price reversed against the level.',
+      ];
+      const sampleInfo = () => ({
+        accounts: S.settings.accounts.filter((a) => a.sample).length,
+        trades: S.trades.filter((t) => t.sample).length,
+      });
+      function buildSample() {
+        let seed = 424242;
+        const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+        const between = (a, b) => a + rnd() * (b - a);
+        const pick = (list) => list[Math.floor(rnd() * list.length)];
+        const today = nowLocal().slice(0, 10);
+        const t0 = Date.UTC(
+          +today.slice(0, 4),
+          +today.slice(5, 7) - 1,
+          +today.slice(8, 10),
+        );
+        const dayAt = (ago) => new Date(t0 - ago * 864e5);
+        const clock = (min) => `${pad(Math.floor(min / 60))}:${pad(min % 60)}`;
+        const stamp = Date.now();
+        let n = 0;
+        const make = (a, date, open) => {
+          const inst = pick(SAMPLE_PAIRS);
+          const [session, from, to] = pick(SAMPLE_SESSIONS);
+          const dir = rnd() < 0.5 ? 1 : -1;
+          const entry = +(inst.base * (1 + between(-0.01, 0.01))).toFixed(inst.dp);
+          const slPips = Math.round(between(...inst.sl));
+          const rr = +between(1.5, 2.5).toFixed(1);
+          const risk = r2(a.balance * a.risk);
+          const lots = Math.max(
+            0.01,
+            Math.round((risk / (slPips * inst.pv)) * 100) / 100,
+          );
+          const start = Math.round(between(from, to));
+          n++;
+          const t = {
+            id: `sample-${n}`,
+            account: a.id,
+            dt: `${date}T${clock(start)}`,
+            xdt: '',
+            pair: inst.pair,
+            side: dir > 0 ? 'Buy' : 'Sell',
+            entry,
+            sl: +(entry - dir * slPips * inst.pip).toFixed(inst.dp),
+            tp: +(entry + dir * slPips * rr * inst.pip).toFixed(inst.dp),
+            exit: null,
+            lots,
+            risk,
+            pl: null,
+            comm: 0,
+            pipSize: inst.pip,
+            session,
+            setup: pick(SAMPLE_SETUPS),
+            tf: pick(['M15', 'H1', 'H4']),
+            notes: open ? 'Trade still running, stop is in place.' : '',
+            sample: true,
+            created: stamp + n,
+            updated: stamp + n,
+          };
+          if (!open) {
+            const win = rnd() < 0.56;
+            const pips = win
+              ? slPips * rr * between(0.6, 1)
+              : -slPips * between(0.7, 1);
+            t.exit = +(entry + dir * pips * inst.pip).toFixed(inst.dp);
+            t.pl = r2(((dir * (t.exit - entry)) / inst.pip) * inst.pv * lots);
+            t.comm = r2(lots * 7);
+            t.xdt = `${date}T${clock(start + Math.round(between(15, 240)))}`;
+            t.notes = pick(win ? SAMPLE_WIN_NOTES : SAMPLE_LOSS_NOTES);
+          }
+          return clean(t);
+        };
+        const trades = [];
+        for (let ago = 120; ago >= 1; ago--) {
+          const date = dayAt(ago).toISOString().slice(0, 10);
+          const weekday = dayAt(ago).getUTCDay();
+          if (weekday === 0 || weekday === 6 || rnd() < 0.28) continue;
+          for (let i = 1 + Math.floor(rnd() * 3); i > 0; i--)
+            trades.push(make(pick(SAMPLE_ACCOUNTS), date, false));
+        }
+        SAMPLE_ACCOUNTS.forEach((a, i) =>
+          trades.push(make(a, dayAt(1 + (i % 2)).toISOString().slice(0, 10), true)),
+        );
+        const accounts = SAMPLE_ACCOUNTS.map(({ risk, ...a }) =>
+          cleanAcc({ ...a, currency: '$', sample: true, created: stamp }),
+        );
+        return { accounts, trades: trades.filter(Boolean) };
+      }
+      function sampleCard() {
+        const info = sampleInfo();
+        const has = info.accounts + info.trades > 0;
+        const status = has
+          ? `Sample data is loaded (${info.accounts} accounts, ${info.trades} trades).`
+          : 'No sample data is loaded.';
+        return `<div class="card"><h2>Sample data</h2>
+          <p>Add realistic demo accounts and trades to preview the dashboard,
+          calendar, charts and filters. Sample records are tagged, so removing them
+          never touches your own data. ${status}</p>
+          <div class="row">
+          <button class="btn primary" data-act="sampleadd"
+            ${has ? 'disabled' : ''}>Add Sample Data</button>
+          <button class="btn danger" data-act="sampledel"
+            ${has ? '' : 'disabled'}>Remove Sample Data</button>
+          </div></div>`;
+      }
+
+
       const tfilter = () => {
         const q = S.q.trim().toLowerCase();
         return calcAll(S.trades)
@@ -1498,7 +1995,7 @@
                     S.trades.length)}</div>`
         );
       }
-      function tradeTable(fl, total) {
+      function tradeTable(fl, total, count = true) {
         if (!fl.length)
           return `<div class="card empty"><h2>No matching trades</h2>
             <p>Try a different search, account or result filter.</p></div>`;
@@ -1511,8 +2008,11 @@
               || '')}</td><td>${x.dur || '\u2014'}</td><td class="n ${cls(x.pips)}">${x.pips ?? '\u2014'}</td>
             <td class="n ${cls(x.net)}">${x.net == null ? '\u2014'
               : fm(x.net, 1, ccy(x.t))}</td><td><span class="badge ${x.res}">${x.res}</span></td></tr>`).join('')}</tbody></table></div>
-          <div class="count">Showing ${fl.length} of ${total} trade${total > 1
-            ? 's' : ''}</div>`;
+          ${
+            count
+              ? `<div class="count">Showing ${fl.length} of ${total} trade${total > 1 ? 's' : ''}</div>`
+              : ''
+          }`;
       }
       function accCard(a) {
         const mine = S.trades.filter((t) => t.account === a.id),
@@ -1559,6 +2059,7 @@
           settings and password) to one file. Import it in any browser or device to restore
           your journal.</p><div class="row"><button class="btn primary" data-act="export">Export backup</button>
           <button class="btn" data-act="import">Import backup</button></div></div>
+          ${sampleCard()}
           <div class="card"><h2>Security</h2><p>The password locks the journal when it is
           opened. Data stays in this browser's storage and is not encrypted, so avoid using
           shared computers.</p><div class="row"><button class="btn" data-act="chpw">Change password</button>
@@ -2176,6 +2677,57 @@
             S.trades.find((t) => t.id === d.id),
             'xd',
           ),
+        calprev: () => calGo(S.cal.y, S.cal.m - 1),
+        calnext: () => calGo(S.cal.y, S.cal.m + 1),
+        calprevy: () => calGo(S.cal.y - 1, S.cal.m),
+        calnexty: () => calGo(S.cal.y + 1, S.cal.m),
+        caltoday: () => {
+          const now = nowLocal();
+          calGo(+now.slice(0, 4), +now.slice(5, 7) - 1);
+        },
+        calday: (d) => {
+          S.calDay = S.calDay === d.d ? '' : d.d;
+          refreshCal();
+        },
+        sampleadd: () => {
+          if (sampleInfo().accounts + sampleInfo().trades > 0)
+            return toast('Sample data is already added.', 'error');
+          const sample = buildSample();
+          const st = { accounts: [...S.settings.accounts, ...sample.accounts] };
+          if (commit([...S.trades, ...sample.trades], st)) {
+            toast(
+              `Sample data added: ${sample.accounts.length} accounts, ${sample.trades.length} trades`,
+            );
+            render();
+          }
+        },
+        sampledel: async () => {
+          const info = sampleInfo();
+          if (!info.accounts && !info.trades)
+            return toast('There is no sample data to remove.', 'error');
+          const ok = await confirmDel(
+            'Remove sample data?',
+            `This removes ${info.trades} sample trade${info.trades === 1 ? '' : 's'} and ` +
+              `${info.accounts} sample account${info.accounts === 1 ? '' : 's'}. ` +
+              'Your own accounts and trades are not affected, and any sample ' +
+              'account that holds your own trades is kept.',
+            'Remove sample data',
+          );
+          if (!ok) return;
+          const trades = S.trades.filter((t) => !t.sample);
+          const used = new Set(trades.map((t) => t.account));
+          const accounts = S.settings.accounts.flatMap((a) =>
+            !a.sample ? [a] : used.has(a.id) ? [{ ...a, sample: false }] : [],
+          );
+          if (commit(trades, cleanSettings({ accounts }))) {
+            if (S.acc !== 'all' && !acc(S.acc)) S.acc = 'all';
+            if (S.tacc !== 'all' && !acc(S.tacc)) S.tacc = 'all';
+            S.calDay = '';
+            toast('Sample data removed');
+            render();
+          }
+        },
+
         export: exportData,
         import: () => {
           S.importMode = 'main';
@@ -2280,6 +2832,16 @@
         if (i === 'accf') {
           S.acc = e.target.value;
           render();
+        }
+      });
+      document.addEventListener('change', (e) => {
+        if (e.target.id !== 'cm' && e.target.id !== 'cy') return;
+        const y = Number($('#cy').value);
+        const m = Number($('#cm').value);
+        if (Number.isInteger(y) && y >= CAL_MIN && y <= CAL_MAX) calGo(y, m);
+        else {
+          toast(`Enter a year between ${CAL_MIN} and ${CAL_MAX}.`, 'error');
+          refreshCal();
         }
       });
       $('#file').onchange = async (e) => {
