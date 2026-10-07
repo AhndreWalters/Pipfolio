@@ -13,7 +13,7 @@ body{font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:va
 h1{font-size:22px;line-height:28px;font-weight:650}h2{font-size:16px;line-height:24px;font-weight:600}
 .wrap{max-width:1120px;margin:0 auto;padding:24px 16px 48px}
 .top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px}
-.brand{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:700;letter-spacing:-.2px}
+.brand{display:flex;align-items:center;font-family:"Space Grotesk", sans-serif;font-size:26px;font-weight:900;letter-spacing:-1px;color:var(--tx);}
 .logo{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--ac),#5b86e8);color:var(--acx);display:grid;place-items:center;font-size:16px;font-weight:700}
 .acts,.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .tabs{display:flex;gap:4px;border-bottom:1px solid var(--bd);margin-bottom:24px}
@@ -169,7 +169,7 @@ const confirmDel=(t,m,label)=>ask(t,m,[{label:'Cancel',val:false},{label,cls:'da
 /* ---------- lock screen ---------- */
 function lockScreen(note){
  const a=getAuth(),setup=!a;
- app.innerHTML=`<div class="lock"><div class="card"><div class="brand"><span class="logo">P</span>Pipfolio</div><p class="mp">${setup?'Create a password to protect your journal. It is stored only in this browser.':'Enter your password to open your journal.'}</p>${note?`<p class="pos" style="margin-top:8px">${note}</p>`:''}
+ app.innerHTML=`<div class="lock"><div class="card"><div class="brand">Pipfolio</div><p class="mp">${setup?'Create a password to protect your journal. It is stored only in this browser.':'Enter your password to open your journal.'}</p>${note?`<p class="pos" style="margin-top:8px">${note}</p>`:''}
  <form id="lf" novalidate><label class="f"><span>${setup?'New password':'Password'}</span><input type="password" name="pw" autocomplete="${setup?'new-password':'current-password'}" autofocus></label>
  ${setup?'<label class="f"><span>Confirm password</span><input type="password" name="pw2" autocomplete="new-password"><small class="hint">At least 8 characters. There is no recovery if you forget it, so keep an exported backup.</small></label>':''}
  <small class="err" id="lerr"></small><button class="btn primary block" id="lb">${setup?'Create password':'Unlock'}</button></form>
@@ -186,7 +186,7 @@ function lockScreen(note){
 /* ---------- shell & views ---------- */
 function render(){
  const v=S.view;
- app.innerHTML=`<div class="wrap"><div class="top"><div class="brand"><span class="logo">P</span>Pipfolio</div><div class="acts"><button class="btn" data-act="theme">${document.documentElement.dataset.theme==='dark'?'Light mode':'Dark mode'}</button><button class="btn" data-act="lock">Lock</button><button class="btn primary" data-act="add">Add trade</button></div></div>
+ app.innerHTML=`<div class="wrap"><div class="top"><div class="brand"></div><div class="acts"><button class="btn" data-act="theme">${document.documentElement.dataset.theme==='dark'?'Light mode':'Dark mode'}</button><button class="btn" data-act="lock">Lock</button><button class="btn primary" data-act="add">Add trade</button></div></div>
  <nav class="tabs">${[['dashboard','Dashboard'],['trades','Trades'],['settings','Settings']].map(([k,l])=>`<button class="tab ${v===k?'on':''}" data-act="view" data-v="${k}">${l}</button>`).join('')}</nav>
  <main>${v==='dashboard'?dashboard():v==='trades'?tradesView():settingsView()}</main></div>`;
  if(v==='dashboard'&&S.trades.length)drawCharts()}
@@ -396,7 +396,7 @@ document.addEventListener('input',e=>{const i=e.target.id;if(i==='q'||i==='res'|
 $('#file').onchange=async e=>{const f=e.target.files[0];e.target.value='';await importFile(f)};
 
 /* ---------- start ---------- */
-if(!ls.set('pipfolio:probe','1'))app.innerHTML='<div class="lock"><div class="card"><div class="brand"><span class="logo">P</span>Pipfolio</div><p class="neg" style="margin-top:16px">Browser storage is blocked. Enable cookies / site data for this page (and leave private mode) so the journal can be saved.</p></div></div>';
+if(!ls.set('pipfolio:probe','1'))app.innerHTML='<div class="lock"><div class="card"><div class="brand">Pipfolio</div><p class="neg" style="margin-top:16px">Browser storage is blocked. Enable cookies / site data for this page (and leave private mode) so the journal can be saved.</p></div></div>';
 else{ls.del('pipfolio:probe');lockScreen()}
 </script>
 </body>
