@@ -71,7 +71,7 @@ dialog::backdrop{background:rgba(10,14,20,.5)}
 .notes{white-space:pre-wrap;padding:12px 16px;border:1px solid var(--bd);border-radius:8px;background:var(--hov)}
 .lock{min-height:100vh;display:grid;place-items:center;padding:16px}
 .lock .card{width:min(400px,100%);padding:32px}.lock form{display:grid;gap:16px;margin-top:24px}
-.lock .brand{margin-bottom:8px}.lock a{color:var(--ac);cursor:pointer;background:none;border:0;font:inherit}
+.lock .brand{justify-content:flex-start;margin-bottom:8px;text-align:left;}
 .links{display:flex;justify-content:space-between;margin-top:16px;font-size:13px}
 #toasts{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);display:grid;gap:8px;z-index:99;width:min(420px,calc(100vw - 24px))}
 .toast{padding:12px 16px;border-radius:8px;background:var(--tx);color:var(--bg);font-weight:500}.toast.error{background:var(--neg);color:#fff}
@@ -186,11 +186,19 @@ const confirmDel=(t,m,label)=>ask(t,m,[{label:'Cancel',val:false},{label,cls:'da
 /* ---------- lock screen ---------- */
 function lockScreen(note){
  const a=getAuth(),setup=!a;
- app.innerHTML=`<div class="lock"><div class="card"><div class="brand"><img src="./money.png" width="35px">Pipfolio</div><p class="mp">${setup?'Create a password to protect your journal. It is stored only in this browser.':'Enter your password to open your journal.'}</p>${note?`<p class="pos" style="margin-top:8px">${note}</p>`:''}
- <form id="lf" novalidate><label class="f"><span>${setup?'New password':'Password'}</span><input type="password" name="pw" autocomplete="${setup?'new-password':'current-password'}" autofocus></label>
- ${setup?'<label class="f"><span>Confirm password</span><input type="password" name="pw2" autocomplete="new-password"><small class="hint">At least 8 characters. There is no recovery if you forget it, so keep an exported backup.</small></label>':''}
- <small class="err" id="lerr"></small><button class="btn primary block" id="lb">${setup?'Create password':'Unlock'}</button></form>
- <div class="links">${setup?'<a data-act="restore">Restore from backup</a>':'<a data-act="forgot">Forgot password?</a>'}<span></span></div></div></div>`;
+ app.innerHTML=`<div class="lock"><div class="card">
+ <div class="brand"><img src="./money.png" width="35px">Pipfolio</div>
+ ${note?`<p class="pos" style="margin-top:8px">${note}</p>`:''}
+ <form id="lf" novalidate>
+  <label class="f">
+   <span>${setup?'New password':'Password'}</span>
+   <input type="password" name="pw" autocomplete="${setup?'new-password':'current-password'}" autofocus>
+  </label>
+  ${setup?'<label class="f"><span>Confirm password</span><input type="password" name="pw2" autocomplete="new-password"><small class="hint">At least 8 characters. There is no recovery if you forget it, so keep an exported backup.</small></label>':''}
+  <small class="err" id="lerr"></small>
+  <button class="btn primary block" id="lb">${setup?'Create password':'Unlock'}</button>
+ </form>
+ </div></div>`;
  $('#lf').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target),pw=f.get('pw'),er=$('#lerr'),b=$('#lb');er.textContent='';
   if(!window.crypto?.subtle){er.textContent='This browser blocks secure hashing. Open Pipfolio over HTTPS (such as GitHub Pages) or localhost.';return}
   if(setup){if(pw.length<8){er.textContent='Password must be at least 8 characters.';return}if(pw!==f.get('pw2')){er.textContent='Passwords do not match.';return}}
