@@ -87,6 +87,23 @@ dialog::backdrop{background:rgba(10,14,20,.5)}
 table{min-width:900px}
 @media(max-width:900px){.kv4{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:600px){.calc{grid-template-columns:1fr 1fr}.hsel{width:100%}.acc-h .row{width:100%}}
+.footer{
+  margin-top:32px;
+  padding-top:16px;
+  border-top:1px solid var(--bd);
+  color:var(--mut);
+  text-align:center;
+  font-size:12px;
+}
+
+.footer a{
+  color:var(--ac);
+  text-decoration:none;
+}
+
+.footer a:hover{
+  text-decoration:underline;
+}
 </style>
 </head>
 <body>
@@ -188,8 +205,13 @@ function render(){
  const v=S.view;
  app.innerHTML=`<div class="wrap"><div class="top"><div class="brand"><img src="./money.png" width="35px">Pipfolio</div><div class="acts"><button class="btn" data-act="theme">${document.documentElement.dataset.theme==='dark'?'Light mode':'Dark mode'}</button><button class="btn" data-act="lock">Lock</button><button class="btn primary" data-act="add">Add trade</button></div></div>
  <nav class="tabs">${[['dashboard','Dashboard'],['trades','Trades'],['settings','Settings']].map(([k,l])=>`<button class="tab ${v===k?'on':''}" data-act="view" data-v="${k}">${l}</button>`).join('')}</nav>
- <main>${v==='dashboard'?dashboard():v==='trades'?tradesView():settingsView()}</main></div>`;
- if(v==='dashboard'&&S.trades.length)drawCharts()}
+ <main>${v==='dashboard'?dashboard():v==='trades'?tradesView():settingsView()}</main>
+ <footer class="footer">
+   © ${new Date().getFullYear()} Pipfolio. All rights reserved.
+ </footer>
+ </div>`;
+ if(v==='dashboard'&&S.trades.length)drawCharts()
+}
 const emptyState=()=>`<div class="card empty"><h2>No trades yet</h2><p>Add your first trade to start tracking your performance.</p><button class="btn primary" data-act="add">Add trade</button></div>`;
 const scope=()=>S.trades.filter(t=>S.acc==='all'||t.account===S.acc);
 const scopeAccs=()=>S.acc==='all'?S.settings.accounts:S.settings.accounts.filter(a=>a.id===S.acc);
