@@ -24,21 +24,21 @@
         --negbg: #fbeaea;
       }
       [data-theme='dark'] {
-        --bg: #0e1218;
-        --bg2: #141a24;
-        --card: #171d27;
-        --bd: #262e3a;
-        --tx: #e7eaf0;
-        --mut: #8b95a5;
+        --bg: #000;
+        --bg2: #0a0a0a;
+        --card: #0f0f0f;
+        --bd: #262626;
+        --tx: #ededed;
+        --mut: #8a8a8a;
         --ac: #6c96f2;
-        --acx: #0e1218;
-        --acs: #1c2740;
+        --acx: #000;
+        --acs: #1a1a1a;
         --pos: #3dc28a;
         --neg: #f06b6b;
-        --in: #10151d;
-        --hov: #1d2531;
-        --posbg: #15352a;
-        --negbg: #3b2024;
+        --in: #0a0a0a;
+        --hov: #1a1a1a;
+        --posbg: #0f2a1f;
+        --negbg: #2e1517;
       }
       * {
         box-sizing: border-box;
@@ -813,7 +813,7 @@
     <div id="app"></div>
     <dialog id="dlg"></dialog>
     <div id="toasts" role="status"></div>
-    <input type="file" id="file" accept=".json,application/json" hidden />
+    <input type="file" id="file" accept=".json,.csv,application/json,text/csv" hidden />
     <script>
       'use strict';
       const K = {
@@ -2058,7 +2058,7 @@
           <div class="card"><h2>Backup and restore</h2><p>Export everything (accounts, trades,
           settings and password) to one file. Import it in any browser or device to restore
           your journal.</p><div class="row"><button class="btn primary" data-act="export">Export backup</button>
-          <button class="btn" data-act="import">Import backup</button></div></div>
+          <button class="btn" data-act="import">Import backup or CSV</button></div></div>
           ${sampleCard()}
           <div class="card"><h2>Security</h2><p>The password locks the journal when it is
           opened. Data stays in this browser's storage and is not encrypted, so avoid using
@@ -2592,6 +2592,125 @@
         render();
       }
 
+      /* ---------- broker CSV import ---------- */
+      function parseCsv(txt) {
+        const rows = [];
+        let row = [], cur = '', q = false;
+        txt = txt.replace(/^\uFEFF/, '');
+        for (let i = 0; i < txt.length; i++) {
+          const c = txt[i];
+          if (q) {
+            if (c === '"') {
+              if (txt[i + 1] === '"') { cur += '"'; i++; } else q = false;
+            } else cur += c;
+          } else if (c === '"') q = true;
+          else if (c === ',') { row.push(cur); cur = ''; }
+          else if (c === '\n' || c === '\r') {
+            if (c === '\r' && txt[i + 1] === '\n') i++;
+            row.push(cur); cur = ''; rows.push(row); row = [];
+          } else cur += c;
+        }
+        if (cur !== '' || row.length) { row.push(cur); rows.push(row); }
+        return rows.filter((r) => r.some((x) => x.trim() !== ''));
+      }
+      const csvDt = (s) => {
+        const m = /^(\d{4}-\d\d-\d\d)[ T](\d\d:\d\d)/.exec(String(s).trim());
+        return m ? m[1] + 'T' + m[2] : '';
+      };
+      function csvTrades(txt) {
+        const rows = parseCsv(txt);
+        if (rows.length < 2) return { error: 'The file has no data rows.' };
+        const head = rows[0].map((h) => h.trim().toLowerCase());
+        const cols = ['symbol', 'side', 'type', 'qty', 'avg fill price', 'status',
+          'update time', 'position id', 'commission', 'closed p&l'];
+        const miss = cols.filter((c) => head.indexOf(c) < 0);
+        if (miss.length) return { error: 'Missing columns: ' + miss.join(', ') + '.' };
+        const I = Object.fromEntries(cols.map((c) => [c, head.indexOf(c)]));
+        const pos = new Map();
+        rows.slice(1).forEach((r) => {
+          const g = (c) => (r[I[c]] ?? '').trim();
+          const pid = g('position id');
+          if (g('status').toLowerCase() !== 'filled' || !pid) return;
+          const o = {
+            sym: g('symbol'), side: g('side'), type: g('type').toLowerCase(),
+            qty: Number(g('qty')), price: Number(g('avg fill price')),
+            time: csvDt(g('update time')), comm: Math.abs(Number(g('commission')) || 0),
+            pl: g('closed p&l'),
+          };
+          if (!pos.has(pid)) pos.set(pid, { entries: [], exits: [] });
+          pos.get(pid)[o.pl !== '' ? 'exits' : 'entries'].push(o);
+        });
+        const wavg = (a) =>
+          +(a.reduce((s, x) => s + x.price * x.qty, 0) /
+            a.reduce((s, x) => s + x.qty, 0)).toFixed(5);
+        const out = [];
+        let skipped = 0, stamp = Date.now();
+        for (const [pid, p] of pos) {
+          if (!p.entries.length) { skipped++; continue; } // opened before this export
+          const byTime = (a, b) => (a.time < b.time ? -1 : a.time > b.time ? 1 : 0);
+          p.entries.sort(byTime); p.exits.sort(byTime);
+          const e0 = p.entries[0];
+          const lots = r2(p.entries.reduce((s, x) => s + x.qty, 0));
+          const entry = wavg(p.entries);
+          const d = e0.side === 'Buy' ? 1 : -1;
+          const exitQty = p.exits.reduce((s, x) => s + x.qty, 0);
+          const done = p.exits.length && exitQty >= lots - 1e-9; // partial close stays open
+          const t = {
+            id: 'csv-' + pid, account: '', dt: e0.time, xdt: '',
+            pair: e0.sym.split('.')[0].toUpperCase(), side: e0.side,
+            entry, sl: null, tp: null, exit: null, lots, risk: 0, pl: null,
+            comm: r2(p.entries.reduce((s, x) => s + x.comm, 0)),
+            pipSize: null, session: 'Other', setup: '', tf: '',
+            notes: 'Imported from broker CSV (' + pid + ')',
+            created: stamp, updated: stamp++,
+          };
+          if (done) {
+            const last = p.exits[p.exits.length - 1];
+            t.exit = wavg(p.exits);
+            t.xdt = last.time;
+            t.pl = r2(p.exits.reduce((s, x) => s + Number(x.pl), 0));
+            t.comm = r2(t.comm + p.exits.reduce((s, x) => s + x.comm, 0));
+            if (last.type.includes('stop') && d * (entry - t.exit) > 0) t.sl = t.exit;
+            if (last.type.includes('take') && d * (t.exit - entry) > 0) t.tp = t.exit;
+          }
+          const c = clean(t);
+          c ? out.push(c) : skipped++;
+        }
+        return { trades: out, skipped };
+      }
+      async function importCsv(file) {
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024)
+          return toast('CSV import failed: file is larger than 5 MB.', 'error');
+        const res = csvTrades(await file.text());
+        if (res.error) return toast('CSV import failed: ' + res.error, 'error');
+        const have = new Set(S.trades.map((t) => t.id));
+        const fresh = res.trades.filter((t) => !have.has(t.id));
+        const dup = res.trades.length - fresh.length;
+        if (!fresh.length)
+          return toast(dup ? 'These trades are already imported.' : 'No trades found in this CSV.', 'error');
+        const def = acc(S.lastAcc) ? S.lastAcc : S.settings.accounts[0].id;
+        openDlg(
+          `<div class="dh"><h2>Import broker CSV</h2></div><div class="db">
+            <p class="mp" style="margin-bottom:16px">${fresh.length} new trade${fresh.length > 1 ? 's' : ''} found${dup ? `, ${dup} already imported` : ''}${res.skipped ? `, ${res.skipped} skipped` : ''}.</p>
+            <label class="f"><span>Import into account</span><select id="csvacc">${S.settings.accounts
+              .map((a) => `<option value="${esc(a.id)}" ${a.id === def ? 'selected' : ''}>${esc(a.name)} (${a.type})</option>`)
+              .join('')}</select></label></div>
+            <div class="df"><button class="btn" data-act="close">Cancel</button>
+            <button class="btn primary" id="csvgo">Import</button></div>`,
+          'sm',
+        );
+        $('#csvgo').onclick = () => {
+          const a = $('#csvacc').value;
+          if (commit([...S.trades, ...fresh.map((t) => ({ ...t, account: a }))])) {
+            S.lastAcc = a;
+            closeDlg();
+            toast(`Imported ${fresh.length} trade${fresh.length > 1 ? 's' : ''}`);
+            render();
+          }
+        };
+      }
+
       /* ---------- actions ---------- */
       const act = {
         view: (d) => {
@@ -2844,10 +2963,14 @@
           refreshCal();
         }
       });
+
       $('#file').onchange = async (e) => {
         const f = e.target.files[0];
         e.target.value = '';
-        await importFile(f);
+        if (!f) return;
+        const isCsv = /\.csv$/i.test(f.name) || f.type === 'text/csv';
+        if (isCsv && S.importMode !== 'setup') await importCsv(f);
+        else await importFile(f);
       };
 
       /* ---------- start ---------- */
