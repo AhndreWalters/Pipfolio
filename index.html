@@ -962,6 +962,22 @@
           .join(' ');
       };
       const fdt = (s) => (s ? s.replace('T', ' ') : '\u2014');
+      function cleanFlow(f) {
+        if (!f || typeof f !== 'object') return null;
+        const amt = Number(f.amount);
+        const o = {
+          id: String(f.id || ''),
+          type: f.type === 'Withdrawal' ? 'Withdrawal' : 'Deposit',
+          date: String(f.date || '').slice(0, 10),
+          amount: amt,
+          note: String(f.note || '').trim().slice(0, 100),
+        };
+        return o.id && /^\d{4}-\d\d-\d\d$/.test(o.date) && Number.isFinite(amt) && amt > 0
+          ? o
+          : null;
+      }
+      const flowNet = (a) =>
+        r2((a.flows || []).reduce((s, f) => s + (f.type === 'Deposit' ? f.amount : -f.amount), 0));
       function cleanAcc(a) {
         if (!a || typeof a !== 'object') return null;
         const b = Number(a.balance),
@@ -980,6 +996,7 @@
             type: ACCT.includes(a.type) ? a.type : 'Other',
             created: Number(a.created) || Date.now(),
             sample: a.sample === true,
+            flows: (Array.isArray(a.flows) ? a.flows : []).map(cleanFlow).filter(Boolean),
           };
         return o.id && o.name && o.currency && Number.isFinite(b) && b >= 0
           ? o
@@ -1345,10 +1362,11 @@
         CTX = cs.length === 1 ? cs[0] : '';
         const list = scope(),
           s = stats(list),
-          start = r2(as.reduce((x, a) => x + a.balance, 0));
+          start = r2(as.reduce((x, a) => x + a.balance, 0)),
+          fl = r2(as.reduce((x, a) => x + flowNet(a), 0));
         const head = `<div class="page-h"><h1>Dashboard</h1><select id="accf" class="hsel" aria-label="Filter by account">${accOpts(S.acc)}</select></div>
           <div class="subl">${cs.length === 1 ? `Balance ${fm(r2(start
-            + s.net))} \u00b7 Starting balance ${fm(start)}`
+            + s.net + fl))} \u00b7 Starting balance ${fm(start)}`
               : 'Accounts use different currencies. Totals are not converted, so ' +
                 'filter by account for exact figures.'}</div>`;
         if (!S.trades.length) return head + emptyState();
@@ -1574,12 +1592,18 @@
         const s = stats(scope());
         if (!s.n) return;
         let run = r2(scopeAccs().reduce((x, a) => x + a.balance, 0));
+                const ev = [
+          ...s.ts.map((x) => ({ k: x.t.xdt, v: x.net })),
+          ...scopeAccs().flatMap((a) =>
+            (a.flows || []).map((f) => ({
+              k: f.date + 'T00:00',
+              v: f.type === 'Deposit' ? f.amount : -f.amount,
+            })),
+          ),
+        ].sort((a, b) => (a.k < b.k ? -1 : a.k > b.k ? 1 : 0));
         const eq = [
           { l: 'Start', v: run },
-          ...s.ts.map((x) => ({
-            l: x.t.xdt.slice(5, 10),
-            v: (run = r2(run + x.net)),
-          })),
+          ...ev.map((x) => ({ l: x.k.slice(5, 10), v: (run = r2(run + x.v)) })),
         ];
         const day = group(s.ts, (x) => x.t.xdt.slice(0, 10))
           .slice(-20)
@@ -2018,12 +2042,13 @@
         const mine = S.trades.filter((t) => t.account === a.id),
           s = stats(mine),
           c = a.currency,
+          net = flowNet(a),
           dash = '\u2014';
         const kv = [
-          ['Current balance', fm(r2(a.balance + s.net), 0, c)],
+          ['Current balance', fm(r2(a.balance + net + s.net), 0, c)],
           ['Starting balance', fm(a.balance, 0, c)],
-          ['Net P&L', `<span class="${cls(s.net)}">${fm(s.net,
-            1, c)}</span>`],
+          ['Net deposits / withdrawals', `<span class="${cls(net)}">${fm(net, 1, c)}</span>`],
+          ['Net P&L', `<span class="${cls(s.net)}">${fm(s.net, 1, c)}</span>`],
           [
             'Return',
             a.balance > 0 && s.n
@@ -2034,20 +2059,35 @@
           ['Trades', mine.length + (s.open ? ` (${s.open} open)` : '')],
           [
             'Profit factor',
-            s.pf == null
-              ? dash
-              : s.pf === Infinity
-                ? '\u221e'
-                : s.pf.toFixed(2),
+            s.pf == null ? dash : s.pf === Infinity ? '\u221e' : s.pf.toFixed(2),
           ],
           ['Average R:R', s.rr == null ? dash : '1:' + s.rr.toFixed(2)],
         ];
+        const fl = [...(a.flows || [])].sort((x, y) =>
+          x.date < y.date ? 1 : x.date > y.date ? -1 : 0,
+        );
+        const flows = fl.length
+          ? `<div class="tw" style="margin-top:12px"><table style="min-width:520px"><thead><tr>
+            <th>Date</th><th>Type</th><th class="n">Amount</th><th>Note</th><th></th></tr></thead><tbody>${fl
+              .map(
+                (f) => `<tr style="cursor:default"><td>${f.date}</td><td>${f.type}</td>
+              <td class="n ${f.type === 'Deposit' ? 'pos' : 'neg'}">${fm(f.type === 'Deposit' ? f.amount : -f.amount, 1, c)}</td>
+              <td>${esc(f.note) || '\u2014'}</td><td class="n"><button class="btn danger" data-act="flowdel"
+              data-id="${esc(a.id)}" data-fid="${esc(f.id)}">Delete</button></td></tr>`,
+              )
+              .join('')}</tbody></table></div>`
+          : `<div class="sub" style="margin-top:8px">No deposits or withdrawals recorded yet.</div>`;
         return `<div class="acc"><div class="acc-h"><div><b>${esc(a.name)}</b> <span class="badge">${a.type}</span>
           <div class="sub">${esc(a.broker) || 'No broker'} \u00b7 ${esc(c)}</div></div>
           <div class="row"><button class="btn" data-act="accview" data-id="${esc(a.id)}">Dashboard</button>
           <button class="btn" data-act="accedit" data-id="${esc(a.id)}">Edit</button>
           <button class="btn danger" data-act="accdel" data-id="${esc(a.id)}">Delete</button></div></div>
-          <div class="kv4">${kv.map(([k, v]) => `<div class="lbl">${k}<b>${v}</b></div>`).join('')}</div></div>`;
+          <div class="kv4">${kv.map(([k, v]) => `<div class="lbl">${k}<b>${v}</b></div>`).join('')}</div>
+          <div class="sec" style="margin-top:16px"><div class="page-h" style="margin:0;min-height:0">
+          <span>Deposits and withdrawals</span><div class="row">
+          <button class="btn" data-act="flowadd" data-id="${esc(a.id)}" data-t="Deposit">Deposit</button>
+          <button class="btn" data-act="flowadd" data-id="${esc(a.id)}" data-t="Withdrawal">Withdraw</button>
+          </div></div></div>${flows}</div>`;
       }
       function settingsView() {
         return `<div class="page-h"><h1>Settings</h1></div><div class="stack">
@@ -2390,6 +2430,7 @@
             currency: g('currency'),
             broker: g('broker'),
             created: a?.created || Date.now(),
+            flows: a?.flows || [],
           };
           const st = {
             accounts: e
@@ -2711,6 +2752,45 @@
         };
       }
 
+      /* ---------- deposits & withdrawals ---------- */
+      function flowForm(id, type) {
+        const a = acc(id);
+        if (!a) return;
+        openDlg(
+          `<div class="dh"><h2>${type} \u00b7 ${esc(a.name)}</h2></div>
+          <form id="ff" novalidate style="display:contents"><div class="db"><div class="grid2">
+          ${F('date', 'Date', `<input name="date" type="date" value="${nowLocal().slice(0, 10)}">`)}
+          ${F('amount', 'Amount (' + esc(a.currency) + ')', nin('amount', '', '0.00'))}
+          <div class="full">${F('note', 'Note (optional)', `<input name="note" maxlength="100" placeholder="e.g. Monthly top-up">`)}</div>
+          </div></div><div class="df"><button type="button" class="btn" data-act="close">Cancel</button>
+          <button class="btn primary">Save ${type.toLowerCase()}</button></div></form>`,
+          'sm',
+        );
+        $('#ff').onsubmit = (ev) => {
+          ev.preventDefault();
+          const f = new FormData(ev.target),
+            g = (n) => String(f.get(n) || '').trim(),
+            er = {},
+            amt = Number(g('amount'));
+          if (!g('date')) er.date = 'Required';
+          if (g('amount') === '') er.amount = 'Required';
+          else if (!Number.isFinite(amt) || amt <= 0) er.amount = 'Must be greater than 0';
+          showErrs(ev.target, er);
+          if (Object.keys(er).length) return;
+          const flow = { id: uid(), type, date: g('date'), amount: amt, note: g('note').slice(0, 100) };
+          const st = {
+            accounts: S.settings.accounts.map((x) =>
+              x.id === id ? { ...x, flows: [...(x.flows || []), flow] } : x,
+            ),
+          };
+          if (commit(S.trades, st)) {
+            closeDlg();
+            toast(type + ' added');
+            render();
+          }
+        };
+      }
+
       /* ---------- actions ---------- */
       const act = {
         view: (d) => {
@@ -2751,6 +2831,28 @@
           }
         },
         accadd: () => accForm(),
+        flowadd: (d) => flowForm(d.id, d.t),
+        flowdel: async (d) => {
+          if (
+            await confirmDel(
+              'Delete this entry?',
+              'This deposit or withdrawal will be permanently removed.',
+              'Delete',
+            )
+          ) {
+            const st = {
+              accounts: S.settings.accounts.map((x) =>
+                x.id === d.id
+                  ? { ...x, flows: (x.flows || []).filter((f) => f.id !== d.fid) }
+                  : x,
+              ),
+            };
+            if (commit(S.trades, st)) {
+              toast('Entry deleted');
+              render();
+            }
+          }
+        },
         accedit: (d) => accForm(acc(d.id)),
         accview: (d) => {
           S.acc = d.id;
