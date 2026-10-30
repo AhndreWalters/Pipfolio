@@ -1,4 +1,4 @@
-    <!doctype html>
+qqqq    <!doctype html>
     <html lang="en" data-theme="light">
     <head>
         <meta charset="utf-8" />
@@ -804,7 +804,117 @@
             }
         }
 
-        </style>
+
+
+        /* Single layout system for all tabs. Original theme variables are unchanged. */
+        .wrap{
+          width:calc(100% - 2 * clamp(18px,4vw,72px));
+          max-width:1480px;
+          margin-inline:auto;
+          padding:24px 0 48px;
+          box-sizing:border-box;
+        }
+        .wrap main,.wrap main>*{min-width:0;max-width:100%}
+        .wrap .top,.wrap .tabs,.wrap .page-h,.wrap .filters,.wrap .footer{max-width:100%;min-width:0}
+        .wrap .tw{max-width:100%;overflow-x:auto}
+        .wrap .two,.wrap .grid2,.wrap .kv4,.wrap .stats,.wrap .charts,.wrap .stack,.wrap .accs{min-width:0}
+        .wrap .card{max-width:100%;box-sizing:border-box}
+        .refdash{
+          --dash-gap:clamp(10px,1vw,16px);
+          --dash-pad:clamp(11px,1.05vw,18px);
+          display:grid;width:100%;min-width:0;gap:var(--dash-gap);
+        }
+        .refdash .ref-top,.refdash .ref-mid,.refdash .ref-bottom,
+        .refdash .ref-legacy,.refdash .ref-morecharts{
+          display:grid;width:100%;min-width:0;gap:var(--dash-gap);align-items:stretch;
+        }
+        .refdash .ref-top{grid-template-columns:repeat(5,minmax(0,1fr))}
+        .refdash .ref-mid{grid-template-columns:repeat(3,minmax(0,1fr))}
+        .refdash .ref-bottom{grid-template-columns:minmax(0,2fr) minmax(0,1fr)}
+        .refdash .ref-legacy{grid-template-columns:repeat(4,minmax(0,1fr))}
+        .refdash .ref-morecharts{grid-template-columns:repeat(2,minmax(0,1fr))}
+        .refdash .ref-card{
+          min-width:0;width:100%;max-width:100%;box-sizing:border-box;
+          border:2px solid var(--bd);border-radius:12px;
+          background:var(--card);padding:var(--dash-pad);
+          margin:0;overflow-wrap:anywhere;
+        }
+        .refdash .ref-top .ref-card{height:auto;min-height:0}
+        .refdash .ref-title{
+          display:flex;align-items:center;justify-content:flex-start;
+          gap:7px;min-width:0;font-size:clamp(9px,.78vw,11px);
+          line-height:1.4;letter-spacing:.75px;text-transform:uppercase;
+          font-weight:600;color:var(--mut);
+        }
+        .refdash .ref-title-text{min-width:0;overflow-wrap:anywhere}
+        .refdash .ref-info{
+          appearance:none;display:inline-grid;place-items:center;
+          flex:0 0 17px;width:17px;height:17px;min-width:17px;
+          padding:0;margin:0;border:0;background:transparent;
+          color:var(--mut);cursor:help;line-height:1;
+        }
+        .refdash .ref-info svg{display:block;width:16px;height:16px;stroke:currentColor;stroke-width:1.8}
+        .refdash .ref-info:focus-visible{outline:2px solid currentColor;outline-offset:2px;border-radius:50%}
+        .refdash .ref-value{font-size:clamp(13px,1.55vw,23px);font-weight:650;line-height:1.3;margin-top:10px;overflow-wrap:anywhere}
+        .refdash .ref-sub{font-size:clamp(10px,.8vw,12px);line-height:1.5;color:var(--mut);margin-top:5px;overflow-wrap:anywhere}
+        .refdash .ref-gauge{display:flex;align-items:center;gap:7px;margin-top:9px;min-width:0}
+        .refdash .ref-gauge svg{display:block;width:min(52%,96px);height:auto;flex:0 1 auto}
+        .refdash .ref-gauge .ref-sub{flex:1 1 0;text-align:center;min-width:0}
+        .refdash .ref-bar{height:6px;display:flex;overflow:hidden;border-radius:8px;background:var(--bd);margin-top:8px}
+        .refdash .ref-bar span{height:100%}
+        .refdash .ref-mid .ref-card,.refdash .ref-morecharts .ref-card{display:flex;flex-direction:column;height:auto;min-height:0}
+        .refdash .ref-plot{display:block;min-width:0;width:100%;margin-top:12px;flex:0 0 auto}
+        .refdash .ref-mid .ref-plot{height:clamp(260px,25vw,350px)}
+        .refdash .ref-morecharts .ref-plot{height:clamp(220px,20vw,270px)}
+        .refdash .ref-plot svg{display:block;width:100%;height:100%;max-width:100%;margin-inline:auto}
+        .refdash .ref-bottom>.ref-card{height:auto;min-height:0;align-self:stretch}
+        .refdash #cal .cal-h{margin-bottom:9px}
+        .refdash #cal .cal-nav{gap:5px;flex-wrap:wrap;min-width:0}
+        .refdash #cal .cal-nav select{width:105px;max-width:100%}
+        .refdash #cal .cal-nav input{width:70px;max-width:100%}
+        .refdash #cal .cal-nav .btn{height:29px;padding:0 7px}
+        .refdash #cal .cal-nav .btn.icon{width:29px}
+        .refdash #cal .cal-sum{margin-bottom:9px}
+        .refdash #cal .cal-grid{grid-template-columns:repeat(7,minmax(0,1fr));gap:clamp(2px,.3vw,5px)}
+        .refdash #cal .cal-d{box-sizing:border-box;min-width:0;max-width:100%;height:auto;min-height:clamp(42px,3.7vw,53px);padding:clamp(3px,.4vw,6px);gap:1px}
+        .refdash #cal .cal-v,.refdash #cal .cal-n{overflow:hidden;text-overflow:ellipsis}
+        .refdash #cal .cal-hint{margin-top:8px}
+        .refdash .ref-calendar-title{display:flex;align-items:center;gap:7px}
+        .refdash .ref-activity-card{display:flex;flex-direction:column;min-height:0;overflow:hidden;height:var(--activity-target-height,auto);max-height:var(--activity-target-height,none)}
+        .refdash .ref-activity{display:flex;flex-direction:column;flex:0 1 auto;min-height:0;gap:2px;margin-top:8px;overflow:hidden}
+        .refdash .ref-activity-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;align-items:center;flex:0 0 auto;padding:3px 2px;line-height:1.3;font-size:12px}
+        .refdash .ref-activity-row[hidden]{display:none}
+        .refdash .ref-activity-row>span{min-width:0;overflow-wrap:anywhere}
+        .refdash .ref-activity-row>span:last-child{text-align:right}
+        .refdash .ref-chip{display:inline-block;padding:2px 7px;margin-right:6px;border-radius:4px;background:var(--posbg);color:var(--pos);font-size:10px}
+        .refdash .ref-chip.loss{background:var(--negbg);color:var(--neg)}
+        .refdash .ref-activity-date{color:var(--mut);font-size:10px}
+        .refdash .ref-legacy .ref-card{min-height:90px}
+        .refdash .ref-legacy .ref-value{font-size:clamp(12px,1.2vw,18px)}
+        .ref-help-pop{position:fixed;z-index:99999;max-width:min(340px,calc(100vw - 20px));width:max-content;box-sizing:border-box;pointer-events:none;padding:11px 13px;border:1px solid var(--bd);border-radius:9px;background:var(--card);color:var(--tx);box-shadow:0 8px 26px #0003;font-size:12px;line-height:1.55;overflow-wrap:anywhere}
+        .ref-help-pop strong{display:block;font-size:12px;margin-bottom:5px}
+        @media(max-width:800px){
+          .wrap{width:calc(100% - 2 * 16px)}
+          .refdash{--dash-gap:7px;--dash-pad:7px}
+          .refdash .ref-mid .ref-plot{height:clamp(170px,26vw,250px)}
+          .refdash .ref-morecharts .ref-plot{height:210px}
+          .refdash .ref-gauge{flex-wrap:wrap;justify-content:center}
+          .refdash .ref-gauge .ref-sub{flex:1 1 100%}
+          .refdash .ref-activity-date{display:none}
+        }
+        @media(max-width:540px){
+          .wrap{width:calc(100% - 2 * 10px)}
+          .refdash{--dash-gap:5px;--dash-pad:5px}
+          .refdash .ref-title{font-size:9px;letter-spacing:0}
+          .refdash .ref-info{flex-basis:13px;width:13px;height:13px;min-width:13px}
+          .refdash .ref-info svg{width:13px;height:13px}
+          .refdash .ref-mid .ref-plot{height:160px}
+          .refdash .ref-morecharts .ref-plot{height:170px}
+          .refdash #cal .cal-d{min-height:36px;padding:2px}
+          .refdash #cal .cal-n{display:none}
+          .refdash .ref-activity-row{font-size:10px;gap:3px}
+        }
+</style>
     </head>
     <body>
         <noscript>
@@ -1387,7 +1497,7 @@
             <main>${v === 'dashboard' ? dashboard() : v === 'trades'
                 ? tradesView() : settingsView()}</main>
             <footer class="footer">\u00a9 ${new Date().getFullYear()} Pipfolio. All rights reserved.</footer></div>`;
-            if (v === 'dashboard' && S.trades.length) drawCharts();
+            if (v === 'dashboard' && S.trades.length) { drawReferenceCharts(); observeDashboardCharts(); fitDashboardActivity(); observeActivityFit(); }
         }
         const emptyState = () =>
             `<div class="card empty"><h2>No trades yet</h2><p>Add your first trade to start tracking
@@ -1493,25 +1603,52 @@
             ['Total commission', fm(totComm), ''],
             ['Additional charges', fm(r2(s.ts.reduce((sum, x) => sum + (x.t.charges || 0), 0))), ''],
             ];
-            return (
-            head +
-            `<div class="stats">${c.map(([l, v, sub, k]) => `<div class="card stat">
-                <div class="lbl">${l}</div><div class="val ${k || ''}">${v}</div>
-                <div class="sub">${sub || '&nbsp;'}</div></div>`).join('')}</div>
-                <div class="card cal-card" id="cal">${calendar()}</div>
-                <div class="charts">${[
-    ['Equity curve', 'eq', 'c3'],
-    ['P&L over time (by close date)', 'day', 'c3'],
-    ['Win vs. loss', 'wl', 'c2'],
-    ['Performance by pair', 'pair', 'c2'],
-    ['Performance by session', 'sess', 'c2'],
-    ]
-    .map(
-        ([t, id, k]) =>
-        `<div class="card ${k}"><h2>${t}</h2><div class="chart" data-chart="${id}"></div></div>`,
-    )
-    .join('')}</div>`
-            );
+
+            const winDays = new Map();
+            s.ts.forEach(x => { const k=x.t.xdt.slice(0,10), d=winDays.get(k)||0; winDays.set(k,r2(d+x.net)); });
+            const dw = [...winDays.values()];
+            const dayWin = dw.length ? 100*dw.filter(v=>v>0).length/dw.length : 0;
+            const ratio = Math.abs(s.al)>0 ? s.aw/Math.abs(s.al) : null;
+            const refHelp = {"Net P&L": "Sum of net P&L across all closed trades in the selected scope. Net P&L per trade is calculated by the existing trade calculator, including recorded costs.", "Trade win %": "Percentage of closed trades classified as wins. Formula: winning closed trades ÷ all closed trades × 100. Breakeven trades remain in the denominator.", "Profit factor": "Gross winning-trade net P&L ÷ absolute gross losing-trade net P&L. Displays ∞ if there are profits but no losses; — if neither exists.", "Day win %": "Percentage of trading close dates with positive aggregate net P&L. Formula: profitable close dates ÷ all dates with closed trades × 100. Flat days count in the denominator.", "Avg win / loss": "Average winning-trade net P&L ÷ absolute average losing-trade net P&L. A missing loss average displays —.", "Edge score": "Six-part radar score using win rate, capped profit factor ÷ 3, capped average win/loss ratio ÷ 3, drawdown score, recovery score, and consistency score. Overall score = 100 × average of the six normalized components. Drawdown score = max(0, 1 − absolute worst relative drawdown ÷ 20); recovery = min(1, max(0, net P&L) ÷ maximum drawdown ÷ 3), or 0 when maximum drawdown is zero; consistency = max(0, 1 − min(1, standard deviation of daily P&L ÷ (absolute average daily P&L + 100))). This is the dashboard’s existing custom score, not a standard trading metric.", "Daily net cumulative P&L": "Running sum of net P&L grouped by trade close date, in date order. Each point = previous cumulative P&L + that day’s net P&L. The lower bars show relative drawdown from the prior cumulative peak.", "Net daily P&L": "Daily net trading profit or loss. Each bar = sum of net P&L for trades closed on that date. Positive days are green; negative days are red.", "Trading calendar": "Monthly calendar of trades grouped by close date. Each day uses the existing calendar daily net P&L calculation; the summary totals closed trades and green/red days in the displayed month.", "Activity": "Most recent ten closed trades in the selected scope, displayed newest first, showing outcome, pair, close date, and net P&L.", "Total trades": "Number of closed trades in the selected scope. Open trades are excluded from this total.", "Winning trades": "Number of closed trades whose calculated result is Win.", "Losing trades": "Number of closed trades whose calculated result is Loss.", "Average R:R": "Arithmetic average of planned risk-to-reward ratios on closed trades with stop-loss and take-profit set. Formula: sum of available planned R:R values ÷ count of those values.", "Best trade": "Closed trade with the highest calculated net P&L.", "Worst trade": "Closed trade with the lowest calculated net P&L.", "Current streak": "Count of consecutive most-recent closed trades with the same Win or Loss result, ending at the latest trade. Breakeven at the end resets the streak.", "Expectancy": "Average net P&L per closed trade. Formula: total net P&L ÷ number of closed trades.", "Average R": "Average realized R for closed trades where realized R is available. Formula: sum of realized R values ÷ number of such trades.", "Total pips": "Sum of calculated pips across closed trades, rounded to one decimal place.", "Total commission": "Sum of recorded commissions across closed trades.", "Additional charges": "Sum of recorded additional charges across closed trades.", "Performance by pair": "Groups closed trades by currency pair and sums net P&L for each pair. Displays the eight highest groups by net P&L.", "Performance by session": "Groups closed trades by trading session and sums net P&L for each session. Displays the eight highest groups by net P&L."};
+            const info = title => `<button type="button" class="ref-info" data-refhelp="${esc(title)}" aria-label="Information about ${esc(title)}"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></button>`;
+            const titleHtml = title => `<div class="ref-title"><span class="ref-title-text">${title}</span>${info(title)}</div>`;
+            const featured = [
+              ['Net P&L',fm(s.net,1),`${s.n} closed trades · ${fm(totComm)} commission`,cls(s.net),'net'],
+              ['Trade win %',s.wr.toFixed(1)+'%',`${s.w.length} W · ${s.be} BE · ${s.l.length} L`,'','win'],
+              ['Profit factor',s.pf===null?'—':s.pf===Infinity?'∞':s.pf.toFixed(2),'gross profit ÷ gross loss','','pf'],
+              ['Day win %',dayWin.toFixed(1)+'%',`${dw.length} days`,'','daywin'],
+              ['Avg win / loss',ratio===null?'—':ratio.toFixed(2),`${fm(s.aw,1)} avg win · ${fm(s.al)} avg loss`,'','ratio']
+            ];
+            const gauge = (pct,side) => `<div class="ref-gauge"><svg viewBox="0 0 110 70" aria-label="${pct.toFixed(1)} percent">
+                <path d="M 12 58 A 43 43 0 0 1 98 58" stroke="var(--bd)" stroke-width="9" stroke-linecap="round" fill="none"/>
+                <path d="M 12 58 A 43 43 0 0 1 98 58" stroke="#079eea" stroke-width="9" stroke-linecap="round" fill="none" pathLength="100" stroke-dasharray="${Math.max(0,Math.min(100,pct))} 100"/>
+                <text x="55" y="64" text-anchor="middle" fill="var(--tx)" font-size="19" font-weight="650">${pct.toFixed(1)}%</text></svg><div class="ref-sub">${side}</div></div>`;
+            const metric = ([label,value,sub,tone,id])=>`<div class="ref-card">${titleHtml(label)}
+                ${id==='win'?gauge(s.wr,`${s.w.length} W<br>${s.be} BE<br>${s.l.length} L`):
+                  id==='daywin'?gauge(dayWin,`${dw.length} days`):
+                  `<div class="ref-value ${tone}">${value}</div><div class="ref-sub">${sub}</div>
+                  ${id==='ratio'?`<div class="ref-bar"><span style="width:${ratio===null?0:100*ratio/(ratio+1)}%;background:#00b820"></span><span style="flex:1;background:#e43a46"></span></div>`:''}`}</div>`;
+            const panel=(title,id)=>`<div class="ref-card">${titleHtml(title)}<div class="ref-plot" data-refchart="${id}"></div></div>`;
+            const recent=[...s.ts].reverse().slice(0,15);
+            return head+`<div class="refdash">
+                <div class="ref-top">${featured.map(metric).join('')}</div>
+                <div class="ref-mid">
+                  ${panel('Edge score','edge')}
+                  ${panel('Daily net cumulative P&L','cumulative')}
+                  ${panel('Net daily P&L','daily')}
+                </div>
+                <div class="ref-bottom">
+                  <div class="ref-card" id="cal">${calendar()}</div>
+                  <div class="ref-card ref-activity-card">${titleHtml("Activity")}<div class="ref-sub">Recent trades</div>
+                    <div class="ref-activity">${recent.map(x=>`<div class="ref-activity-row">
+                    <span><span class="ref-chip ${x.net<0?'loss':''}">${x.res.toUpperCase()}</span>${esc(x.t.pair)}</span>
+                    <span><span class="ref-activity-date">${x.t.xdt.slice(0,10)}</span> &nbsp; <b class="${cls(x.net)}">${fm(x.net,1)}</b></span></div>`).join('')}</div>
+                  </div>
+                </div>
+                <div class="ref-legacy">${c.filter(x=>!['Net P&L','Win rate','Profit factor','Average win','Average loss'].includes(x[0])).map(x=>`<div class="ref-card">${titleHtml(x[0])}<div class="ref-value ${x[3]||''}">${x[1]}</div><div class="ref-sub">${x[2]||'&nbsp;'}</div></div>`).join('')}</div>
+                <div class="ref-morecharts">${panel('Performance by pair','pair')}${panel('Performance by session','sess')}</div>
+              </div>`;
+
         }
 
         const CH = 240,
@@ -1686,11 +1823,159 @@
             el.innerHTML = f[el.dataset.chart](w);
             });
         }
+
+        function drawReferenceCharts(){
+          const st=stats(scope()), ts=st.ts;
+          if(!ts.length)return;
+          const byDate=new Map();
+          ts.forEach(x=>{let k=x.t.xdt.slice(0,10);byDate.set(k,r2((byDate.get(k)||0)+x.net));});
+          const daily=[...byDate].sort((a,b)=>a[0].localeCompare(b[0]));
+          let cumulative=0, peak=0, maxDD=0;
+          const curve=daily.map(([k,v])=>{cumulative=r2(cumulative+v);peak=Math.max(peak,cumulative);maxDD=Math.max(maxDD,peak-cumulative);return {l:k,v:cumulative};});
+          const drawdown=curve.map(p=>{const high=Math.max(0,...curve.filter(x=>x.l<=p.l).map(x=>x.v));return high>0?100*(p.v-high)/high:0;});
+          const wins=st.wr/100, pf=st.pf===Infinity?1:st.pf===null?0:Math.min(1,st.pf/3);
+          const al=Math.abs(st.al), ratio=al?Math.min(1,st.aw/al/3):0;
+          const greenDays=daily.length?daily.filter(x=>x[1]>0).length/daily.length:0;
+          const consistency=daily.length?Math.max(0,1-Math.min(1,Math.sqrt(daily.reduce((a,x)=>a+(x[1]-st.net/daily.length)**2,0)/daily.length)/(Math.abs(st.net/daily.length)+100))):0;
+          const recovery=maxDD?Math.min(1,Math.max(0,st.net)/maxDD/3):0;
+          const radarVals=[wins,pf,ratio,Math.max(0,1-Math.abs(Math.min(...drawdown))/20),recovery,consistency];
+          const score=100*radarVals.reduce((a,b)=>a+b,0)/6;
+          const chartEls=document.querySelectorAll('[data-refchart]');
+          chartEls.forEach(el=>{
+            const id=el.dataset.refchart, w=Math.max(260,Math.floor(el.clientWidth)), h=Math.max(190,Math.floor(el.clientHeight));
+            const color='#079eea', red='#e43a46', green='#00b820', muted='var(--mut)';
+            if(id==='edge'){
+              const cx=w/2,cy=h/2+12,R=Math.min(w*.31,h*.36),labels=['Win %','Profit factor','Avg win/loss','Drawdown','Recovery','Consistency'];
+              const xy=(i,r)=>[cx+Math.sin(i*Math.PI/3)*r,cy-Math.cos(i*Math.PI/3)*r];
+              const poly=vs=>vs.map((v,i)=>xy(i,R*v).join(',')).join(' ');
+              el.innerHTML=`<svg viewBox="0 0 ${w} ${h}"><text x="${w-5}" y="20" text-anchor="end" fill="${color}" font-size="22" font-weight="650">${score.toFixed(2)}<tspan fill="${muted}" font-size="11"> /100</tspan></text>
+                ${[.25,.5,.75,1].map(v=>`<polygon points="${poly(Array(6).fill(v))}" fill="none" stroke="var(--bd)" stroke-width="1"/>`).join('')}
+                ${labels.map((t,i)=>{let [x,y]=xy(i,R+22);return `<line x1="${cx}" y1="${cy}" x2="${xy(i,R)[0]}" y2="${xy(i,R)[1]}" stroke="var(--bd)"/><text x="${x}" y="${y}" text-anchor="middle" fill="${muted}" font-size="10">${t}</text>`}).join('')}
+                <polygon points="${poly(radarVals)}" fill="${color}" fill-opacity=".24" stroke="${color}" stroke-width="2"/></svg>`;
+            }else if(id==='daily'||id==='cumulative'){
+              const items=id==='daily'?daily.map(([l,v])=>({l,v})):curve;
+              const values=items.map(x=>x.v),lo=Math.min(0,...values),hi=Math.max(0,...values),span=hi-lo||1;
+              const L=52,T=24,B=40,R=10,pw=w-L-R,ph=h-T-B;
+              const y=v=>T+(hi-v)/span*ph, x=i=>L+(items.length===1?pw/2:i*pw/(items.length-1));
+              const ticks=Array.from({length:5},(_,i)=>lo+span*i/4);
+              const grid=ticks.map(v=>`<line x1="${L}" x2="${w-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--bd)"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end" fill="${muted}" font-size="10">${Math.round(v).toLocaleString()}</text>`).join('');
+              const dates=[0,Math.floor((items.length-1)/2),items.length-1].filter((v,i,a)=>a.indexOf(v)===i);
+              const xlabels=dates.map(i=>`<text x="${x(i)}" y="${h-9}" text-anchor="middle" fill="${muted}" font-size="10">${items[i].l}</text>`).join('');
+              if(id==='daily'){
+                const bw=Math.max(2,Math.min(15,pw/(items.length||1)*.62));
+                el.innerHTML=`<svg viewBox="0 0 ${w} ${h}">${grid}<line x1="${L}" x2="${w-R}" y1="${y(0)}" y2="${y(0)}" stroke="var(--mut)"/>
+                ${items.map((it,i)=>`<rect x="${x(i)-bw/2}" y="${Math.min(y(0),y(it.v))}" width="${bw}" height="${Math.max(1,Math.abs(y(0)-y(it.v)))}" rx="1" fill="${it.v>=0?green:red}"><title>${it.l}: ${fm(it.v,1)}</title></rect>`).join('')}${xlabels}</svg>`;
+              }else{
+                const line=items.map((it,i)=>`${i?'L':'M'}${x(i)} ${y(it.v)}`).join(' ');
+                const area=`${line} L${x(items.length-1)} ${y(lo)} L${x(0)} ${y(lo)} Z`;
+                const ddh=75,ddy=h-ddh;
+                const maxAbs=Math.max(1,...drawdown.map(Math.abs));
+                el.innerHTML=`<svg viewBox="0 0 ${w} ${h}"><defs><linearGradient id="refgrad" x1="0" y1="0" x2="0" y2="1"><stop stop-color="${color}" stop-opacity=".22"/><stop offset="1" stop-color="${color}" stop-opacity="0"/></linearGradient></defs>
+                <g transform="translate(0,-28) scale(1,.77)">${grid}<path d="${area}" fill="url(#refgrad)"/><path d="${line}" fill="none" stroke="${color}" stroke-width="2"/></g>
+                <line x1="0" x2="${w}" y1="${ddy-12}" y2="${ddy-12}" stroke="var(--bd)"/>
+                <text x="0" y="${ddy+2}" fill="${muted}" font-size="10" letter-spacing="1">RELATIVE DRAWDOWN</text><text x="${w-5}" y="${ddy+2}" text-anchor="end" fill="${red}" font-size="10">MAX −${Math.abs(Math.min(...drawdown)).toFixed(1)}%</text>
+                ${drawdown.map((v,i)=>`<rect x="${x(i)-Math.max(1,pw/items.length*.35)}" y="${ddy+10}" width="${Math.max(2,pw/items.length*.7)}" height="${Math.abs(v)/maxAbs*(ddh-28)}" fill="${red}" opacity=".85"/>`).join('')}</svg>`;
+              }
+            }else{
+              const data=group(ts,x=>id==='pair'?x.t.pair:x.t.session).sort((a,b)=>b.v-a.v).slice(0,8);
+              el.innerHTML=barChart(w,data);
+            }
+          });
+        }
+
+
+        /* Dashboard-only tooltip layer; does not modify application data or behavior. */
+        let refTip;
+        const showRefTip = el => {
+          const dash=document.querySelector('.refdash');
+          if(!dash || !dash.contains(el))return;
+          const title=el.getAttribute('data-refhelp');
+          const info={"Net P&L": "Sum of net P&L across all closed trades in the selected scope. Net P&L per trade is calculated by the existing trade calculator, including recorded costs.", "Trade win %": "Percentage of closed trades classified as wins. Formula: winning closed trades ÷ all closed trades × 100. Breakeven trades remain in the denominator.", "Profit factor": "Gross winning-trade net P&L ÷ absolute gross losing-trade net P&L. Displays ∞ if there are profits but no losses; — if neither exists.", "Day win %": "Percentage of trading close dates with positive aggregate net P&L. Formula: profitable close dates ÷ all dates with closed trades × 100. Flat days count in the denominator.", "Avg win / loss": "Average winning-trade net P&L ÷ absolute average losing-trade net P&L. A missing loss average displays —.", "Edge score": "Six-part radar score using win rate, capped profit factor ÷ 3, capped average win/loss ratio ÷ 3, drawdown score, recovery score, and consistency score. Overall score = 100 × average of the six normalized components. Drawdown score = max(0, 1 − absolute worst relative drawdown ÷ 20); recovery = min(1, max(0, net P&L) ÷ maximum drawdown ÷ 3), or 0 when maximum drawdown is zero; consistency = max(0, 1 − min(1, standard deviation of daily P&L ÷ (absolute average daily P&L + 100))). This is the dashboard’s existing custom score, not a standard trading metric.", "Daily net cumulative P&L": "Running sum of net P&L grouped by trade close date, in date order. Each point = previous cumulative P&L + that day’s net P&L. The lower bars show relative drawdown from the prior cumulative peak.", "Net daily P&L": "Daily net trading profit or loss. Each bar = sum of net P&L for trades closed on that date. Positive days are green; negative days are red.", "Trading calendar": "Monthly calendar of trades grouped by close date. Each day uses the existing calendar daily net P&L calculation; the summary totals closed trades and green/red days in the displayed month.", "Activity": "Most recent ten closed trades in the selected scope, displayed newest first, showing outcome, pair, close date, and net P&L.", "Total trades": "Number of closed trades in the selected scope. Open trades are excluded from this total.", "Winning trades": "Number of closed trades whose calculated result is Win.", "Losing trades": "Number of closed trades whose calculated result is Loss.", "Average R:R": "Arithmetic average of planned risk-to-reward ratios on closed trades with stop-loss and take-profit set. Formula: sum of available planned R:R values ÷ count of those values.", "Best trade": "Closed trade with the highest calculated net P&L.", "Worst trade": "Closed trade with the lowest calculated net P&L.", "Current streak": "Count of consecutive most-recent closed trades with the same Win or Loss result, ending at the latest trade. Breakeven at the end resets the streak.", "Expectancy": "Average net P&L per closed trade. Formula: total net P&L ÷ number of closed trades.", "Average R": "Average realized R for closed trades where realized R is available. Formula: sum of realized R values ÷ number of such trades.", "Total pips": "Sum of calculated pips across closed trades, rounded to one decimal place.", "Total commission": "Sum of recorded commissions across closed trades.", "Additional charges": "Sum of recorded additional charges across closed trades.", "Performance by pair": "Groups closed trades by currency pair and sums net P&L for each pair. Displays the eight highest groups by net P&L.", "Performance by session": "Groups closed trades by trading session and sums net P&L for each session. Displays the eight highest groups by net P&L."};
+          const description=info[title];
+          if(!description)return;
+          if(!refTip){refTip=document.createElement('div');refTip.className='ref-help-pop';refTip.setAttribute('role','tooltip');document.body.appendChild(refTip);}
+          refTip.replaceChildren();
+          const h=document.createElement('strong');h.textContent=title;
+          const d=document.createElement('div');d.textContent=description;
+          refTip.append(h,d);
+          refTip.hidden=false;
+          const a=el.getBoundingClientRect(),b=refTip.getBoundingClientRect();
+          const x=Math.max(10,Math.min(innerWidth-b.width-10,a.left+a.width/2-b.width/2));
+          let y=a.bottom+9;
+          if(y+b.height>innerHeight-8)y=Math.max(8,a.top-b.height-9);
+          refTip.style.left=x+'px';refTip.style.top=y+'px';
+        };
+        const hideRefTip=()=>{if(refTip)refTip.hidden=true;};
+        document.addEventListener('pointerover',e=>{const el=e.target.closest?.('.ref-info');if(el)showRefTip(el);});
+        document.addEventListener('pointerout',e=>{if(e.target.closest?.('.ref-info'))hideRefTip();});
+        document.addEventListener('focusin',e=>{const el=e.target.closest?.('.ref-info');if(el)showRefTip(el);});
+        document.addEventListener('focusout',e=>{if(e.target.closest?.('.ref-info'))hideRefTip();});
+        document.addEventListener('keydown',e=>{if(e.key==='Escape')hideRefTip();});
+        window.addEventListener('scroll',hideRefTip,true);
+        window.addEventListener('resize',hideRefTip);
+
+
+        let activityFitObserver;
+        function fitDashboardActivity(){
+          const dash=document.querySelector('.refdash');
+          if(!dash)return;
+          const card=dash.querySelector('.ref-activity-card');
+          const calendar=dash.querySelector('#cal');
+          const list=card?.querySelector('.ref-activity');
+          if(!card||!calendar||!list)return;
+          const rows=Array.from(list.children).slice(0,15);
+          const target=Math.ceil(calendar.getBoundingClientRect().height);
+          if(target<=0)return;
+          card.style.setProperty('--activity-target-height',target+'px');
+          // Reset visibility before measuring so previously hidden rows can reappear.
+          Array.from(list.children).forEach((row,i)=>row.hidden=i>=15);
+          const bounds=card.getBoundingClientRect();
+          const listTop=list.getBoundingClientRect().top;
+          const style=getComputedStyle(card);
+          const available=Math.max(0,bounds.top+target-listTop-
+            (parseFloat(style.paddingBottom)||0)-(parseFloat(style.borderBottomWidth)||0));
+          const gap=parseFloat(getComputedStyle(list).rowGap)||0;
+          let used=0;
+          rows.forEach((row,i)=>{
+            const rowHeight=row.getBoundingClientRect().height;
+            const required=rowHeight+(i>0&&used>0?gap:0);
+            if(used+required>available+0.5)row.hidden=true;
+            else used+=required;
+          });
+        }
+        function observeActivityFit(){
+          if(activityFitObserver)activityFitObserver.disconnect();
+          const cal=document.querySelector('.refdash #cal');
+          if(!cal)return;
+          if('ResizeObserver' in window){
+            activityFitObserver=new ResizeObserver(()=>requestAnimationFrame(fitDashboardActivity));
+            activityFitObserver.observe(cal);
+          }
+        }
+
+        let dashboardChartObserver;
+        function observeDashboardCharts(){
+          if(dashboardChartObserver) dashboardChartObserver.disconnect();
+          if(!('ResizeObserver' in window)) return;
+          let lastWidths=new WeakMap();
+          dashboardChartObserver=new ResizeObserver(entries=>{
+            let changed=false;
+            for(const entry of entries){
+              const width=Math.round(entry.contentRect.width);
+              if(lastWidths.has(entry.target) && lastWidths.get(entry.target)!==width) changed=true;
+              lastWidths.set(entry.target,width);
+            }
+            if(changed){clearTimeout(rt);rt=setTimeout(()=>{
+              if(S.view==='dashboard' && document.querySelector('[data-refchart]')) drawReferenceCharts();
+            },120);}
+          });
+          document.querySelectorAll('.refdash [data-refchart]').forEach(el=>dashboardChartObserver.observe(el));
+        }
         let rt;
         addEventListener('resize', () => {
             clearTimeout(rt);
             rt = setTimeout(() => {
-            if (S.view === 'dashboard' && $('[data-chart]')) drawCharts();
+            if (S.view === 'dashboard' && $('[data-refchart]')) drawReferenceCharts();
             }, 150);
         });
 
@@ -1805,7 +2090,7 @@
                 trade${trades > 1 ? 's' : ''} \u00b7 ${green} green and ${red} red
                 day${green + red === 1 ? '' : 's'}`
             : 'No closed trades in this month.';
-            return `<div class="cal-h"><div><h2>Trading calendar</h2>
+            return `<div class="cal-h"><div><h2 class="ref-calendar-title">Trading calendar <button type="button" class="ref-info" data-refhelp="Trading calendar" aria-label="Information about Trading calendar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></button></h2>
             <div class="sub">${name} \u00b7 daily results by close date</div></div>
             <div class="cal-nav">
             <button class="btn icon" data-act="calprevy" aria-label="Previous year"
