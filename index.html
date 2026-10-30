@@ -1101,6 +1101,8 @@
             risk: num(t.risk) ?? 0,
             pl: num(t.pl),
             comm: num(t.comm) ?? 0,
+            charges: num(t.charges) ?? 0,
+            adjustment: num(t.adjustment) ?? 0,
             pipSize: num(t.pipSize),
             session: SESS.includes(t.session) ? t.session : 'Other',
             setup: String(t.setup || '')
@@ -1119,13 +1121,14 @@
             if (o.xdt && (!okDt(o.xdt) || o.xdt < o.dt)) return null;
             for (const k of ['entry', 'lots'])
             if (o[k] == null || isNaN(o[k])) return null;
-            for (const k of ['sl', 'tp', 'risk', 'comm', 'exit', 'pl'])
+            for (const k of ['sl', 'tp', 'risk', 'comm', 'charges', 'adjustment', 'exit', 'pl'])
             if (isNaN(o[k])) return null;
             if (
             !(o.entry > 0 && o.lots > 0) ||
             (o.exit != null && o.exit <= 0) ||
             o.risk < 0 ||
-            o.comm < 0
+            o.comm < 0 ||
+            o.charges < 0
             )
             return null;
             if (!(o.pipSize > 0)) o.pipSize = defPip(o.pair);
@@ -1169,7 +1172,7 @@
         const calc = (t) => {
             const d = t.side === 'Buy' ? 1 : -1,
             c = closed(t),
-            net = c ? r2(t.pl - t.comm) : null;
+            net = c ? r2(t.pl - t.comm - (t.charges || 0) + (t.adjustment || 0)) : null;
             return {
             c,
             net,
@@ -1488,6 +1491,7 @@
             ],
             ['Total pips', totPips, '', cls(totPips)],
             ['Total commission', fm(totComm), ''],
+            ['Additional charges', fm(r2(s.ts.reduce((sum, x) => sum + (x.t.charges || 0), 0))), ''],
             ];
             return (
             head +
@@ -2187,6 +2191,7 @@
                 session: '',
                 risk: '',
                 comm: '',
+                charges: '',
                 account:
                 S.acc !== 'all'
                     ? S.acc
@@ -2250,7 +2255,10 @@
                 'Gross profit / loss <span class="ccy"></span>', nin('pl',
                 v.pl, '0.00'), 'Before commission. Negative for a loss.')}
             ${F('comm', 'Commission <span class="ccy"></span>',
-                nin('comm', v.comm, '0.00'), 'Enter as a positive cost')}${F('pipSize',
+                nin('comm', v.comm, '0.00'), 'Enter as a positive cost')}${F('charges',
+                'Additional charges <span class="ccy"></span>',
+                nin('charges', v.charges, '0.00'),
+                'Swap, financing, and other broker fees. Imported automatically when available; edit to override.')}${F('pipSize',
                 'Pip size', nin('pipSize', e ? v.pipSize : '', 'Auto'),
                     'Blank for auto (JPY 0.01, XAU 0.1, others 0.0001)')}
             <div class="full">${F('notes', 'Notes', `<textarea name="notes" maxlength="5000" placeholder="Why you took the trade, how you managed it, what you learned">${esc(v.notes
@@ -2440,6 +2448,7 @@
             tp = opt('tp'),
             risk = opt('risk'),
             comm = opt('comm'),
+            charges = opt('charges'),
             ps = opt('pipSize');
             for (const [n, x] of [
             ['entry', entry],
@@ -2453,6 +2462,7 @@
             for (const [n, x] of [
             ['risk', risk],
             ['comm', comm],
+            ['charges', charges],
             ])
             if (x != null && x < 0) e[n] = 'Cannot be negative';
                         if (xd || xt || exit != null || pl != null) {
@@ -2491,6 +2501,7 @@
                 risk: risk ?? 0,
                 pl,
                 comm: comm ?? 0,
+                charges: charges ?? 0,
                 pipSize: ps,
                 session,
                 setup: g('setup'),
@@ -2599,6 +2610,8 @@
                 : `<span class="${cls(t.pl)}">${fm(t.pl, 1, k)}</span>`,
             ],
             ['Commission', fm(t.comm, 0, k)],
+            ['Additional charges', fm(t.charges || 0, 0, k)],
+            ['Broker P&L adjustment', fm(t.adjustment || 0, 1, k)],
             [
                 'Net P&L',
                 c.net == null
@@ -2780,26 +2793,40 @@
         function csvTrades(txt) {
             const rows = parseCsv(txt);
             if (rows.length < 2) return { error: 'The file has no data rows.' };
-            const head = rows[0].map((h) => h.trim().toLowerCase());
+            const head = rows[0].map((h) => h.trim().toLowerCase().replace(/\s+/g, ' '));
             const cols = ['symbol', 'side', 'type', 'qty', 'avg fill price', 'status',
             'update time', 'position id', 'commission', 'closed p&l'];
             const miss = cols.filter((c) => head.indexOf(c) < 0);
             if (miss.length) return { error: 'Missing columns: ' + miss.join(', ') + '.' };
             const I = Object.fromEntries(cols.map((c) => [c, head.indexOf(c)]));
+            // Only use explicitly labelled broker fee columns; never estimate missing fees.
+            const feeCols = head.map((h, i) => /^(swap|swap fee|swap fees|financing|financing fee|financing fees|overnight fee|overnight fees|other fees|additional charges|transaction fee|transaction fees|exchange fee|exchange fees)$/.test(h) ? i : -1).filter((i) => i >= 0);
             const pos = new Map();
+            const balanceCol = head.findIndex((h) => /^(account balance|balance after|running balance|ending balance)$/.test(h));
+            const reportedBalances = [];
+            const badFinancial = [];
             rows.slice(1).forEach((r) => {
             const g = (c) => (r[I[c]] ?? '').trim();
             const pid = g('position id');
+            if (balanceCol >= 0 && String(r[balanceCol] ?? '').trim() !== '') {
+                const b = Number(String(r[balanceCol]).replace(/[$, ]/g, ''));
+                if (Number.isFinite(b)) reportedBalances.push({ time: csvDt(g('update time')), value: b });
+            }
             if (g('status').toLowerCase() !== 'filled' || !pid) return;
             const o = {
                 sym: g('symbol'), side: g('side'), type: g('type').toLowerCase(),
                 qty: Number(g('qty')), price: Number(g('avg fill price')),
                 time: csvDt(g('update time')), comm: Math.abs(Number(g('commission')) || 0),
-                pl: g('closed p&l'),
+                charges: r2(feeCols.reduce((sum, i) => sum + Math.abs(Number(r[i]) || 0), 0)),
+                pl: g('closed p&l'), netPl: head.includes('net closed p&l') ? (r[head.indexOf('net closed p&l')] ?? '').trim() : '',
             };
+            if (o.pl !== '' && (!Number.isFinite(Number(o.pl)) || (o.netPl !== '' && !Number.isFinite(Number(o.netPl))))) {
+                badFinancial.push(pid); return;
+            }
             if (!pos.has(pid)) pos.set(pid, { entries: [], exits: [] });
             pos.get(pid)[o.pl !== '' ? 'exits' : 'entries'].push(o);
             });
+            if (badFinancial.length) return { error: 'Invalid broker P&L values for position(s): ' + [...new Set(badFinancial)].join(', ') };
             const wavg = (a) =>
             +(a.reduce((s, x) => s + x.price * x.qty, 0) /
                 a.reduce((s, x) => s + x.qty, 0)).toFixed(5);
@@ -2820,6 +2847,8 @@
                 pair: e0.sym.split('.')[0].toUpperCase(), side: e0.side,
                 entry, sl: null, tp: null, exit: null, lots, risk: 0, pl: null,
                 comm: r2(p.entries.reduce((s, x) => s + x.comm, 0)),
+                charges: r2(p.entries.reduce((s, x) => s + x.charges, 0)),
+                adjustment: 0,
                 pipSize: null, session: detectSession(e0.time), setup: '', tf: '',
                 notes: 'Imported from broker CSV (' + pid + ')',
                 created: stamp, updated: stamp++,
@@ -2830,13 +2859,21 @@
                 t.xdt = last.time;
                 t.pl = r2(p.exits.reduce((s, x) => s + Number(x.pl), 0));
                 t.comm = r2(t.comm + p.exits.reduce((s, x) => s + x.comm, 0));
+                t.charges = r2(t.charges + p.exits.reduce((s, x) => s + x.charges, 0));
+                // TradingView net includes broker adjustments not itemized as commission.
+                // Preserve the reported net rather than inventing a fee.
+                if (p.exits.every((x) => x.netPl !== '' && Number.isFinite(Number(x.netPl)))) {
+                    const reportedNet = r2(p.exits.reduce((s, x) => s + Number(x.netPl), 0));
+                    t.adjustment = r2(reportedNet - (t.pl - t.comm - t.charges));
+                }
                 if (last.type.includes('stop') && d * (entry - t.exit) > 0) t.sl = t.exit;
                 if (last.type.includes('take') && d * (t.exit - entry) > 0) t.tp = t.exit;
             }
             const c = clean(t);
             c ? out.push(c) : skipped++;
             }
-            return { trades: out, skipped };
+            reportedBalances.sort((a, b) => a.time.localeCompare(b.time));
+            return { trades: out, skipped, reportedBalance: reportedBalances.length ? reportedBalances[reportedBalances.length - 1].value : null }; 
         }
         async function importCsv(file) {
             if (!file) return;
@@ -2850,19 +2887,33 @@
             if (!fresh.length)
             return toast(dup ? 'These trades are already imported.' : 'No trades found in this CSV.', 'error');
             const def = acc(S.lastAcc) ? S.lastAcc : S.settings.accounts[0].id;
+            const balanceNotice = res.reportedBalance == null
+                ? 'No broker account balance column detected. Existing starting balance will be kept.'
+                : 'Broker-reported ending balance: ' + fm(res.reportedBalance, false, '') + '. You may reconcile the account balance using this value.';
             openDlg(
             `<div class="dh"><h2>Import broker CSV</h2></div><div class="db">
                 <p class="mp" style="margin-bottom:16px">${fresh.length} new trade${fresh.length > 1 ? 's' : ''} found${dup ? `, ${dup} already imported` : ''}${res.skipped ? `, ${res.skipped} skipped` : ''}.</p>
+                <p class="mp" style="margin-bottom:12px">${esc(balanceNotice)}</p>
                 <label class="f"><span>Import into account</span><select id="csvacc">${S.settings.accounts
                 .map((a) => `<option value="${esc(a.id)}" ${a.id === def ? 'selected' : ''}>${esc(a.name)} (${a.type})</option>`)
-                .join('')}</select></label></div>
+                .join('')}</select></label>
+                ${res.reportedBalance == null ? '' : '<label style="display:block;margin-top:12px"><input type="checkbox" id="csvbalance" style="width:auto;height:auto"> Reconcile account to broker-reported balance (only if this is the latest balance)</label>'}</div>
                 <div class="df"><button class="btn" data-act="close">Cancel</button>
                 <button class="btn primary" id="csvgo">Import</button></div>`,
             'sm',
             );
             $('#csvgo').onclick = () => {
             const a = $('#csvacc').value;
-            if (commit([...S.trades, ...fresh.map((t) => ({ ...t, account: a }))])) {
+            const updatedTrades = [...S.trades, ...fresh.map((t) => ({ ...t, account: a }))];
+            let settings = S.settings;
+            if (res.reportedBalance != null && $('#csvbalance')?.checked) {
+                const accountNet = r2(updatedTrades.filter((t) => t.account === a && closed(t)).reduce((sum, t) => sum + calc(t).net, 0));
+                settings = { ...S.settings, accounts: S.settings.accounts.map((x) => x.id === a
+                    ? { ...x, balance: r2(res.reportedBalance - accountNet - flowNet(x)) } : x) };
+                if (settings.accounts.some((x) => x.id === a && x.balance < 0))
+                    return toast('Reconciliation would require a negative starting balance. Check account history.', 'error');
+            }
+            if (commit(updatedTrades, settings)) {
                 S.lastAcc = a;
                 closeDlg();
                 toast(`Imported ${fresh.length} trade${fresh.length > 1 ? 's' : ''}`);
