@@ -156,6 +156,11 @@ body{background:radial-gradient(circle at 12% 0%,var(--bg2),transparent 40%),var
 @media(max-width:540px){.simple-stat{padding:14px}.info-tooltip{right:-4px;max-width:min(225px,70vw)}}
 .trade-count-summary{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.trade-count-summary strong{color:var(--tx)}
 
+.dashboard-top-actions{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-wrap:wrap}
+.dashboard-balance{display:flex;align-items:center;padding:0;border:0;border-radius:0;background:transparent}
+.dashboard-balance span{font-size:10px;font-weight:700;letter-spacing:.08em;font-variant:small-caps;color:var(--mut)}
+.dashboard-balance strong{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
+@media(max-width:600px){.dashboard-top-actions{justify-content:flex-start}.dashboard-balance{align-items:flex-start}}
 /* Compact charts align naturally without blank grid tracks. */
 .simple-chart-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:14px;align-items:stretch}
 .simple-chart-grid>.simple-panel{min-width:0;display:flex;flex-direction:column}
@@ -263,6 +268,27 @@ h1,h2,h3,.simple-panel-title h2,.ref-calendar-title,.simple-label,.refdash .ref-
 .dashboard-quote{display:flex;align-items:center;gap:9px;color:var(--ac)!important;max-width:100%;line-height:1.4;font-weight:650}
 .dashboard-quote-text{min-width:0;overflow-wrap:anywhere}
 .dashboard-quote-mark{color:var(--ac);font-family:Georgia,serif;font-size:clamp(22px,2.6vw,30px);font-weight:800;line-height:.8;flex-shrink:0}
+
+/* Compact performance cards inspired by the reference layout */
+.kpi-stats{grid-template-columns:repeat(5,minmax(0,1fr));gap:11px}
+.kpi-card{min-height:145px;padding:16px!important;border-radius:14px!important;display:flex;flex-direction:column;justify-content:flex-start}
+.kpi-card .simple-stat-head{margin-bottom:12px;min-height:22px}
+.kpi-card .simple-label{font-size:12px;letter-spacing:.065em;text-transform:uppercase;font-variant:normal}
+.kpi-card .simple-value{font-size:clamp(19px,2vw,27px);margin:4px 0 5px}
+.kpi-card .simple-sub{font-size:11px;line-height:1.4}
+.kpi-content{min-width:0}
+.kpi-gauge{width:115px;max-width:65%;position:relative;flex-shrink:0}
+.kpi-gauge svg{width:100%;display:block}
+.kpi-gauge strong{position:absolute;bottom:5px;left:0;width:100%;text-align:center;font-size:18px}
+.kpi-card:has(.kpi-gauge) .kpi-content{display:flex;align-items:center;justify-content:space-between;gap:7px}
+.kpi-gauge-side{font-size:12px;color:var(--mut);line-height:1.5;text-align:right;white-space:nowrap}
+.kpi-ratio{margin-top:5px}
+.kpi-ratio-track{height:6px;background:var(--neg);border-radius:10px;overflow:hidden}
+.kpi-ratio-track span{display:block;height:100%;background:var(--pos);border-radius:10px}
+.kpi-ratio-labels{display:flex;justify-content:space-between;gap:4px;flex-wrap:wrap;font-size:10px;margin-top:7px}
+@media(max-width:1150px){.kpi-stats{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:680px){.kpi-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:390px){.kpi-stats{grid-template-columns:1fr}}
 </style>
     </head>
     <body>
@@ -912,7 +938,7 @@ function dashboard() {
     const mixed = currencies.length > 1;
     const s = stats(scope());
     const balance = accounts.reduce((sum,a) => sum + a.balance + flowNet(a), 0) + s.net;
-    const head = `<div class="page-h"><div><h1>Your Trading Overview</h1><p class="subl dashboard-quote"><span class="dashboard-quote-mark" aria-hidden="true">“</span><span class="dashboard-quote-text">${esc(dashboardQuote())}</span><span class="dashboard-quote-mark" aria-hidden="true">”</span></p></div><select id="accf" class="hsel" aria-label="Filter by account">${accOpts(S.acc)}</select></div>`;
+    const head = `<div class="page-h"><div><h1>Your Trading Overview</h1><p class="subl dashboard-quote"><span class="dashboard-quote-mark" aria-hidden="true">“</span><span class="dashboard-quote-text">${esc(dashboardQuote())}</span><span class="dashboard-quote-mark" aria-hidden="true">”</span></p></div><div class="dashboard-top-actions"><div class="dashboard-balance"><strong class="${cls(balance)}">${mixed?'—':fm(balance,1)}</strong></div><select id="accf" class="hsel" aria-label="Filter by account">${accOpts(S.acc)}</select></div></div>`;
     if (!S.trades.length) return head + emptyState();
     if (!s.n) return head + `<div class="card empty"><h2>Nothing to chart yet</h2><p>${s.open ? `${s.open} open trade(s). Close a trade to see your results.` : 'No closed trades in this account yet.'}</p><button class="btn primary" data-act="view" data-v="trades">See trades</button></div>`;
     const money = n => mixed ? '—' : fm(n,1);
@@ -923,13 +949,20 @@ function dashboard() {
     let peak = 0, running = 0, drawdown = 0;
     const equity = [0];
     for (const x of s.ts) { running += x.net; equity.push(running); peak=Math.max(peak,running); drawdown=Math.max(drawdown,peak-running); }
-    const metrics = [
-      ['Net P&L',money(s.net),`${s.n} closed trades`,cls(s.net),'Total profit from closed trades after commissions and fees.'],
-      ['Win rate',pct(s.wr),`${s.w.length} wins · ${s.l.length} losses`,'','Percentage of closed trades that made a net profit.'],
-      ['Profit factor',s.pf===null?'—':s.pf===Infinity?'∞':s.pf.toFixed(2),'Gross profit / gross loss','','Total profits from winning trades divided by total losses from losing trades. Above 1 means profits exceed losses.'],
-      ['Avg. per trade',money(expectancy),'Expectancy',cls(expectancy),'Average net profit or loss for each closed trade.'],
-      ['Max drawdown',money(drawdown),'Largest peak-to-trough dip','neg','Largest fall in cumulative trading profit from a previous high. Based on closed trades.'],
-      ['Balance',mixed?'—':fm(balance,1),'Including deposits & withdrawals','','Starting account balances plus deposits and withdrawals, and net results of closed trades.']
+    const dayTotals = new Map();
+    for (const x of s.ts) { const day=x.t.xdt.slice(0,10); dayTotals.set(day,(dayTotals.get(day)||0)+x.net); }
+    const winningDays=[...dayTotals.values()].filter(v=>v>0).length;
+    const dayWinRate=dayTotals.size?100*winningDays/dayTotals.size:0;
+    const avgWin=s.w.length?profit/s.w.length:0;
+    const avgLoss=s.l.length?loss/s.l.length:0;
+    const avgRatio=avgLoss?avgWin/avgLoss:null;
+    const gauge=(rate,caption)=>`<div class="kpi-gauge"><svg viewBox="0 0 120 78" aria-hidden="true"><path d="M 12 65 A 48 48 0 0 1 108 65" pathLength="100" fill="none" stroke="var(--bd)" stroke-width="9" stroke-linecap="round"/><path d="M 12 65 A 48 48 0 0 1 108 65" pathLength="100" fill="none" stroke="var(--ac)" stroke-width="9" stroke-linecap="round" stroke-dasharray="${Math.max(0,Math.min(100,rate))} 100"/></svg><strong>${rate.toFixed(1)}%</strong></div><span class="kpi-gauge-side">${caption}</span>`;
+    const metricCards=[
+      {label:'Net P&L',value:money(s.net),color:cls(s.net),sub:`${s.n} closed trades · ${money(s.ts.reduce((sum,x)=>sum+(Number(x.t.commission)||0),0))} commissions`,help:'Total profit or loss from closed trades after recorded costs.'},
+      {label:'Trade Win %',content:gauge(s.wr,`${s.w.length} W<br>${s.be} BE<br>${s.l.length} L`),help:'Winning closed trades divided by all closed trades, including breakeven trades.'},
+      {label:'Profit Factor',value:s.pf===null?'—':s.pf===Infinity?'∞':s.pf.toFixed(2),sub:'Gross profit ÷ gross loss',help:'Gross profits from winning trades divided by absolute gross losses.'},
+      {label:'Day Win %',content:gauge(dayWinRate,`${dayTotals.size} days`),help:'Percentage of close dates with a positive total net P&L.'},
+      {label:'Avg Win / Loss',value:avgRatio===null?'—':avgRatio.toFixed(2),content:`<div class="kpi-ratio"><div class="kpi-ratio-track"><span style="width:${avgWin+avgLoss?100*avgWin/(avgWin+avgLoss):50}%"></span></div><div class="kpi-ratio-labels"><span class="pos">+${money(avgWin)} avg win</span><span class="neg">-${money(avgLoss)} avg loss</span></div></div>`,help:'Average winning trade divided by absolute average losing trade.'}
     ];
     const width=800,height=230,pad=42;
     const lo=Math.min(0,...equity),hi=Math.max(0,...equity),range=hi-lo||1;
@@ -990,16 +1023,16 @@ function dashboard() {
       </svg>`;
     const recent=[...s.ts].reverse().slice(0,5);
     return `${head}${mixed?'<p class="notice-mixed">Accounts have different currencies. Select one account for meaningful money totals.</p>':''}
-      <div class="simple-stats">${metrics.map(([label,value,sub,color,help])=>`<div class="card simple-stat"><div class="simple-stat-head"><div class="simple-label">${label}</div><span class="info-wrap"><button type="button" class="info-button" aria-label="About ${label}" aria-describedby="tip-${label.replace(/[^a-z]/gi,'').toLowerCase()}">i</button><span class="info-tooltip" role="tooltip" id="tip-${label.replace(/[^a-z]/gi,'').toLowerCase()}">${help}</span></span></div><div class="simple-value ${color}">${value}</div><div class="simple-sub">${sub}</div></div>`).join('')}</div>
+      <div class="simple-stats kpi-stats">${metricCards.map((m,i)=>`<div class="card simple-stat kpi-card"><div class="simple-stat-head"><div class="simple-label">${m.label}</div><span class="info-wrap"><button type="button" class="info-button" aria-label="About ${m.label}">i</button><span class="info-tooltip" role="tooltip">${m.help}</span></span></div>${m.value!==undefined?`<div class="simple-value ${m.color||''}">${m.value}</div>`:''}${m.content?`<div class="kpi-content">${m.content}</div>`:''}${m.sub?`<div class="simple-sub">${m.sub}</div>`:''}</div>`).join('')}</div>
       <div class="simple-layout">
         <section class="card simple-panel"><div class="simple-panel-title"><h2>Your Progress</h2><span class="simple-sub">Cumulative trading P&L</span></div><div class="simple-curve" data-progress-values="${esc(JSON.stringify(progressValues))}" data-progress-dates="${esc(JSON.stringify(progressDates))}" data-progress-money="${mixed?'mixed':'single'}">${curve}</div></section>
-        <section class="card simple-panel"><div class="simple-panel-title"><h2>Recent Trades</h2><button class="btn" data-act="view" data-v="trades">View all</button></div><div class="simple-recent">${recent.map(x=>`<button class="simple-trade" data-act="detail" data-id="${esc(x.t.id)}"><span><strong>${esc(x.t.pair)}</strong><small>${esc(x.t.xdt.slice(0,10))} · ${esc(x.t.side)}</small></span><strong class="${cls(x.net)}">${money(x.net)}</strong></button>`).join('')}</div></section>
+        <section class="card simple-panel radar-panel"><div class="simple-panel-title"><h2>Trading Performance Profile</h2><span class="simple-sub">Six normalized indicators</span></div>${radarChart}</section>
       </div>
       <div class="simple-chart-grid">
         <section class="card simple-panel"><div class="simple-panel-title"><h2>Performance By Pair</h2><span class="simple-sub">Top 5 by absolute P&L</span></div>${pairChart}</section>
         <section class="card simple-panel"><div class="simple-panel-title"><h2>Monthly P&L</h2><span class="simple-sub">Last 6 active months</span></div>${monthChart}</section>
         <section class="card simple-panel"><div class="simple-panel-title"><h2>Trade Outcomes</h2><span class="simple-sub">Win / loss / breakeven</span></div>${outcomeChart}</section>
-        <section class="card simple-panel radar-panel"><div class="simple-panel-title"><h2>Trading Performance Profile</h2><span class="simple-sub">Six normalized indicators</span></div>${radarChart}</section>
+        <section class="card simple-panel"><div class="simple-panel-title"><h2>Recent Trades</h2><button class="btn" data-act="view" data-v="trades">View all</button></div><div class="simple-recent">${recent.map(x=>`<button class="simple-trade" data-act="detail" data-id="${esc(x.t.id)}"><span><strong>${esc(x.t.pair)}</strong><small>${esc(x.t.xdt.slice(0,10))} · ${esc(x.t.side)}</small></span><strong class="${cls(x.net)}">${money(x.net)}</strong></button>`).join('')}</div></section>
       </div>
       <section class="card simple-panel simple-calendar" id="cal">${calendar()}</section>`;
 }
