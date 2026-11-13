@@ -289,6 +289,16 @@ h1,h2,h3,.simple-panel-title h2,.ref-calendar-title,.simple-label,.refdash .ref-
 @media(max-width:1150px){.kpi-stats{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:680px){.kpi-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:390px){.kpi-stats{grid-template-columns:1fr}}
+
+/* Instrument logos displayed consistently in Recent Trades and the Trades tab. */
+.pair-label{display:inline-flex;align-items:center;gap:7px;vertical-align:middle;white-space:nowrap}
+.pair-logos{display:inline-flex;align-items:center;flex:none;padding-left:2px}
+.pair-logos img,.pair-logos .pair-token{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--card);object-fit:cover;background:var(--acs);display:grid;place-items:center;font-size:11px}
+.pair-logos img+img,.pair-logos .pair-token+img,.pair-logos img+.pair-token{margin-left:-9px}
+.simple-recent .simple-trade .pair-label,.card.tw tbody td .pair-label{display:inline-flex;align-items:center;gap:9px}
+.simple-recent .simple-trade .pair-logos,.card.tw tbody td .pair-logos{flex-shrink:0}
+.simple-recent .simple-trade .pair-logos img,.simple-recent .simple-trade .pair-logos .pair-token,.card.tw tbody td .pair-logos img,.card.tw tbody td .pair-logos .pair-token{width:24px;height:24px;font-size:11px}
+.pair-form-preview{display:flex;align-items:center;min-height:24px;margin-top:7px}
 </style>
     </head>
     <body>
@@ -335,6 +345,26 @@ const esc = (s) =>
         "'": '&#39;',
         })[c],
     );
+
+// Use TradingView's actual symbol artwork: overlapping country emblems for FX,
+// and TradingView's metal/crypto icons for other supported instruments.
+const PAIR_COUNTRIES={EUR:'EU',USD:'US',GBP:'GB',JPY:'JP',AUD:'AU',CAD:'CA',CHF:'CH',NZD:'NZ',CNH:'CN',CNY:'CN',SGD:'SG',HKD:'HK',NOK:'NO',SEK:'SE',DKK:'DK',ZAR:'ZA',MXN:'MX',TRY:'TR',PLN:'PL'};
+const TV_INSTRUMENTS={XAU:'metal/gold',XAG:'metal/silver',XPT:'metal/platinum',XPD:'metal/palladium',BTC:'crypto/XTVCBTC',ETH:'crypto/XTVCETH',SOL:'crypto/XTVCSOL'};
+function pairLogo(code){
+    const c=String(code||'').toUpperCase();
+    const asset=PAIR_COUNTRIES[c]?'country/'+PAIR_COUNTRIES[c]:TV_INSTRUMENTS[c];
+    if(asset)return `<img src="https://s3-symbol-logo.tradingview.com/${asset}.svg" alt="${esc(c)}" loading="lazy" onerror="this.style.display='none'">`;
+    return `<span class="pair-token" title="${esc(c)}">${esc(c.slice(0,2))}</span>`;
+}
+function pairHTML(pair){
+    const raw=String(pair||'');
+    // Preserve broker suffixes (e.g. XAUUSD2471) while resolving the base instrument.
+    const symbol=raw.toUpperCase().split(':').pop().replace(/[^A-Z]/g,'');
+    const codes=symbol.length>=6?[symbol.slice(0,3),symbol.slice(3,6)]:[symbol.slice(0,3)];
+    const logos=TV_INSTRUMENTS[codes[0]]?pairLogo(codes[0]):codes.map(pairLogo).join('');
+    return `<span class="pair-label"><span class="pair-logos">${logos}</span><span>${esc(raw)}</span></span>`;
+}
+
 const r2 = (x) => Math.round((x + Math.sign(x) * Number.EPSILON) * 100) / 100;
 const uid = () =>
     Date.now().toString(36) + Math.random().toString(36).slice(2, 9);
@@ -989,7 +1019,7 @@ function dashboard() {
     for(const x of s.ts){const pair=x.t.pair||'Other';pairs.set(pair,(pairs.get(pair)||0)+x.net);}
     const pairEntries=[...pairs.entries()].sort((a,b)=>Math.abs(b[1])-Math.abs(a[1])).slice(0,5);
     const maxPair=Math.max(1,...pairEntries.map(x=>Math.abs(x[1])));
-    const pairChart=`<div class="simple-pairs">${pairEntries.map(([pair,val])=>`<div class="simple-pair-row"><div class="simple-pair-top"><strong>${esc(pair)}</strong><span class="${cls(val)}">${money(val)}</span></div><div class="simple-pair-track"><span class="${val<0?'is-loss':''}" style="width:${Math.max(2,Math.abs(val)/maxPair*100)}%"></span></div></div>`).join('')}</div>`;
+    const pairChart=`<div class="simple-pairs">${pairEntries.map(([pair,val])=>`<div class="simple-pair-row"><div class="simple-pair-top"><strong>${pairHTML(pair)}</strong><span class="${cls(val)}">${money(val)}</span></div><div class="simple-pair-track"><span class="${val<0?'is-loss':''}" style="width:${Math.max(2,Math.abs(val)/maxPair*100)}%"></span></div></div>`).join('')}</div>`;
     // Six independently normalized indicators (0–100). This is a descriptive
     // journal profile, not a prediction or a standardized trading rating.
     const clamp100 = value => Math.max(0, Math.min(100, Number.isFinite(value) ? value : 0));
@@ -1032,7 +1062,7 @@ function dashboard() {
         <section class="card simple-panel"><div class="simple-panel-title"><h2>Performance By Pair</h2><span class="simple-sub">Top 5 by absolute P&L</span></div>${pairChart}</section>
         <section class="card simple-panel"><div class="simple-panel-title"><h2>Monthly P&L</h2><span class="simple-sub">Last 6 active months</span></div>${monthChart}</section>
         <section class="card simple-panel"><div class="simple-panel-title"><h2>Trade Outcomes</h2><span class="simple-sub">Win / loss / breakeven</span></div>${outcomeChart}</section>
-        <section class="card simple-panel"><div class="simple-panel-title"><h2>Recent Trades</h2><button class="btn" data-act="view" data-v="trades">View all</button></div><div class="simple-recent">${recent.map(x=>`<button class="simple-trade" data-act="detail" data-id="${esc(x.t.id)}"><span><strong>${esc(x.t.pair)}</strong><small>${esc(x.t.xdt.slice(0,10))} · ${esc(x.t.side)}</small></span><strong class="${cls(x.net)}">${money(x.net)}</strong></button>`).join('')}</div></section>
+        <section class="card simple-panel"><div class="simple-panel-title"><h2>Recent Trades</h2><button class="btn" data-act="view" data-v="trades">View all</button></div><div class="simple-recent">${recent.map(x=>`<button class="simple-trade" data-act="detail" data-id="${esc(x.t.id)}"><span><strong class="recent-pair-with-logo">${pairHTML(x.t.pair)}</strong><small>${esc(x.t.xdt.slice(0,10))} · ${esc(x.t.side)}</small></span><strong class="${cls(x.net)}">${money(x.net)}</strong></button>`).join('')}</div></section>
       </div>
       <section class="card simple-panel simple-calendar" id="cal">${calendar()}</section>`;
 }
@@ -1864,7 +1894,7 @@ function tradeTable(fl, total, count = true) {
     <th>Pair</th><th>Side</th><th>Account</th><th>Duration</th>
     <th class="n">Pips</th><th class="n">Net P&L</th><th>Result</th></tr></thead>
     <tbody>${fl.map((x) => `<tr data-act="detail" data-id="${esc(x.t.id)}" tabindex="0">
-        <td>${fdt(x.t.dt)}</td><td><b>${esc(x.t.pair)}</b></td>
+        <td>${fdt(x.t.dt)}</td><td class="trade-pair-with-logo"><b>${pairHTML(x.t.pair)}</b></td>
         <td>${x.t.side}</td><td>${esc(acc(x.t.account)?.name
         || '')}</td><td>${x.dur || '\u2014'}</td><td class="n ${cls(x.pips)}">${x.pips ?? '\u2014'}</td>
         <td class="n ${cls(x.net)}">${x.net == null ? '\u2014'
@@ -2021,7 +2051,7 @@ function tradeForm(t, focus) {
         : ''}>${esc(a.name)} (${a.type})</option>`).join('')}</select>`)}
     ${F('pair', 'Pair / instrument', `<input name="pair" list="pl" value="${esc(v.pair
         || '')}" placeholder="EURUSD" autocapitalize="characters" maxlength="20">
-        <datalist id="pl">${pairs.map((p) => `<option value="${esc(p)}">`).join('')}</datalist>`)}
+        <datalist id="pl">${pairs.map((p) => `<option value="${esc(p)}">`).join('')}</datalist><div class="pair-form-preview" id="pair-preview">${v.pair?pairHTML(v.pair):''}</div>`)}
     ${F('side', 'Direction', `<select name="side">${SIDES.map((s) => `<option ${v.side === s
         ? 'selected' : ''}>${s}</option>`).join('')}</select>`)}
     ${F('lots', 'Lot size', nin('lots', v.lots, '0.10'))}
@@ -2378,7 +2408,7 @@ function detail(id) {
     dash = '\u2014';
     const kv = [
     ['Account', esc(a?.name || 'Unknown')],
-    ['Pair', esc(t.pair)],
+    ['Pair', pairHTML(t.pair)],
     ['Direction', t.side],
     ['Entry date and time', fdt(t.dt)],
     ['Exit date and time', fdt(t.xdt)],
@@ -2420,7 +2450,7 @@ function detail(id) {
     ['Broker', esc(a?.broker) || dash],
     ];
     openDlg(
-    `<div class="dh"><h2>${esc(t.pair)} \u00b7 ${t.side}</h2></div>
+    `<div class="dh"><h2>${pairHTML(t.pair)} \u00b7 ${t.side}</h2></div>
         <div class="db"><div class="kv">${kv.map(([k, v]) => `<div class="lbl">${k}<b style="color:var(--tx)">${v}</b></div>`).join('')}</div>
         <div class="lbl" style="margin:24px 0 4px">Notes</div>${t.notes
         ? `<div class="notes">${esc(t.notes)}</div>` : '<div class="mp">No notes added.</div>'}</div>
