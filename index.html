@@ -469,6 +469,20 @@ dialog, .lock .card, .auth-status, .auth-note, .info-tooltip, .ref-help-pop { bo
 .lock .brand-mark{margin-right:0;transform:none}
 .auth-status[hidden]{display:none}
 .header-username bdi{white-space:inherit;overflow-wrap:inherit}
+/* Settings: grouped controls and optional details. */
+.settings-page{max-width:1080px;margin-inline:auto;gap:16px}
+.settings-page>section>h2{margin-bottom:8px}
+.settings-row{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:12px 0;min-width:0}
+.settings-username{flex:1;max-width:600px;margin:0}.settings-email{justify-content:flex-start;overflow-wrap:anywhere;font-size:13px}
+.settings-email>span:last-child{min-width:0;overflow-wrap:anywhere}
+.settings-actions{margin-top:8px}.settings-heading{margin:0 0 14px;min-height:38px}
+.settings-disclosure{border:0;border-top:1px solid var(--bd);margin-top:14px;min-width:0}
+.settings-disclosure>summary{cursor:pointer;padding:15px 0;font-weight:550;list-style:revert}
+.settings-disclosure>summary::marker{color:var(--mut)}
+.settings-detail{padding:0 0 8px;min-width:0}.settings-detail>.f{margin-bottom:12px}
+.settings-page .accent-palette{margin-top:0}.settings-page .acc{box-shadow:none}
+.settings-page .kv4{margin-top:0}.settings-danger>summary{color:var(--neg)}
+@media(max-width:560px){.settings-row{flex-wrap:wrap;gap:10px}.settings-username{flex-basis:100%;max-width:none}.settings-email{align-items:flex-start}.settings-page .acc-h{align-items:flex-start;flex-wrap:wrap;gap:12px}.settings-heading{gap:10px}}
 </style>
     </head>
     <body>
@@ -2161,22 +2175,14 @@ const sampleInfo = () => ({
     );
     return { accounts, trades: trades.filter(Boolean) };
 }
-        function sampleCard() {
-            const info = sampleInfo();
-            const has = info.accounts + info.trades > 0;
-            const status = has
-                ? `Sample data is loaded (${info.accounts} accounts, ${info.trades} trades). Each click adds another set of trades.`
-                : 'No sample data is loaded.';
-            return `<div class="card"><h2>Sample Data</h2>
-            <p>Add varied demo accounts and unpredictable trades, including streaks and occasional large losses, to preview the dashboard,
-            calendar, charts, filters, strategy analytics, psychology, mistakes, checklists and screenshot previews. Sample records are tagged, so removing them
-            never touches your own data. ${status}</p>
-            <div class="row">
-            <button class="btn primary" data-act="sampleadd">Add Sample Data</button>
-            <button class="btn danger" data-act="sampledel"
-                ${has ? '' : 'disabled'}>Remove Sample Data</button>
-            </div></div>`;
-        }
+function sampleCard() {
+    const info = sampleInfo(), has = info.accounts + info.trades > 0;
+    return `<details class="settings-disclosure"><summary>Example data</summary><div class="settings-detail">
+        <p>${has ? `${info.accounts} example accounts and ${info.trades} example trades loaded.` : 'Try the journal with example trades.'} Removing examples keeps your own trades.</p>
+        <div class="row"><button class="btn" data-act="sampleadd">Add examples</button>
+        <button class="btn" data-act="sampledel" ${has ? '' : 'disabled'}>Remove examples</button></div>
+    </div></details>`;
+}
 const tfilter = () => {
     const q = S.q.trim().toLowerCase();
     return calcAll(S.trades)
@@ -2286,46 +2292,51 @@ function accCard(a) {
     <div class="row"><button class="btn" data-act="accview" data-id="${esc(a.id)}">Dashboard</button>
     <button class="btn" data-act="accedit" data-id="${esc(a.id)}">Edit</button>
     <button class="btn danger" data-act="accdel" data-id="${esc(a.id)}">Delete</button></div></div>
-    <div class="kv4">${kv.map(([k, v]) => `<div class="lbl">${k}<b>${v}</b></div>`).join('')}</div>
+    <details class="settings-disclosure"><summary>Balance &amp; cash flow</summary><div class="settings-detail"><div class="kv4">${kv.map(([k, v]) => `<div class="lbl">${k}<b>${v}</b></div>`).join('')}</div>
     <div class="sec" style="margin-top:16px"><div class="page-h" style="margin:0;min-height:0">
     <span>Deposits and withdrawals</span><div class="row">
     <button class="btn" data-act="flowadd" data-id="${esc(a.id)}" data-t="Deposit">Deposit</button>
     <button class="btn" data-act="flowadd" data-id="${esc(a.id)}" data-t="Withdrawal">Withdraw</button>
-    </div></div></div>${flows}</div>`;
+    </div></div></div>${flows}</div></details></div>`;
 }
 function settingsView() {
-    return `<div class="page-h"><h1>Settings</h1></div><div class="stack">
-    <div class="card"><div class="page-h" style="margin:0 0 16px">
-    <div><h2>Accounts</h2><p style="margin:0">Each account keeps its own balance and
-    statistics.</p></div><button class="btn primary" data-act="accadd">Add account</button></div>
-    <div class="accs">${S.settings.accounts.map(accCard).join('')}</div></div>
-    <div class="card"><h2>Backup and Restore</h2><p>Export everything (accounts, trades,
-    settings, screenshots and appearance) to one file. Login credentials are excluded. Import it in any browser or device to restore
-    your journal.</p><div class="row"><button class="btn primary" data-act="export">Export backup</button>
-    <button class="btn" data-act="import">Import backup or CSV</button></div></div>
-    <div class="card"><h2>Trading Checklist</h2><p>One rule per line. These appear when adding or editing trades.</p><textarea id="checklist-editor" maxlength="1500">${esc((S.settings.checklist||[]).join('\n'))}</textarea><div class="row" style="margin-top:10px"><button class="btn primary" data-act="savechecklist">Save Checklist</button></div></div>
-    ${sampleCard()}
-    <div class="card"><h2>Appearance</h2><p>Choose the look of your trading journal.</p>
-    <button class="btn" data-act="theme">${document.documentElement.dataset.theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</button>
-    <span class="accent-picker-label">Accent Color</span>
-    <div class="accent-palette" role="group" aria-label="Choose accent color">${ACCENT_OPTIONS.map(([name,color])=>`<button type="button" class="accent-swatch" style="--swatch:${color}" data-act="accent" data-color="${color}" title="${name}" aria-label="${name} accent" aria-pressed="${preferences.accent===color}"></button>`).join('')}</div>
-    <p class="accent-note">Choose from vibrant, pastel, deep, and neutral colours. Your selection updates the interface in both light and dark modes.</p>
-    <label class="accent-picker-label" for="custom-dashboard-quote">Dashboard Quote</label>
-    <textarea id="custom-dashboard-quote" maxlength="240" placeholder="Write your own motivational quote">${esc(dashboardQuote())}</textarea>
-    <div class="row" style="margin-top:10px"><button class="btn primary" data-act="savequote">Save Quote</button><button class="btn" data-act="resetquote">Reset Quote</button></div>
-    <p class="accent-note">Your quote appears in quotation marks on the dashboard and is saved to your account.</p></div>
-    <div class="card"><h2>Profile &amp; Account</h2>
-    <p>Your journal is linked to your account, even if you change your username.</p>
-    <label class="f"><span>Username</span><input id="profile-username" autocomplete="username" maxlength="200" value="${esc(profileUsername)}" placeholder="Choose a username"></label>
-    <div class="row" style="margin-top:10px"><button class="btn primary" data-act="saveusername">Save username</button></div>
-    <p><strong>Email:</strong> ${esc(currentUser?.email || '')}</p>
-    <p id="cloud-status" role="status">${esc(syncMessage)}</p>
-    <div class="row"><button class="btn" data-act="reload">Reload journal</button><button class="btn" data-act="lock">Sign out</button></div></div>
-    <div class="card"><h2>Security</h2><p>Manage your account password.</p>
-    <div class="row"><button class="btn" data-act="chpw">Change password</button>
-    <button class="btn" data-act="lock">Sign out</button></div></div>
-    <div class="card"><h2>Erase Journal</h2><p>Permanently deletes your journal content across all devices. Your login is kept. Export a backup first.</p>
-    <button class="btn danger" data-act="erase">Erase journal</button></div></div>`;
+    return `<div class="page-h"><h1>Settings</h1></div><div class="stack settings-page">
+    <section class="card"><h2>Account</h2>
+        <div class="settings-row"><label class="f settings-username" for="profile-username"><span>Username</span>
+            <input id="profile-username" autocomplete="username" maxlength="200" value="${esc(profileUsername)}" placeholder="Choose a username"></label>
+            <button class="btn primary" data-act="saveusername">Save username</button></div>
+        <div class="settings-row settings-email"><span class="lbl">Email</span><span>${esc(currentUser?.email || '')}</span></div>
+        <div class="row settings-actions"><button class="btn" data-act="chpw">Change password</button>
+            <button class="btn" data-act="lock">Sign out</button></div>
+    </section>
+    <section class="card"><div class="page-h settings-heading"><h2>Trading accounts</h2>
+        <button class="btn primary" data-act="accadd">Add account</button></div>
+        <div class="accs">${S.settings.accounts.map(accCard).join('')}</div>
+    </section>
+    <section class="card"><h2>Preferences</h2>
+        <div class="settings-row"><span>Theme</span><button class="btn" data-act="theme">Switch to ${preferences.theme === 'dark' ? 'light' : 'dark'} mode</button></div>
+        <details class="settings-disclosure"><summary>Accent colour</summary><div class="settings-detail">
+            <div class="accent-palette" role="group" aria-label="Choose accent colour">${ACCENT_OPTIONS.map(([name,color])=>`<button type="button" class="accent-swatch" style="--swatch:${color}" data-act="accent" data-color="${color}" title="${name}" aria-label="${name} accent" aria-pressed="${preferences.accent===color}"></button>`).join('')}</div>
+        </div></details>
+        <details class="settings-disclosure"><summary>Trading checklist</summary><div class="settings-detail">
+            <label class="f" for="checklist-editor"><span class="lbl">One rule per line</span><textarea id="checklist-editor" maxlength="1500">${esc((S.settings.checklist||[]).join('\n'))}</textarea></label>
+            <button class="btn primary" data-act="savechecklist">Save checklist</button>
+        </div></details>
+        <details class="settings-disclosure"><summary>Dashboard quote</summary><div class="settings-detail">
+            <label class="f" for="custom-dashboard-quote"><span class="lbl">Your motivational quote</span><textarea id="custom-dashboard-quote" maxlength="240" placeholder="Write your own motivational quote">${esc(dashboardQuote())}</textarea></label>
+            <div class="row"><button class="btn primary" data-act="savequote">Save quote</button><button class="btn" data-act="resetquote">Reset to default</button></div>
+        </div></details>
+    </section>
+    <section class="card"><h2>Data &amp; backups</h2>
+        <div class="settings-row"><span id="cloud-status" role="status" class="lbl">${esc(syncMessage)}</span><button class="btn" data-act="reload">Reload journal</button></div>
+        <p>Download a backup or import a backup or broker CSV.</p>
+        <div class="row"><button class="btn" data-act="export">Export backup</button><button class="btn" data-act="import">Import file</button></div>
+        ${sampleCard()}
+        <details class="settings-disclosure settings-danger"><summary>Erase journal</summary><div class="settings-detail">
+            <p>Deletes your journal on every device. Your login stays active. Export a backup first.</p>
+            <button class="btn danger" data-act="erase">Erase journal</button>
+        </div></details>
+    </section></div>`;
 }
 /* ---------- Trading review extensions ---------- */
 const EMOTIONS=['Calm','Confident','Focused','Fearful','Anxious','Frustrated','Greedy','Overconfident','Excited','Tired'];
@@ -3416,7 +3427,10 @@ const cardHelpDescriptions = {
  'trading performance profile':'A six-axis view of trading results. Hover over the information markers beside the radar labels for the score and its meaning.',
  'trading calendar':'Shows daily net profit or loss based on trade closing dates. Navigate months to review previous trading activity.',
  'backup and restore':'Export a backup of your accounts, trades, and settings, or restore previously saved journal data. Keep a backup before importing.',
- 'security':'Change your account password or sign out.',
+ 'account':'Update your username, change your password or sign out.',
+ 'preferences':'Choose your theme, accent colour, checklist and dashboard quote.',
+ 'data & backups':'Reload saved data, import or export a backup, and manage examples or erase your journal.',
+ 'trading accounts':'Add and manage trading accounts, balances, deposits and withdrawals.',
  'erase journal':'Permanently deletes your saved journal across all devices. Your login is kept.',
  'sample data':'Use example trades to explore how the journal and dashboard work before entering your own trades.',
  'no matching trades':'No trades match the current filters. Adjust or clear the filters to display more results.',
