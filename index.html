@@ -454,6 +454,10 @@ select option{background-color:var(--in);color:var(--tx)}
 .auth-note{margin:14px 0;color:var(--mut)}.auth-status{margin:12px 0;white-space:pre-wrap;overflow-wrap:anywhere}
 #saving-indicator{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:12px 18px;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--tx);z-index:999999;box-shadow:0 8px 24px #0002}
 
+/* Account controls are in Settings; username sits immediately left of navigation. */
+.header-navigation{display:flex;align-items:center;gap:12px;min-width:0;flex-wrap:wrap}
+.header-username{display:inline-block;max-width:210px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;font-size:13px;color:var(--tx);padding:9px 12px;background:var(--acs);border-radius:16px}
+@media(max-width:800px){.top{flex-wrap:wrap}.header-navigation{width:100%}.top .header-tabs{flex-wrap:wrap}}
 /* Rounded broker interface refresh */
 :root { --card-radius: 22px; }
 .card, .refdash .ref-card, .acc, .simple-stat, .simple-panel, .kpi-card, .review-analytics { border-radius: 22px !important; }
@@ -486,6 +490,7 @@ let recoveryMode = /(?:[?#&])type=recovery(?:&|$)/.test(location.hash + location
 const defaultPreferences = () => ({theme:'light', accent:'#4bace5', quote:''});
 let preferences = defaultPreferences();
 let syncMessage = 'Saved to your account';
+let profileUsername = '';
 const S = {
     trades: [],
     settings: { accounts: [] },
@@ -880,7 +885,7 @@ function busy(on) {
 }
 function clearAccount() {
     authGeneration++;
-    ready = false; currentUser = null; revision = 0;
+    ready = false; currentUser = null; revision = 0; profileUsername = '';
     S.trades = []; S.settings = cleanSettings();
     S.view = 'dashboard'; S.acc = S.tacc = 'all'; S.q = '';
     S.res = 'all'; S.lastAcc = ''; S.calDay = '';
@@ -912,6 +917,12 @@ async function loadAccount(user, force = false) {
             preferences = cleanPreferences(payload.preferences);
             revision = Number(data?.revision || 0);
             ready = true; showPreferences();
+            // Profile loading must never block access to an existing journal.
+            try {
+                const profile = await db.from('profiles').select('username').eq('id',user.id).maybeSingle();
+                if(generation !== authGeneration) return;
+                profileUsername = profile.error ? '' : (profile.data?.username || '');
+            } catch (_) { profileUsername = ''; }
             syncStatus(data ? 'Saved to your account' : 'Account ready — add your first trade');
             render();
         } catch(error) {
@@ -1095,6 +1106,7 @@ function authScreen(mode = 'signin', message = '') {
         <p id="auth-message" class="auth-status" role="status">${esc(message)}</p>
         ${failedLoad ? `<div class="auth-links"><button type="button" class="btn primary" id="auth-retry">Retry loading</button><button type="button" class="btn" id="auth-signout">Sign out</button></div>`
         : `<form id="auth-form">
+            ${signup ? '<label class="f"><span>Username</span><input name="username" autocomplete="username" required minlength="3" maxlength="20" pattern="[a-zA-Z0-9_]{3,20}" placeholder="3–20 letters, numbers or underscores"></label>' : ''}
             ${!update ? '<label class="f"><span>Email address</span><input type="email" name="email" autocomplete="email" required maxlength="254"></label>' : ''}
             ${!reset ? `<label class="f"><span>Password</span><input type="password" name="password" autocomplete="${signup||update?'new-password':'current-password'}" required ${signup||update?'minlength="8"':''}></label>` : ''}
             ${signup||update ? '<label class="f"><span>Confirm password</span><input type="password" name="confirm" autocomplete="new-password" minlength="8" required></label>' : ''}
@@ -1119,6 +1131,8 @@ function authScreen(mode = 'signin', message = '') {
         const form = event.target, fields = new FormData(form);
         const email = String(fields.get('email')||'').trim();
         const password = String(fields.get('password')||'');
+        const username = String(fields.get('username')||'').trim().toLowerCase();
+        if(signup && !/^[a-z0-9_]{3,20}$/.test(username)) return say('Username must be 3–20 letters, numbers or underscores.',true);
         if((signup||update) && password !== fields.get('confirm')) return say('Passwords do not match.',true);
         const button = $('#auth-submit'); button.disabled = true;
         // Prevent navigation during an authentication request.
@@ -1140,7 +1154,7 @@ function authScreen(mode = 'signin', message = '') {
                 say('If an account exists for that email, a password reset link has been sent.');
             } else {
                 const result = signup
-                    ? await db.auth.signUp({email,password,options:{emailRedirectTo:redirectURL()}})
+                    ? await db.auth.signUp({email,password,options:{emailRedirectTo:redirectURL(),data:{username}}})
                     : await db.auth.signInWithPassword({email,password});
                 if(result.error) throw result.error;
                 if(result.data.session) await loadAccount(result.data.session.user);
@@ -1210,7 +1224,7 @@ function render() {
     const v = S.view;
     app.innerHTML = `<div class="wrap"><div class="top"><div class="brand">
     <img class="brand-mark" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAYAAAD0eNT6AAAACXBIWXMAAES3AABEtwGB+XlgAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAACdVJREFUeJzt2TGLZncZh+HnnXlnE4hh3YCubGdnIdaSImGDhV8gTWCWFBLBys5CrNJYamWVJgtuEbDUMhmtAn4Hq0BcJAprzK7O7LGJkGZgSbL5z+t9XV/g/OCc4j48MwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHzVdqsHAJc7PTv9+bZt11fvmJk5Ojp68PZLb7+5egfw5divHgBcbje7n8xubq3eMTOzbdv9mREA8H/iaPUAAOCrJwAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAEDQfvUADser7776tWePnn1z9Y6SbbbrqzdcVa+/+/p3Lo4ufrx6x1Xy8PHDX7xz+51/rt7BYRAAPLH9xf65OZqfrt4BMzOPd4+/PeN7/Kz9xf6XMyMAeCJOAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIGi/egB8Ae/Pbn62esRTtc3vZuaF1TOuopNrJ+8/evTo9uodV8nzX3/+o9UbOBwCgMO1m7/ffenu2eoZT9Pp2em/V2+4qt568a2PZua91TvgUDkBAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQtF89AD63bV45PTv9cPWMp+wbqwdcVadnp6/MzG9X77hKzh+ff/fe7Xt/W72DwyAAOGTXZubm6hGssdt2z2y7zfv/rIs5Xj2Bw+EEAABBAgAAggQAAAQJAAAIEgAAECQAACBIAABAkAAAgCABAABBAgAAggQAAAQJAAAIEgAAECQAACBIAABAkAAAgCABAABBAgAAggQAAAQJAAAIEgAAECQAACBIAABAkAAAgCABAABBAgAAggQAAAQJAAAIEgAAECQAACBIAABAkAAAgCABAABB+9UDOCDHczEzH66eEfPNEeqXeTjrv8cbM/PM4g3wuexWDwAud+fszgfbbLdW7/jU/bsv3725esRVcvrH0z/MNj9cveN/zv9z/q17P7j319U7OAz+LAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACNqvHsDheOPPb5x88q9PXly9o2TbtmurN1xVr/3ptRvH2/H3lo7Y5sbS58MXIAB4Yg/+8eCF/cn+vdU7YGZmf7H//rbbfr96BxwqJwAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABC0Xz2Aw3F+fP7xyZz8evWOkm22H83Mc6t3XEVH29FfLnYXv1q94yo5Pz7/ePUGDsdu9QDgcnfO7nywzXZr9Y5P3b/78t2bq0cAXw4nAAAIEgAAECQAACBIAABAkAAAgCABAABBAgAAggQAAAQJAAAIEgAAECQAACBIAABAkAAAgCABAABBAgAAggQAAAQJAAAIEgAAECQAACBIAABAkAAAgCABAABBAgAAggQAAAQJAAAIEgAAECQAACBIAABAkAAAgCABAABBAgAAggQAAAQJAAAIEgAAECQAACBIAABAkAAAgCABAABBAgAAggQAAAQJAAAIEgAAECQAACBIAABAkAAAgCABAABBAgAAggQAAAQJAAAIEgAAECQAACBov3oAcLlttt/sZnd99Y6ZmW3bHqzeAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHDI/gsIyIfvn3a0VgAAAABJRU5ErkJggg==" alt="" aria-hidden="true">Pipfolio</div>
-    <nav class="tabs header-tabs" aria-label="Main navigation">${[
+    <div class="header-navigation"><span class="header-username" title="Your username">${esc(profileUsername || 'Set username in Settings')}</span><nav class="tabs header-tabs" aria-label="Main navigation">${[
     ['dashboard', 'Dashboard'],
     ['trades', 'Trades'],
     ['review', 'Trade Review'],
@@ -1218,8 +1232,7 @@ function render() {
     ]
     .map(([k, l]) =>
     `<button class="tab ${v === k ? 'on' : ''}" data-act="view" data-v="${k}">${l}</button>`)
-    .join('')}</nav></div>
-    <div class="cloud-bar"><span>${esc(currentUser?.email || '')}</span><span id="cloud-status" role="status">${esc(syncMessage)}</span><div class="row"><button class="btn" data-act="reload">Reload journal</button><button class="btn" data-act="lock">Sign out</button></div></div>
+    .join('')}</nav></div></div>
     <main>${v === 'dashboard' ? dashboard() : v === 'trades'
         ? tradesView() : v === 'review' ? reviewView() : settingsView()}</main>
     <footer class="footer">\u00a9 ${new Date().getFullYear()} Pipfolio. All rights reserved.</footer></div>`;
@@ -2290,7 +2303,14 @@ function settingsView() {
     <textarea id="custom-dashboard-quote" maxlength="240" placeholder="Write your own motivational quote">${esc(dashboardQuote())}</textarea>
     <div class="row" style="margin-top:10px"><button class="btn primary" data-act="savequote">Save Quote</button><button class="btn" data-act="resetquote">Reset Quote</button></div>
     <p class="accent-note">Your quote appears in quotation marks on the dashboard and is saved to your account.</p></div>
-    <div class="card"><h2>Security</h2><p>Signed in as ${esc(currentUser?.email || '')}. Your journal is saved to your Supabase account.</p>
+    <div class="card"><h2>Profile &amp; Account</h2>
+    <p>Your journal is linked to your account, even if you change your username.</p>
+    <label class="f"><span>Username</span><input id="profile-username" autocomplete="username" maxlength="20" minlength="3" pattern="[a-zA-Z0-9_]{3,20}" value="${esc(profileUsername)}" placeholder="Choose a username"></label>
+    <div class="row" style="margin-top:10px"><button class="btn primary" data-act="saveusername">Save username</button></div>
+    <p><strong>Email:</strong> ${esc(currentUser?.email || '')}</p>
+    <p id="cloud-status" role="status">${esc(syncMessage)}</p>
+    <div class="row"><button class="btn" data-act="reload">Reload journal</button><button class="btn" data-act="lock">Sign out</button></div></div>
+    <div class="card"><h2>Security</h2><p>Manage your account password.</p>
     <div class="row"><button class="btn" data-act="chpw">Change password</button>
     <button class="btn" data-act="lock">Sign out</button></div></div>
     <div class="card"><h2>Erase Journal</h2><p>Permanently deletes your journal content across all devices. Your login is kept. Export a backup first.</p>
@@ -3156,6 +3176,21 @@ const act = {
     },
     resetquote: async () => {
         if(await commit(S.trades, S.settings, {...preferences,quote:''})) render();
+    },
+    saveusername: async () => {
+        if(!currentUser || saving) return;
+        const username = ($('#profile-username')?.value || '').trim().toLowerCase();
+        if(!/^[a-z0-9_]{3,20}$/.test(username)) return toast('Use 3–20 letters, numbers or underscores.', 'error');
+        const button = $('[data-act="saveusername"]');
+        if(button) button.disabled = true;
+        try {
+            const {data,error} = await db.from('profiles').upsert({id:currentUser.id,username},{onConflict:'id'}).select('username').single();
+            if(error) throw error;
+            profileUsername = data.username;
+            render(); toast('Username updated');
+        } catch(error) {
+            toast(error.code === '23505' ? 'That username is already taken.' : 'Could not update username: '+error.message,'error');
+        } finally { if(button?.isConnected) button.disabled = false; }
     },
     lock: signOut,
     reload: async () => {if(currentUser && !saving) await loadAccount(currentUser,true);},
