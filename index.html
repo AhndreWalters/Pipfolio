@@ -453,6 +453,13 @@ select option{background-color:var(--in);color:var(--tx)}
 .cloud-bar .btn{height:32px;font-size:12px}.auth-links{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}.auth-links .btn{flex:1}
 .auth-note{margin:14px 0;color:var(--mut)}.auth-status{margin:12px 0;white-space:pre-wrap;overflow-wrap:anywhere}
 #saving-indicator{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:12px 18px;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--tx);z-index:999999;box-shadow:0 8px 24px #0002}
+
+/* Rounded broker interface refresh */
+:root { --card-radius: 22px; }
+.card, .refdash .ref-card, .acc, .simple-stat, .simple-panel, .kpi-card, .review-analytics { border-radius: 22px !important; }
+.btn, input, select, textarea, .tabs, .tab, .cloud-bar, .cal-d, .simple-trade, .notes, .calc { border-radius: 15px !important; }
+dialog, .lock .card, .auth-status, .auth-note, .info-tooltip, .ref-help-pop { border-radius: 24px !important; }
+.pair-logos img, .pair-logos .pair-token, .accent-swatch { border-radius: 50% !important; }
 </style>
     </head>
     <body>
@@ -876,7 +883,10 @@ function clearAccount() {
     ready = false; currentUser = null; revision = 0;
     S.trades = []; S.settings = cleanSettings();
     S.view = 'dashboard'; S.acc = S.tacc = 'all'; S.q = '';
-    S.res = 'all'; S.lastAcc = ''; S.calDay = ''; delete S.cal;
+    S.res = 'all'; S.lastAcc = ''; S.calDay = '';
+    // Calendar state must exist before the dashboard renders after sign-in or reload.
+    const today = new Date();
+    S.cal = { y: today.getFullYear(), m: today.getMonth() };
     preferences = defaultPreferences(); showPreferences();
     closeDlg(); hideChartInfo(); hideRefTip();
 }
@@ -2165,8 +2175,7 @@ const tfilter = () => {
 };
 function tradesView() {
     const head = `<div class="page-h"><h1 class="trades-title">Trades <span class="info-wrap"><button type="button" class="info-button" aria-label="About Trades" aria-describedby="tip-trades-heading">i</button><span class="info-tooltip" role="tooltip" id="tip-trades-heading">Review, search, filter, import, and manage your recorded trades. Select Add Trade to log a new position.</span></span></h1><div class="row"><button class="btn primary" data-act="add">Add Trade</button></div></div>`;
-    const quotePanel = `<div class="dashboard-quote-footer"><span class="dashboard-quote-mark" aria-hidden="true">“</span><span class="dashboard-quote-text">${esc(dashboardQuote())}</span><span class="dashboard-quote-mark" aria-hidden="true">”</span></div>`;
-    if (!S.trades.length) return head + emptyState() + quotePanel;
+    if (!S.trades.length) return head + emptyState();
     return (
     head +
     `<div class="filters"><input id="q" type="search" placeholder="Search pair, setup or notes"
