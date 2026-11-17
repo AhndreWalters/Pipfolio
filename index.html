@@ -448,6 +448,11 @@ select option{background-color:var(--in);color:var(--tx)}
 .discipline-stats span,.discipline-stats small{font-size:12px;color:var(--mut)}
 .discipline-stats strong{font-size:21px;overflow-wrap:anywhere}
 @media(max-width:650px){.discipline-stats{grid-template-columns:1fr}}
+/* Supabase account controls */
+.cloud-bar{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:-4px 0 22px;padding:12px 16px;border:1px solid var(--bd);border-radius:10px;font-size:12px;color:var(--mut);overflow-wrap:anywhere}
+.cloud-bar .btn{height:32px;font-size:12px}.auth-links{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}.auth-links .btn{flex:1}
+.auth-note{margin:14px 0;color:var(--mut)}.auth-status{margin:12px 0;white-space:pre-wrap;overflow-wrap:anywhere}
+#saving-indicator{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:12px 18px;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--tx);z-index:999999;box-shadow:0 8px 24px #0002}
 </style>
     </head>
     <body>
@@ -455,19 +460,25 @@ select option{background-color:var(--in);color:var(--tx)}
         <p style="padding: 24px">Pipfolio needs JavaScript enabled.</p>
         </noscript>
         <div id="app"></div>
+        <div id="saving-indicator" role="status" hidden>Saving to your account…</div>
         <dialog id="dlg"></dialog>
         <div id="toasts" role="status"></div>
         <input type="file" id="file" accept=".json,.csv,application/json,text/csv" hidden />
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
         <script>
 'use strict';
-const K = {
-    data: 'pipfolio:v1',
-    auth: 'pipfolio:auth',
-    theme: 'pipfolio:theme',
-};
+// Fill in these TWO public project values before uploading to GitHub Pages.
+// Use a PUBLISHABLE key. Never put a secret or service_role key in this file.
+const SUPABASE_URL = 'https://ukotgedbveqgsywksuyc.supabase.co/rest/v1/';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_Dqw7e5vjjn1IXwlKzG17nw_elllMnSH';
 const SIDES = ['Buy', 'Sell'],
-    SESS = ['Asian', 'London', 'New York', 'London/NY Overlap', 'Other'],
-    ITER = 200000;
+    SESS = ['Asian', 'London', 'New York', 'London/NY Overlap', 'Other'];
+let db = null, currentUser = null, revision = 0, ready = false, saving = false;
+let authGeneration = 0, loadingUser = null, loadTask = null;
+let recoveryMode = /(?:[?#&])type=recovery(?:&|$)/.test(location.hash + location.search);
+const defaultPreferences = () => ({theme:'light', accent:'#4bace5', quote:''});
+let preferences = defaultPreferences();
+let syncMessage = 'Saved to your account';
 const S = {
     trades: [],
     settings: { accounts: [] },
@@ -559,28 +570,6 @@ function pairHTML(pair){
 const r2 = (x) => Math.round((x + Math.sign(x) * Number.EPSILON) * 100) / 100;
 const uid = () =>
     Date.now().toString(36) + Math.random().toString(36).slice(2, 9);
-const ls = {
-    get(k) {
-    try {
-        return localStorage.getItem(k);
-    } catch {
-        return null;
-    }
-    },
-    set(k, v) {
-    try {
-        localStorage.setItem(k, v);
-        return true;
-    } catch {
-        return false;
-    }
-    },
-    del(k) {
-    try {
-        localStorage.removeItem(k);
-    } catch {}
-    },
-};
 function toast(m, type = '') {
     const t = document.createElement('div');
     t.className = 'toast ' + type;
@@ -590,16 +579,9 @@ function toast(m, type = '') {
 }
 function setTheme(t, save = true) {
     document.documentElement.dataset.theme = t;
-    if (save) ls.set(K.theme, t);
+
 }
-setTheme(
-    ls.get(K.theme) ||
-    (matchMedia('(prefers-color-scheme:dark)').matches
-        ? 'dark'
-        : 'light'),
-    false,
-);
-/* Accent colors are a local appearance preference; no account or trade data is changed. */
+setTheme('light', false);
 const ACCENT_OPTIONS = [
   ['Sky Blue','#4bace5'],['Ocean Blue','#2563eb'],['Royal Blue','#1d4ed8'],
   ['Navy','#1e3a8a'],['Midnight Blue','#172554'],['Ice Blue','#bae6fd'],
@@ -618,10 +600,8 @@ const ACCENT_OPTIONS = [
   ['Slate','#64748b'],['Graphite','#334155'],['Silver','#cbd5e1'],
   ['Black','#000000'],['White','#ffffff']
 ];
-const ACCENT_KEY='pipfolio:accent';
-const QUOTE_KEY='pipfolio:dashboard-quote';
 const DEFAULT_QUOTE='A little progress, one trade at a time.';
-function dashboardQuote(){return ls.get(QUOTE_KEY) || DEFAULT_QUOTE;}
+function dashboardQuote(){return preferences.quote || DEFAULT_QUOTE;}
 function rgbMix(a,b,amount){return a.map((v,i)=>Math.round(v*(1-amount)+b[i]*amount));}
 function cssRgb(a){return 'rgb('+a.join(',')+')';}
 function validAccent(c){return ACCENT_OPTIONS.some(o=>o[1]===c)}
@@ -662,58 +642,9 @@ function applyAccent(c,save=true){
   const luminance=rgb.reduce((sum,v,i)=>sum+[.2126,.7152,.0722][i]*(v/255<=.04045?v/255/12.92:Math.pow((v/255+.055)/1.055,2.4)),0);
   root.style.setProperty('--acx',luminance>.30?'#111827':'#ffffff');
   for(const [key,value] of Object.entries(themeVars))root.style.setProperty(key,value);
-  if(save)ls.set(ACCENT_KEY,c);
+
 }
-applyAccent(ls.get(ACCENT_KEY),false);
-/* ---------- password ---------- */
-// Legacy-compatible password gate: PBKDF2 protects the verifier, NOT the
-// unencrypted localStorage journal. Never claim this is at-rest encryption.
-// Avoid changing the storage format here so existing browsers/backups still load.
-const b64 = (b) => btoa(String.fromCharCode(...new Uint8Array(b)));
-const unb64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
-async function derive(pw, salt, iter = ITER) {
-    const k = await crypto.subtle.importKey(
-    'raw',
-    new TextEncoder().encode(pw),
-    'PBKDF2',
-    false,
-    ['deriveBits'],
-    );
-    return b64(
-    await crypto.subtle.deriveBits(
-        { name: 'PBKDF2', salt, iterations: iter, hash: 'SHA-256' },
-        k,
-        256,
-    ),
-    );
-}
-async function makeAuth(pw) {
-    const salt = crypto.getRandomValues(new Uint8Array(16));
-    return { salt: b64(salt), hash: await derive(pw, salt), iter: ITER };
-}
-const goodAuth = (a) =>
-    a &&
-    typeof a.salt === 'string' &&
-    typeof a.hash === 'string' &&
-    Number.isInteger(a.iter) &&
-    a.iter >= 1000 &&
-    a.iter <= 2e6;
-function getAuth() {
-    try {
-    const a = JSON.parse(ls.get(K.auth));
-    return goodAuth(a) ? a : null;
-    } catch {
-    return null;
-    }
-}
-// Compare fixed-length password hashes without an early exit.
-const checkPw = async (pw, a) => {
-    const actual = await derive(pw, unb64(a.salt), a.iter);
-    if (actual.length !== a.hash.length) return false;
-    let difference = 0;
-    for (let i = 0; i < actual.length; i++) difference |= actual.charCodeAt(i) ^ a.hash.charCodeAt(i);
-    return difference === 0;
-};
+applyAccent(preferences.accent,false);
 /* ---------- data ---------- */
 const defPip = (p) =>
     /JPY/.test(p) ? 0.01 : /XAU|GOLD/.test(p) ? 0.1 : 0.0001;
@@ -919,39 +850,100 @@ function clean(t) {
     if (!(o.pipSize > 0)) o.pipSize = defPip(o.pair);
     return o;
 }
-function load() {
-    const raw = ls.get(K.data);
-    S.settings = cleanSettings();
-    S.trades = [];
-    S.acc = S.tacc = 'all';
-    if (!raw) return;
-    try {
-    const d = JSON.parse(raw);
-    S.settings = cleanSettings(d.settings);
-    S.trades = norm(
-        (Array.isArray(d.trades) ? d.trades : [])
-        .map(clean)
-        .filter(Boolean),
-        S.settings,
-    );
-    } catch {
-    ls.set('pipfolio:corrupt-copy', raw);
-    toast(
-        'Stored data could not be read. A raw copy was kept in browser storage.',
-        'error',
-    );
-    }
+function cleanPreferences(p) {
+    return {theme:p?.theme === 'dark' ? 'dark' : 'light',
+        accent:validAccent(p?.accent) ? p.accent : '#4bace5',
+        quote:typeof p?.quote === 'string' ? p.quote.slice(0,240) : ''};
 }
-const persist = (trades, settings) =>
-    ls.set(K.data, JSON.stringify({ version: 2, trades, settings }));
-function commit(trades, settings = S.settings) {
-    if (!persist(trades, settings)) {
-    toast('Could not save. Browser storage is full or blocked.', 'error');
-    return false;
+function showPreferences() {
+    setTheme(preferences.theme, false);
+    applyAccent(preferences.accent, false);
+}
+function syncStatus(message) {
+    syncMessage = message;
+    const el = $('#cloud-status');
+    if(el) el.textContent = message;
+}
+function busy(on) {
+    saving = on;
+    app.inert = on;
+    dlg.inert = on;
+    const indicator = $('#saving-indicator');
+    if(indicator) indicator.hidden = !on;
+}
+function clearAccount() {
+    authGeneration++;
+    ready = false; currentUser = null; revision = 0;
+    S.trades = []; S.settings = cleanSettings();
+    S.view = 'dashboard'; S.acc = S.tacc = 'all'; S.q = '';
+    S.res = 'all'; S.lastAcc = ''; S.calDay = ''; delete S.cal;
+    preferences = defaultPreferences(); showPreferences();
+    closeDlg(); hideChartInfo(); hideRefTip();
+}
+async function loadAccount(user, force = false) {
+    if(recoveryMode) return authScreen('update');
+    if(!force && ready && currentUser?.id === user.id) return;
+    if(loadingUser === user.id && loadTask) return loadTask;
+    clearAccount(); currentUser = user;
+    const generation = authGeneration;
+    loadingUser = user.id;
+    app.innerHTML = '<div class="lock"><div class="card">Loading your journal…</div></div>';
+    loadTask = (async () => {
+        try {
+            const {data, error} = await db.from('journals')
+                .select('payload,revision').eq('user_id', user.id).maybeSingle();
+            if(generation !== authGeneration) return;
+            if(error) throw error;
+            const payload = data?.payload || {};
+            if(data && (!Array.isArray(payload.trades) || !payload.settings))
+                throw new Error('The saved journal format could not be read. Contact the site owner.');
+            S.settings = cleanSettings(payload.settings);
+            S.trades = norm((payload.trades || []).map(clean).filter(Boolean), S.settings);
+            preferences = cleanPreferences(payload.preferences);
+            revision = Number(data?.revision || 0);
+            ready = true; showPreferences();
+            syncStatus(data ? 'Saved to your account' : 'Account ready — add your first trade');
+            render();
+        } catch(error) {
+            if(generation === authGeneration) authScreen('loaderror',
+                'Your journal could not be loaded. ' + error.message);
+        } finally {
+            if(generation === authGeneration) {loadingUser = null; loadTask = null;}
+        }
+    })();
+    return loadTask;
+}
+async function commit(trades, settings = S.settings, nextPreferences = preferences) {
+    if(!ready || !currentUser) {toast('Sign in and load your journal first.', 'error');return false;}
+    if(saving) {toast('A save is already in progress.', 'error');return false;}
+    const generation = authGeneration;
+    const payload = JSON.parse(JSON.stringify({version:3, trades, settings,
+        preferences:cleanPreferences(nextPreferences)}));
+    if(new Blob([JSON.stringify(payload)]).size > 20*1024*1024) {
+        toast('Your journal exceeds 20 MB. Export a backup and remove some screenshots.', 'error');
+        return false;
     }
-    S.trades = trades;
-    S.settings = settings;
-    return true;
+    busy(true); syncStatus('Saving…');
+    try {
+        const {data, error} = await db.rpc('save_journal', {
+            p_payload:payload, p_expected_revision:revision
+        });
+        if(error) throw error;
+        if(generation !== authGeneration) return false;
+        revision = Number(data);
+        S.trades = payload.trades; S.settings = payload.settings;
+        preferences = payload.preferences; showPreferences();
+        syncStatus('Saved to your account');
+        return true;
+    } catch(error) {
+        if(generation !== authGeneration) return false;
+        syncStatus('Save failed — your change was not confirmed');
+        const conflict = error.code === '40001';
+        toast(conflict
+            ? 'Another tab or device has newer changes. Copy any form text, then use Reload journal and try again.'
+            : 'Save was not confirmed. Check your connection, then reload your journal before retrying. ' + error.message, 'error');
+        return false;
+    } finally {busy(false);}
 }
 const closed = (t) => t.exit != null && t.pl != null && !!t.xdt;
 const calc = (t) => {
@@ -1079,88 +1071,130 @@ const confirmDel = (t, m, label) =>
     { label: 'Cancel', val: false },
     { label, cls: 'danger solid', val: true },
     ]);
-/* Keep an unlocked journal open across page refreshes in the same browser tab.
-   sessionStorage ends with the tab and is never used to store the password. */
-const UNLOCK_SESSION_KEY = 'pipfolio:unlocked-tab';
-function markTabUnlocked(){
-    try { sessionStorage.setItem(UNLOCK_SESSION_KEY, '1'); } catch {}
-}
-function clearTabUnlock(){
-    try { sessionStorage.removeItem(UNLOCK_SESSION_KEY); } catch {}
-}
-function isTabUnlocked(){
-    try { return sessionStorage.getItem(UNLOCK_SESSION_KEY) === '1'; } catch { return false; }
-}
-/* ---------- lock screen ---------- */
-function lockScreen(note) {
-    const a = getAuth(),
-    setup = !a;
+/* ---------- Supabase email accounts ---------- */
+function authScreen(mode = 'signin', message = '') {
+    closeDlg();
+    const signup = mode === 'signup', reset = mode === 'reset', update = mode === 'update';
+    const failedLoad = mode === 'loaderror';
+    const title = signup ? 'Create your account' : reset ? 'Reset your password'
+        : update ? 'Set a new password' : failedLoad ? 'Journal unavailable' : 'Welcome to Pipfolio';
     app.innerHTML = `<div class="lock"><div class="card">
-    <div class="brand"><img class="brand-mark" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAYAAAD0eNT6AAAACXBIWXMAAES3AABEtwGB+XlgAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAACdVJREFUeJzt2TGLZncZh+HnnXlnE4hh3YCubGdnIdaSImGDhV8gTWCWFBLBys5CrNJYamWVJgtuEbDUMhmtAn4Hq0BcJAprzK7O7LGJkGZgSbL5z+t9XV/g/OCc4j48MwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHzVdqsHAJc7PTv9+bZt11fvmJk5Ojp68PZLb7+5egfw5divHgBcbje7n8xubq3eMTOzbdv9mREA8H/iaPUAAOCrJwAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAEDQfvUADser7776tWePnn1z9Y6SbbbrqzdcVa+/+/p3Lo4ufrx6x1Xy8PHDX7xz+51/rt7BYRAAPLH9xf65OZqfrt4BMzOPd4+/PeN7/Kz9xf6XMyMAeCJOAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIGi/egB8Ae/Pbn62esRTtc3vZuaF1TOuopNrJ+8/evTo9uodV8nzX3/+o9UbOBwCgMO1m7/ffenu2eoZT9Pp2em/V2+4qt568a2PZua91TvgUDkBAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQtF89AD63bV45PTv9cPWMp+wbqwdcVadnp6/MzG9X77hKzh+ff/fe7Xt/W72DwyAAOGTXZubm6hGssdt2z2y7zfv/rIs5Xj2Bw+EEAABBAgAAggQAAAQJAAAIEgAAECQAACBIAABAkAAAgCABAABBAgAAggQAAAQJAAAIEgAAECQAACBIAABAkAAAgCABAABBAgAAggQAAAQJAAAIEgAAECQAACBIAABAkAAAgCABAABBAgAAggQAAAQJAAAIEgAAECQAACBIAABAkAAAgCABAABB+9UDOCDHczEzH66eEfPNEeqXeTjrv8cbM/PM4g3wuexWDwAud+fszgfbbLdW7/jU/bsv3725esRVcvrH0z/MNj9cveN/zv9z/q17P7j319U7OAz+LAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACNqvHsDheOPPb5x88q9PXly9o2TbtmurN1xVr/3ptRvH2/H3lo7Y5sbS58MXIAB4Yg/+8eCF/cn+vdU7YGZmf7H//rbbfr96BxwqJwAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABC0Xz2Aw3F+fP7xyZz8evWOkm22H83Mc6t3XEVH29FfLnYXv1q94yo5Pz7/ePUGDsdu9QDgcnfO7nywzXZr9Y5P3b/78t2bq0cAXw4nAAAIEgAAECQAACBIAABAkAAAgCABAABBAgAAggQAAAQJAAAIEgAAECQAACBIAABAkAAAgCABAABBAgAAggQAAAQJAAAIEgAAECQAACBIAABAkAAAgCABAABBAgAAggQAAAQJAAAIEgAAECQAACBIAABAkAAAgCABAABBAgAAggQAAAQJAAAIEgAAECQAACBIAABAkAAAgCABAABBAgAAggQAAAQJAAAIEgAAECQAACBIAABAkAAAgCABAABBAgAAggQAAAQJAAAIEgAAECQAACBov3oAcLlttt/sZnd99Y6ZmW3bHqzeAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHDI/gsIyIfvn3a0VgAAAABJRU5ErkJggg==" alt="" aria-hidden="true">Pipfolio</div>${note
-        ? `<p class="pos" style="margin-top:8px">${esc(note)}</p>`
-        : ''}
-    <form id="lf" novalidate><label class="f"><span>${setup
-        ? 'New password' : 'Password'}</span><input type="password" name="pw" autocomplete="${setup
-        ? 'new-password' : 'current-password'}" autofocus></label>
-    ${setup ? `<label class="f"><span>Confirm password</span>
-        <input type="password" name="pw2" autocomplete="new-password">
-        <small class="hint">At least 8 characters. There is no recovery if you forget
-        it, so keep an exported backup.</small></label>`
-        : ''}
-    <small class="err" id="lerr"></small><button class="btn primary block" id="lb">${setup
-        ? 'Create password' : 'Unlock'}</button></form></div></div>`;
-    $('#lf').onsubmit = async (e) => {
-    e.preventDefault();
-    const f = new FormData(e.target),
-        pw = f.get('pw'),
-        er = $('#lerr'),
-        b = $('#lb');
-    er.textContent = '';
-    if (!window.crypto?.subtle) {
-        er.textContent =
-        'This browser blocks secure hashing. Open Pipfolio over HTTPS ' +
-            '(such as GitHub Pages) or localhost.';
-        return;
-    }
-    if (setup) {
-        if (pw.length < 8) {
-        er.textContent = 'Password must be at least 8 characters.';
-        return;
-        }
-        if (pw !== f.get('pw2')) {
-        er.textContent = 'Passwords do not match.';
-        return;
-        }
-    } else if (!pw) {
-        er.textContent = 'Enter your password.';
-        return;
-    }
-    const lab = b.textContent;
-    b.disabled = true;
-    b.textContent = setup ? 'Creating\u2026' : 'Unlocking\u2026';
-    await new Promise((r) => setTimeout(r, 30));
-    try {
-        if (setup) {
-        if (!ls.set(K.auth, JSON.stringify(await makeAuth(pw)))) {
-            er.textContent = 'Could not save. Browser storage is blocked.';
-            return;
-        }
-        } else if (!(await checkPw(pw, a))) {
-        er.textContent = 'Incorrect password.';
-        return;
-        }
-        load();
-        markTabUnlocked();
-        S.view = 'dashboard';
-        render();
-    } catch {
-        er.textContent = 'Something went wrong. Please try again.';
-    } finally {
-        b.disabled = false;
-        b.textContent = lab;
-    }
+        <div class="brand">Pipfolio</div><h2 style="margin-top:16px">${title}</h2>
+        <p class="auth-note">${failedLoad ? 'Retry loading before making any changes.' : update
+            ? 'Choose a password with at least 8 characters.' : 'Your trading journal, saved to your account.'}</p>
+        <p id="auth-message" class="auth-status" role="status">${esc(message)}</p>
+        ${failedLoad ? `<div class="auth-links"><button type="button" class="btn primary" id="auth-retry">Retry loading</button><button type="button" class="btn" id="auth-signout">Sign out</button></div>`
+        : `<form id="auth-form">
+            ${!update ? '<label class="f"><span>Email address</span><input type="email" name="email" autocomplete="email" required maxlength="254"></label>' : ''}
+            ${!reset ? `<label class="f"><span>Password</span><input type="password" name="password" autocomplete="${signup||update?'new-password':'current-password'}" required ${signup||update?'minlength="8"':''}></label>` : ''}
+            ${signup||update ? '<label class="f"><span>Confirm password</span><input type="password" name="confirm" autocomplete="new-password" minlength="8" required></label>' : ''}
+            <button class="btn primary block" id="auth-submit">${signup?'Create account':reset?'Send reset email':update?'Save password':'Sign in'}</button>
+        </form>
+        <div class="auth-links">${update ? '<button type="button" class="btn" id="auth-back">Back to journal</button><button type="button" class="btn" id="auth-signout">Sign out</button>' : `<button type="button" class="btn" id="auth-toggle">${signup||reset?'Back to sign in':'Create account'}</button>${!reset?'<button type="button" class="btn" id="auth-forgot">Forgot password?</button>':''}`}</div>`}
+        </div></div>`;
+    const say = (text, error = false) => {
+        const el = $('#auth-message');
+        if(el) {el.textContent = text;el.classList.toggle('neg', error);}
     };
+    $('#auth-retry')?.addEventListener('click',()=>currentUser && loadAccount(currentUser,true));
+    $('#auth-toggle')?.addEventListener('click',()=>authScreen(signup||reset?'signin':'signup'));
+    $('#auth-forgot')?.addEventListener('click',()=>authScreen('reset'));
+    $('#auth-signout')?.addEventListener('click',signOut);
+    $('#auth-back')?.addEventListener('click',async()=>{
+        if(recoveryMode) return say('Save your new password first, or sign out.');
+        if(currentUser) await loadAccount(currentUser,true);
+    });
+    $('#auth-form')?.addEventListener('submit', async event => {
+        event.preventDefault();
+        const form = event.target, fields = new FormData(form);
+        const email = String(fields.get('email')||'').trim();
+        const password = String(fields.get('password')||'');
+        if((signup||update) && password !== fields.get('confirm')) return say('Passwords do not match.',true);
+        const button = $('#auth-submit'); button.disabled = true;
+        // Prevent navigation during an authentication request.
+        app.querySelectorAll('.auth-links button').forEach(b=>b.disabled=true);
+        say('Please wait…');
+        try {
+            if(update) {
+                const {error} = await db.auth.updateUser({password});
+                if(error) throw error;
+                recoveryMode = false;
+                const {data,error:sessionError} = await db.auth.getSession();
+                if(sessionError) throw sessionError;
+                if(!data.session) throw new Error('Please sign in again with your new password.');
+                await loadAccount(data.session.user,true);
+                toast('Password updated');
+            } else if(reset) {
+                const {error} = await db.auth.resetPasswordForEmail(email,{redirectTo:redirectURL()});
+                if(error) throw error;
+                say('If an account exists for that email, a password reset link has been sent.');
+            } else {
+                const result = signup
+                    ? await db.auth.signUp({email,password,options:{emailRedirectTo:redirectURL()}})
+                    : await db.auth.signInWithPassword({email,password});
+                if(result.error) throw result.error;
+                if(result.data.session) await loadAccount(result.data.session.user);
+                else say('Check your email for a confirmation link, then return here to sign in. If you already have an account, sign in or reset your password.');
+            }
+        } catch(error) {say(error.message || 'Could not complete the request. Try again.', true);}
+        finally {
+            button.disabled = false;
+            form.querySelector('[name="password"]') && (form.querySelector('[name="password"]').value='');
+            form.querySelector('[name="confirm"]') && (form.querySelector('[name="confirm"]').value='');
+            app.querySelectorAll('.auth-links button').forEach(b=>b.disabled=false);
+        }
+    });
 }
+const redirectURL = () => location.origin + location.pathname;
+async function signOut() {
+    if(saving) return;
+    try {
+        const {error} = await db.auth.signOut({scope:'local'});
+        if(error) throw error;
+        recoveryMode = false; clearAccount(); authScreen('signin','You have signed out.');
+    } catch(error) {toast('Could not sign out. '+error.message,'error');}
+}
+async function startCloud() {
+    if(SUPABASE_URL.includes('YOUR_PROJECT') || SUPABASE_PUBLISHABLE_KEY.includes('YOUR_SUPABASE')) {
+        app.innerHTML = '<div class="lock"><div class="card"><div class="brand">Pipfolio</div><h2 style="margin-top:16px">Connect your Supabase project</h2><p class="auth-note">Open index.html in a text editor. Fill in SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY near the start of the JavaScript, then upload it again. Run supabase-setup.sql in your Supabase project first.</p></div></div>';
+        return;
+    }
+    if(!window.supabase?.createClient) {
+        app.innerHTML = '<div class="lock"><div class="card">The Supabase library could not load. Check your connection or content blocker, then refresh.</div></div>';
+        return;
+    }
+    try {
+        db = window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{
+            auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:'implicit'}
+        });
+        db.auth.onAuthStateChange((event,session)=>{
+            // Do not await another Supabase call inside this callback.
+            if(event === 'PASSWORD_RECOVERY') {
+                recoveryMode = true;
+                setTimeout(()=>{if(recoveryMode) {clearAccount();currentUser=session?.user||null;authScreen('update');}},0);
+            } else if(event === 'SIGNED_OUT') {
+                recoveryMode = false;clearAccount();authScreen();
+            } else if(event === 'SIGNED_IN' && session) {
+                const eventGeneration = authGeneration;
+                setTimeout(()=>{
+                    if(!recoveryMode && eventGeneration === authGeneration) loadAccount(session.user);
+                },0);
+            }
+        });
+        const {data,error} = await db.auth.getSession();
+        if(error) throw error;
+        const authError = new URLSearchParams(location.hash.slice(1)).get('error_description')
+            || new URLSearchParams(location.search).get('error_description');
+        if(authError) {
+            history.replaceState(null,'',location.pathname);
+            authScreen('signin', authError);
+        } else if(recoveryMode && data.session) {
+            currentUser=data.session.user;authScreen('update');
+        } else if(data.session) await loadAccount(data.session.user);
+        else authScreen();
+    } catch(error) {authScreen('signin','Connection error: '+error.message);}
+}
+
 /* ---------- shell & views ---------- */
 function render() {
     const v = S.view;
@@ -1175,6 +1209,7 @@ function render() {
     .map(([k, l]) =>
     `<button class="tab ${v === k ? 'on' : ''}" data-act="view" data-v="${k}">${l}</button>`)
     .join('')}</nav></div>
+    <div class="cloud-bar"><span>${esc(currentUser?.email || '')}</span><span id="cloud-status" role="status">${esc(syncMessage)}</span><div class="row"><button class="btn" data-act="reload">Reload journal</button><button class="btn" data-act="lock">Sign out</button></div></div>
     <main>${v === 'dashboard' ? dashboard() : v === 'trades'
         ? tradesView() : v === 'review' ? reviewView() : settingsView()}</main>
     <footer class="footer">\u00a9 ${new Date().getFullYear()} Pipfolio. All rights reserved.</footer></div>`;
@@ -2232,7 +2267,7 @@ function settingsView() {
     statistics.</p></div><button class="btn primary" data-act="accadd">Add account</button></div>
     <div class="accs">${S.settings.accounts.map(accCard).join('')}</div></div>
     <div class="card"><h2>Backup and Restore</h2><p>Export everything (accounts, trades,
-    settings and password) to one file. Import it in any browser or device to restore
+    settings, screenshots and appearance) to one file. Login credentials are excluded. Import it in any browser or device to restore
     your journal.</p><div class="row"><button class="btn primary" data-act="export">Export backup</button>
     <button class="btn" data-act="import">Import backup or CSV</button></div></div>
     <div class="card"><h2>Trading Checklist</h2><p>One rule per line. These appear when adding or editing trades.</p><textarea id="checklist-editor" maxlength="1500">${esc((S.settings.checklist||[]).join('\n'))}</textarea><div class="row" style="margin-top:10px"><button class="btn primary" data-act="savechecklist">Save Checklist</button></div></div>
@@ -2240,19 +2275,17 @@ function settingsView() {
     <div class="card"><h2>Appearance</h2><p>Choose the look of your trading journal.</p>
     <button class="btn" data-act="theme">${document.documentElement.dataset.theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</button>
     <span class="accent-picker-label">Accent Color</span>
-    <div class="accent-palette" role="group" aria-label="Choose accent color">${ACCENT_OPTIONS.map(([name,color])=>`<button type="button" class="accent-swatch" style="--swatch:${color}" data-act="accent" data-color="${color}" title="${name}" aria-label="${name} accent" aria-pressed="${(ls.get(ACCENT_KEY)||'#4bace5')===color}"></button>`).join('')}</div>
+    <div class="accent-palette" role="group" aria-label="Choose accent color">${ACCENT_OPTIONS.map(([name,color])=>`<button type="button" class="accent-swatch" style="--swatch:${color}" data-act="accent" data-color="${color}" title="${name}" aria-label="${name} accent" aria-pressed="${preferences.accent===color}"></button>`).join('')}</div>
     <p class="accent-note">Choose from vibrant, pastel, deep, and neutral colours. Your selection updates the interface in both light and dark modes.</p>
     <label class="accent-picker-label" for="custom-dashboard-quote">Dashboard Quote</label>
     <textarea id="custom-dashboard-quote" maxlength="240" placeholder="Write your own motivational quote">${esc(dashboardQuote())}</textarea>
     <div class="row" style="margin-top:10px"><button class="btn primary" data-act="savequote">Save Quote</button><button class="btn" data-act="resetquote">Reset Quote</button></div>
-    <p class="accent-note">Your quote appears in quotation marks on the dashboard and is saved in this browser.</p></div>
-    <div class="card"><h2>Security</h2><p>The password locks the journal when it is
-    opened. Data stays in this browser's storage and is not encrypted, so avoid using
-    shared computers.</p><div class="row"><button class="btn" data-act="chpw">Change password</button>
-    <button class="btn" data-act="lock">Lock Now</button></div></div>
-    <div class="card"><h2>Erase Journal</h2><p>Permanently deletes all accounts, trades,
-    settings and the password from this browser. Export a backup first.</p>
-    <button class="btn danger" data-act="erase">Erase all data</button></div></div>`;
+    <p class="accent-note">Your quote appears in quotation marks on the dashboard and is saved to your account.</p></div>
+    <div class="card"><h2>Security</h2><p>Signed in as ${esc(currentUser?.email || '')}. Your journal is saved to your Supabase account.</p>
+    <div class="row"><button class="btn" data-act="chpw">Change password</button>
+    <button class="btn" data-act="lock">Sign out</button></div></div>
+    <div class="card"><h2>Erase Journal</h2><p>Permanently deletes your journal content across all devices. Your login is kept. Export a backup first.</p>
+    <button class="btn danger" data-act="erase">Erase journal</button></div></div>`;
 }
 /* ---------- Trading review extensions ---------- */
 const EMOTIONS=['Calm','Confident','Focused','Fearful','Anxious','Frustrated','Greedy','Overconfident','Excited','Tired'];
@@ -2524,7 +2557,7 @@ function tradeForm(t, focus) {
             x.id === t.id ? { ...trade, id: t.id, created: t.created } : x,
         )
         : [...S.trades, trade];
-    if (commit(list)) {
+    if (await commit(list)) {
         S.lastAcc = trade.account;
         closeDlg();
         toast(e ? 'Trade saved' : 'Trade added');
@@ -2673,7 +2706,7 @@ function accForm(a) {
         || '')}">`)}</div></div></div>
     <div class="df"><button type="button" class="btn" data-act="close">Cancel</button>
     <button class="btn primary">${e ? 'Save changes' : 'Add Account'}</button></div></form>`);
-    $('#af').onsubmit = (ev) => {
+    $('#af').onsubmit = async (ev) => {
     ev.preventDefault();
     const f = new FormData(ev.target),
         g = (n) => String(f.get(n)).trim(),
@@ -2706,11 +2739,11 @@ function accForm(a) {
         flows: a?.flows || [],
     };
     const st = {
-        accounts: e
+        ...S.settings, accounts: e
         ? S.settings.accounts.map((x) => (x.id === a.id ? o : x))
         : [...S.settings.accounts, o],
     };
-    if (commit(S.trades, st)) {
+    if (await commit(S.trades, st)) {
         closeDlg();
         toast(e ? 'Account saved' : 'Account added');
         render();
@@ -2790,7 +2823,7 @@ function exportData() {
     version: 2,
     exportedAt: new Date().toISOString(),
     theme: document.documentElement.dataset.theme,
-    auth: getAuth(),
+    preferences: {...preferences},
     settings: S.settings,
     trades: S.trades,
     };
@@ -2811,8 +2844,8 @@ function exportData() {
 async function importFile(file) {
     if (!file) return;
     const fail = (m) => toast(m, 'error');
-    if (file.size > 10 * 1024 * 1024)
-    return fail('Import failed: file is larger than 10 MB.');
+    if (file.size > 20 * 1024 * 1024)
+    return fail('Import failed: file is larger than 20 MB.');
     let d;
     try {
     const txt = await file.text();
@@ -2840,19 +2873,6 @@ async function importFile(file) {
     ? '' : 's'} and ${st.accounts.length} account${st.accounts.length === 1
         ? '' : 's'} found${skipped ? `, ${skipped} invalid trade${skipped > 1
         ? 's' : ''} skipped` : ''}.`;
-    if (S.importMode === 'setup') {
-    if (!goodAuth(d.auth))
-        return fail(
-        'Import failed: this backup does not contain a password.',
-        );
-    if (!persist(trades, st) || !ls.set(K.auth, JSON.stringify(d.auth)))
-        return fail('Could not save. Browser storage is full or blocked.');
-    if (d.theme === 'dark' || d.theme === 'light') setTheme(d.theme);
-    clearTabUnlock();
-    return lockScreen(
-        'Backup restored. Enter your backup password to open the journal.',
-    );
-    }
     const ch = await ask(
     'Import backup',
     `${note}<br><br><b>Merge</b> adds new accounts and trades and keeps your current
@@ -2867,7 +2887,7 @@ async function importFile(file) {
     if (ch === 'm') {
     const am = new Map(S.settings.accounts.map((a) => [a.id, a]));
     st.accounts.forEach((a) => am.has(a.id) || am.set(a.id, a));
-    const ns = { accounts: [...am.values()] },
+    const ns = { ...S.settings, accounts: [...am.values()] },
         m = new Map(S.trades.map((t) => [t.id, t]));
     let add = 0,
         upd = 0;
@@ -2881,7 +2901,7 @@ async function importFile(file) {
         upd++;
         }
     });
-    if (commit(norm([...m.values()], ns), ns)) {
+    if (await commit(norm([...m.values()], ns), ns)) {
         toast(`Merged: ${add} added, ${upd} updated`);
         render();
     }
@@ -2891,18 +2911,16 @@ async function importFile(file) {
     !(await confirmDel(
         'Replace all data?',
         'This overwrites every account, trade and setting in this ' +
-        'browser. Export a backup first if you might need the current ' +
+        'profile. Export a backup first if you might need the current ' +
         'data.',
         'Replace data',
     ))
     )
     return;
-    // Keep the active password on in-session restore. Backup credentials are
-    // only adopted when restoring from the initial locked setup screen.
-    if (!commit(trades, st)) return;
-    if (d.theme === 'dark' || d.theme === 'light') setTheme(d.theme);
+    const restoredPreferences = cleanPreferences(d.preferences || {...preferences, theme:d.theme || preferences.theme});
+    if (!(await commit(trades, st, restoredPreferences))) return;
     S.acc = S.tacc = 'all';
-    toast('Backup restored. Your current password is unchanged.');
+    toast('Backup restored to your account.');
     render();
 }
 /* ---------- broker CSV import ---------- */
@@ -3050,7 +3068,7 @@ async function importCsv(file) {
         <button class="btn primary" id="csvgo">Import</button></div>`,
     'sm',
     );
-    $('#csvgo').onclick = () => {
+    $('#csvgo').onclick = async () => {
     const a = $('#csvacc').value;
     const updatedTrades = [...S.trades, ...fresh.map((t) => ({ ...t, account: a }))];
     let settings = S.settings;
@@ -3061,7 +3079,7 @@ async function importCsv(file) {
         if (settings.accounts.some((x) => x.id === a && x.balance < 0))
             return toast('Reconciliation would require a negative starting balance. Check account history.', 'error');
     }
-    if (commit(updatedTrades, settings)) {
+    if (await commit(updatedTrades, settings)) {
         S.lastAcc = a;
         closeDlg();
         toast(`Imported ${fresh.length} trade${fresh.length > 1 ? 's' : ''}`);
@@ -3083,7 +3101,7 @@ function flowForm(id, type) {
     <button class="btn primary">Save ${type.toLowerCase()}</button></div></form>`,
     'sm',
     );
-    $('#ff').onsubmit = (ev) => {
+    $('#ff').onsubmit = async (ev) => {
     ev.preventDefault();
     const f = new FormData(ev.target),
         g = (n) => String(f.get(n) || '').trim(),
@@ -3096,11 +3114,11 @@ function flowForm(id, type) {
     if (Object.keys(er).length) return;
     const flow = { id: uid(), type, date: g('date'), amount: amt, note: g('note').slice(0, 100) };
     const st = {
-        accounts: S.settings.accounts.map((x) =>
+        ...S.settings, accounts: S.settings.accounts.map((x) =>
         x.id === id ? { ...x, flows: [...(x.flows || []), flow] } : x,
         ),
     };
-    if (commit(S.trades, st)) {
+    if (await commit(S.trades, st)) {
         closeDlg();
         toast(type + ' added');
         render();
@@ -3113,36 +3131,27 @@ const act = {
     S.view = d.v;
     render();
     },
-    theme: () => {
-    setTheme(
-        document.documentElement.dataset.theme === 'dark'
-        ? 'light'
-        : 'dark',
-    );
-    applyAccent(ls.get(ACCENT_KEY),false);
-    render();
+    theme: async () => {
+        if(await commit(S.trades, S.settings, {...preferences,
+            theme:preferences.theme === 'dark' ? 'light' : 'dark'})) render();
     },
-    accent: (d) => {
-    applyAccent(d.color);
-    render();
+    accent: async (d) => {
+        if(await commit(S.trades, S.settings, {...preferences,accent:d.color})) render();
     },
-    savequote: () => {
-    const quote=($('#custom-dashboard-quote')?.value || '').trim();
-    if(!quote){toast('Enter a quote first.', 'error');return;}
-    if(!ls.set(QUOTE_KEY,quote)){toast('Could not save your quote.', 'error');return;}
-    render();toast('Dashboard quote saved');
+    savequote: async () => {
+        const quote=($('#custom-dashboard-quote')?.value || '').trim();
+        if(!quote) return toast('Enter a quote first.', 'error');
+        if(await commit(S.trades, S.settings, {...preferences,quote})) {
+            render(); toast('Dashboard quote saved');
+        }
     },
-    resetquote: () => {
-    ls.del(QUOTE_KEY);render();toast('Default quote restored');
+    resetquote: async () => {
+        if(await commit(S.trades, S.settings, {...preferences,quote:''})) render();
     },
-    lock: () => {
-    clearTabUnlock();
-    S.trades = [];
-    closeDlg();
-    lockScreen();
-    },
+    lock: signOut,
+    reload: async () => {if(currentUser && !saving) await loadAccount(currentUser,true);},
     riskcalc: () => riskCalculator(),
-    savechecklist: () => {const val=($('#checklist-editor')?.value||'').split('\n').map(x=>x.trim()).filter(Boolean).slice(0,20);const next={...S.settings,checklist:val};if(commit(S.trades,next)){toast('Checklist saved');render();}},
+    savechecklist: async () => {const val=($('#checklist-editor')?.value||'').split('\n').map(x=>x.trim()).filter(Boolean).slice(0,20);const next={...S.settings,checklist:val};if(await commit(S.trades,next)){toast('Checklist saved');render();}},
     add: () => tradeForm(),
     close: closeDlg,
     detail: (d) => detail(d.id),
@@ -3157,7 +3166,7 @@ const act = {
             ' ')} will be permanently deleted.`,
         'Delete trade',
         )) &&
-        commit(S.trades.filter((x) => x.id !== d.id))
+        await commit(S.trades.filter((x) => x.id !== d.id))
     ) {
         toast('Trade deleted');
         render();
@@ -3174,13 +3183,13 @@ const act = {
         )
     ) {
         const st = {
-        accounts: S.settings.accounts.map((x) =>
+        ...S.settings, accounts: S.settings.accounts.map((x) =>
             x.id === d.id
             ? { ...x, flows: (x.flows || []).filter((f) => f.id !== d.fid) }
             : x,
         ),
         };
-        if (commit(S.trades, st)) {
+        if (await commit(S.trades, st)) {
         toast('Entry deleted');
         render();
         }
@@ -3211,10 +3220,10 @@ const act = {
         )
     ) {
         const st = {
-        accounts: S.settings.accounts.filter((x) => x.id !== d.id),
+        ...S.settings, accounts: S.settings.accounts.filter((x) => x.id !== d.id),
         };
         if (
-        commit(
+        await commit(
             S.trades.filter((t) => t.account !== d.id),
             st,
         )
@@ -3243,11 +3252,11 @@ const act = {
     S.calDay = S.calDay === d.d ? '' : d.d;
     refreshCal();
     },
-                sampleadd: () => {
+                sampleadd: async () => {
     const sample = buildSample();
     const st = { ...S.settings, accounts: [...S.settings.accounts, ...sample.accounts],
         checklist: (S.settings.checklist || []).length ? S.settings.checklist : [...SAMPLE_CHECKLIST] };
-    if (commit([...S.trades, ...sample.trades], st)) {
+    if (await commit([...S.trades, ...sample.trades], st)) {
         toast(
         `Sample data added: ${sample.trades.length} trades` +
             (sample.accounts.length ? `, ${sample.accounts.length} accounts` : ''),
@@ -3277,7 +3286,7 @@ const act = {
             ? [{ ...a, sample: false }]
             : [],
     );
-    if (commit(trades, cleanSettings({ accounts }))) {
+    if (await commit(trades, cleanSettings({ ...S.settings, accounts }))) {
         if (S.acc !== 'all' && !acc(S.acc)) S.acc = 'all';
         if (S.tacc !== 'all' && !acc(S.tacc)) S.tacc = 'all';
         S.calDay = '';
@@ -3290,91 +3299,21 @@ const act = {
     S.importMode = 'main';
     $('#file').click();
     },
-    restore: () => {
-    S.importMode = 'setup';
-    $('#file').click();
-    },
-    forgot: async () => {
-    if (
-        await confirmDel(
-        'Erase journal?',
-        "Passwords cannot be recovered. You can erase this browser's " +
-            "journal and start over, or restore from a backup file " +
-            "afterwards. All data here will be deleted.",
-        'Erase all data',
-        )
-    ) {
-        [K.data, K.auth].forEach(ls.del);
-        clearTabUnlock();
-        lockScreen('Journal erased. Create a new password.');
-    }
-    },
     erase: async () => {
-    if (
-        await confirmDel(
-        'Erase all data?',
-        'All trades, settings and your password will be permanently ' +
-            'deleted from this browser.',
-        'Erase all data',
-        )
-    ) {
-        [K.data, K.auth].forEach(ls.del);
-        S.trades = [];
-        S.settings = cleanSettings();
-        S.acc = S.tacc = 'all';
-        closeDlg();
-        clearTabUnlock();
-        lockScreen('Journal erased. Create a new password.');
-    }
-    },
-    chpw: () => {
-    openDlg(
-        `<div class="dh"><h2>Change Password</h2></div><form id="cf" novalidate style="display:contents">
-        <div class="db"><div class="grid2"><div class="full">${F('cur',
-            'Current password', '<input type="password" name="cur" ' +
-            'autocomplete="current-password">')}</div>${F('n1',
-                'New password', '<input type="password" name="n1" autocomplete="new-password">')}${F('n2',
-                'Confirm new password', '<input type="password" name="n2" autocomplete="new-password">')}</div></div>
-        <div class="df"><button type="button" class="btn" data-act="close">Cancel</button>
-        <button class="btn primary" id="cb">Change password</button></div></form>`,
-    );
-    $('#cf').onsubmit = async (ev) => {
-        ev.preventDefault();
-        const f = new FormData(ev.target),
-        e = {};
-        if (!window.crypto?.subtle)
-        e.cur = 'Secure hashing is unavailable in this context';
-        else {
-        const a = getAuth();
-        if (!f.get('cur') || !a || !(await checkPw(f.get('cur'), a)))
-            e.cur = 'Incorrect password';
-        if (String(f.get('n1')).length < 8)
-            e.n1 = 'At least 8 characters';
-        else if (f.get('n1') !== f.get('n2'))
-            e.n2 = 'Passwords do not match';
+        if(await confirmDel('Erase your journal?',
+            'This deletes all trades, trading accounts, screenshots and settings from your Supabase profile on every device. Your login stays active. Export a backup first.',
+            'Erase journal')) {
+            if(await commit([], cleanSettings(), defaultPreferences())) {
+                closeDlg(); S.acc = S.tacc = 'all'; render(); toast('Journal erased');
+            }
         }
-        dlg.querySelectorAll('[data-f]').forEach((l) => {
-        l.classList.toggle('bad', !!e[l.dataset.f]);
-        $('.err', l).textContent = e[l.dataset.f] || '';
-        });
-        if (Object.keys(e).length) return;
-        const b = $('#cb');
-        b.disabled = true;
-        b.textContent = 'Saving\u2026';
-        if (ls.set(K.auth, JSON.stringify(await makeAuth(f.get('n1'))))) {
-        closeDlg();
-        toast('Password changed');
-        } else {
-        b.disabled = false;
-        b.textContent = 'Change password';
-        toast('Could not save. Browser storage is blocked.', 'error');
-        }
-    };
     },
+    chpw: () => authScreen('update'),
+
 };
 document.addEventListener('click', (e) => {
     const a = e.target.closest('[data-act]');
-    if (a && act[a.dataset.act]) act[a.dataset.act](a.dataset);
+    if (a && act[a.dataset.act] && ready && !saving) Promise.resolve(act[a.dataset.act](a.dataset)).catch(error=>toast(error.message,'error'));
 });
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && e.target.matches('tr[data-act]'))
@@ -3422,15 +3361,15 @@ const cardHelpDescriptions = {
  'trading performance profile':'A six-axis view of trading results. Hover over the information markers beside the radar labels for the score and its meaning.',
  'trading calendar':'Shows daily net profit or loss based on trade closing dates. Navigate months to review previous trading activity.',
  'backup and restore':'Export a backup of your accounts, trades, and settings, or restore previously saved journal data. Keep a backup before importing.',
- 'security':'Change your journal password and manage access to the journal on this browser.',
- 'erase journal':'Permanently deletes saved journal data from this browser. Export a backup first if you may need it later.',
+ 'security':'Change your account password or sign out.',
+ 'erase journal':'Permanently deletes your saved journal across all devices. Your login is kept.',
  'sample data':'Use example trades to explore how the journal and dashboard work before entering your own trades.',
  'no matching trades':'No trades match the current filters. Adjust or clear the filters to display more results.',
  'no trades yet':'Add your first trade to begin tracking performance and viewing trading statistics.',
  'nothing to chart yet':'Charts are generated from closed trades. Close or import a trade to begin displaying performance.',
  'accounts':'Manage trading accounts and select the account whose trades and results you want to review.',
  'trades':'Review, search, filter, import, and manage the trades recorded in your journal.',
- 'settings':'Customize your journal, manage imports and backups, and control your password and local data.',
+ 'settings':'Customize your journal, manage imports and backups, and manage your account and saved journal.',
  'dashboard':'An overview of your trading performance, charts, recent trades, and trading calendar.'
 };
 function addCardInfo(){
@@ -3466,22 +3405,9 @@ cardInfoObserver.observe(document.getElementById('app'),{childList:true,subtree:
 addCardInfo();
 
 /* ---------- start ---------- */
-if (!ls.set('pipfolio:probe', '1'))
-    app.innerHTML =
-    `<div class="lock"><div class="card"><div class="brand">Pipfolio</div>
-        <p class="neg" style="margin-top:16px">Browser storage is blocked. Enable cookies
-        / site data for this page (and leave private mode) so the journal can be saved.</p></div></div>`;
-else {
-    ls.del('pipfolio:probe');
-    if (getAuth() && isTabUnlocked()) {
-        load();
-        S.view = 'dashboard';
-        render();
-    } else {
-        clearTabUnlock();
-        lockScreen();
-    }
-}
+dlg.addEventListener('cancel',event=>{if(saving)event.preventDefault();});
+window.addEventListener('beforeunload',event=>{if(saving){event.preventDefault();event.returnValue='';}});
+startCloud();
 </script>
     </body>
     </html>
