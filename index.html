@@ -456,7 +456,7 @@ select option{background-color:var(--in);color:var(--tx)}
 
 /* Account controls are in Settings; username sits immediately left of navigation. */
 .header-navigation{display:flex;align-items:center;gap:12px;min-width:0;flex-wrap:wrap}
-.header-username{display:inline-block;max-width:210px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;font-size:13px;color:var(--tx);padding:9px 12px;background:var(--acs);border-radius:16px}
+.header-username{display:inline-block;max-width:min(100%,360px);min-width:0;white-space:pre-wrap;overflow-wrap:anywhere;font-weight:700;font-size:13px;color:var(--tx);padding:9px 12px;background:var(--acs);border-radius:16px}
 @media(max-width:800px){.top{flex-wrap:wrap}.header-navigation{width:100%}.top .header-tabs{flex-wrap:wrap}}
 /* Rounded broker interface refresh */
 :root { --card-radius: 22px; }
@@ -464,6 +464,11 @@ select option{background-color:var(--in);color:var(--tx)}
 .btn, input, select, textarea, .tabs, .tab, .cloud-bar, .cal-d, .simple-trade, .notes, .calc { border-radius: 15px !important; }
 dialog, .lock .card, .auth-status, .auth-note, .info-tooltip, .ref-help-pop { border-radius: 24px !important; }
 .pair-logos img, .pair-logos .pair-token, .accent-swatch { border-radius: 50% !important; }
+/* Keep account branding aligned and preserve Unicode usernames in the header. */
+.lock .brand{display:flex;align-items:center;gap:9px}
+.lock .brand-mark{margin-right:0;transform:none}
+.auth-status[hidden]{display:none}
+.header-username bdi{white-space:inherit;overflow-wrap:inherit}
 </style>
     </head>
     <body>
@@ -1093,20 +1098,26 @@ const confirmDel = (t, m, label) =>
     { label, cls: 'danger solid', val: true },
     ]);
 /* ---------- Supabase email accounts ---------- */
+// Count Unicode code points, so emojis are not counted as two UTF-16 units.
+function validUsername(value) {
+    const length = [...value].length;
+    return value.trim().length > 0 && length <= 100;
+}
+const PIPFOLIO_BRAND = "<div class=\"brand\"><img class=\"brand-mark\" src=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAYAAAD0eNT6AAAACXBIWXMAAES3AABEtwGB+XlgAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAACdVJREFUeJzt2TGLZncZh+HnnXlnE4hh3YCubGdnIdaSImGDhV8gTWCWFBLBys5CrNJYamWVJgtuEbDUMhmtAn4Hq0BcJAprzK7O7LGJkGZgSbL5z+t9XV/g/OCc4j48MwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHzVdqsHAJc7PTv9+bZt11fvmJk5Ojp68PZLb7+5egfw5divHgBcbje7n8xubq3eMTOzbdv9mREA8H/iaPUAAOCrJwAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAEDQfvUADser7776tWePnn1z9Y6SbbbrqzdcVa+/+/p3Lo4ufrx6x1Xy8PHDX7xz+51/rt7BYRAAPLH9xf65OZqfrt4BMzOPd4+/PeN7/Kz9xf6XMyMAeCJOAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIGi/egB8Ae/Pbn62esRTtc3vZuaF1TOuopNrJ+8/evTo9uodV8nzX3/+o9UbOBwCgMO1m7/ffenu2eoZT9Pp2em/V2+4qt568a2PZua91TvgUDkBAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQtF89AD63bV45PTv9cPWMp+wbqwdcVadnp6/MzG9X77hKzh+ff/fe7Xt/W72DwyAAOGTXZubm6hGssdt2z2y7zfv/rIs5Xj2Bw+EEAABBAgAAggQAAAQJAAAIEgAAECQAACBIAABAkAAAgCABAABBAgAAggQAAAQJAAAIEgAAECQAACBIAABAkAAAgCABAABBAgAAggQAAAQJAAAIEgAAECQAACBIAABAkAAAgCABAABBAgAAggQAAAQJAAAIEgAAECQAACBIAABAkAAAgCABAABB+9UDOCDHczEzH66eEfPNEeqXeTjrv8cbM/PM4g3wuexWDwAud+fszgfbbLdW7/jU/bsv3725esRVcvrH0z/MNj9cveN/zv9z/q17P7j319U7OAz+LAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACNqvHsDheOPPb5x88q9PXly9o2TbtmurN1xVr/3ptRvH2/H3lo7Y5sbS58MXIAB4Yg/+8eCF/cn+vdU7YGZmf7H//rbbfr96BxwqJwAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABC0Xz2Aw3F+fP7xyZz8evWOkm22H83Mc6t3XEVH29FfLnYXv1q94yo5Pz7/ePUGDsdu9QDgcnfO7nywzXZr9Y5P3b/78t2bq0cAXw4nAAAIEgAAECQAACBIAABAkAAAgCABAABBAgAAggQAAAQJAAAIEgAAECQAACBIAABAkAAAgCABAABBAgAAggQAAAQJAAAIEgAAECQAACBIAABAkAAAgCABAABBAgAAggQAAAQJAAAIEgAAECQAACBIAABAkAAAgCABAABBAgAAggQAAAQJAAAIEgAAECQAACBIAABAkAAAgCABAABBAgAAggQAAAQJAAAIEgAAECQAACBIAABAkAAAgCABAABBAgAAggQAAAQJAAAIEgAAECQAACBov3oAcLlttt/sZnd99Y6ZmW3bHqzeAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHDI/gsIyIfvn3a0VgAAAABJRU5ErkJggg==\" alt=\"\" aria-hidden=\"true\">Pipfolio</div>";
 function authScreen(mode = 'signin', message = '') {
     closeDlg();
     const signup = mode === 'signup', reset = mode === 'reset', update = mode === 'update';
     const failedLoad = mode === 'loaderror';
     const title = signup ? 'Create your account' : reset ? 'Reset your password'
-        : update ? 'Set a new password' : failedLoad ? 'Journal unavailable' : 'Welcome to Pipfolio';
+        : update ? 'Set a new password' : failedLoad ? 'Journal unavailable' : '';
     app.innerHTML = `<div class="lock"><div class="card">
-        <div class="brand">Pipfolio</div><h2 style="margin-top:16px">${title}</h2>
+        ${PIPFOLIO_BRAND}${title ? `<h2 style="margin-top:16px">${title}</h2>` : ''}
         <p class="auth-note">${failedLoad ? 'Retry loading before making any changes.' : update
             ? 'Choose a password with at least 8 characters.' : 'Your trading journal, saved to your account.'}</p>
-        <p id="auth-message" class="auth-status" role="status">${esc(message)}</p>
+        <p id="auth-message" class="auth-status" role="status"${message ? '' : ' hidden'}>${esc(message)}</p>
         ${failedLoad ? `<div class="auth-links"><button type="button" class="btn primary" id="auth-retry">Retry loading</button><button type="button" class="btn" id="auth-signout">Sign out</button></div>`
         : `<form id="auth-form">
-            ${signup ? '<label class="f"><span>Username</span><input name="username" autocomplete="username" required maxlength="100" placeholder="Any name, emojis and symbols welcome"></label>' : ''}
+            ${signup ? '<label class="f"><span>Username</span><input name="username" autocomplete="username" required maxlength="200" placeholder="Any name, emojis and symbols welcome"></label>' : ''}
             ${!update ? '<label class="f"><span>Email address</span><input type="email" name="email" autocomplete="email" required maxlength="254"></label>' : ''}
             ${!reset ? `<label class="f"><span>Password</span><input type="password" name="password" autocomplete="${signup||update?'new-password':'current-password'}" required ${signup||update?'minlength="8"':''}></label>` : ''}
             ${signup||update ? '<label class="f"><span>Confirm password</span><input type="password" name="confirm" autocomplete="new-password" minlength="8" required></label>' : ''}
@@ -1116,7 +1127,7 @@ function authScreen(mode = 'signin', message = '') {
         </div></div>`;
     const say = (text, error = false) => {
         const el = $('#auth-message');
-        if(el) {el.textContent = text;el.classList.toggle('neg', error);}
+        if(el) {el.textContent = text;el.hidden = !text;el.classList.toggle('neg', error);}
     };
     $('#auth-retry')?.addEventListener('click',()=>currentUser && loadAccount(currentUser,true));
     $('#auth-toggle')?.addEventListener('click',()=>authScreen(signup||reset?'signin':'signup'));
@@ -1132,7 +1143,7 @@ function authScreen(mode = 'signin', message = '') {
         const email = String(fields.get('email')||'').trim();
         const password = String(fields.get('password')||'');
         const username = String(fields.get('username')||'').trim();
-        if(signup && (!username || [...username].length > 100)) return say('Username must contain 1–100 characters, including emojis or symbols.',true);
+        if(signup && !validUsername(username)) return say('Username must contain 1–100 characters, including emojis or symbols.',true);
         if((signup||update) && password !== fields.get('confirm')) return say('Passwords do not match.',true);
         const button = $('#auth-submit'); button.disabled = true;
         // Prevent navigation during an authentication request.
@@ -1175,7 +1186,7 @@ async function signOut() {
     try {
         const {error} = await db.auth.signOut({scope:'local'});
         if(error) throw error;
-        recoveryMode = false; clearAccount(); authScreen('signin','You have signed out.');
+        recoveryMode = false; clearAccount(); authScreen('signin');
     } catch(error) {toast('Could not sign out. '+error.message,'error');}
 }
 async function startCloud() {
@@ -1224,7 +1235,7 @@ function render() {
     const v = S.view;
     app.innerHTML = `<div class="wrap"><div class="top"><div class="brand">
     <img class="brand-mark" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAYAAAD0eNT6AAAACXBIWXMAAES3AABEtwGB+XlgAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAACdVJREFUeJzt2TGLZncZh+HnnXlnE4hh3YCubGdnIdaSImGDhV8gTWCWFBLBys5CrNJYamWVJgtuEbDUMhmtAn4Hq0BcJAprzK7O7LGJkGZgSbL5z+t9XV/g/OCc4j48MwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHzVdqsHAJc7PTv9+bZt11fvmJk5Ojp68PZLb7+5egfw5divHgBcbje7n8xubq3eMTOzbdv9mREA8H/iaPUAAOCrJwAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAEDQfvUADser7776tWePnn1z9Y6SbbbrqzdcVa+/+/p3Lo4ufrx6x1Xy8PHDX7xz+51/rt7BYRAAPLH9xf65OZqfrt4BMzOPd4+/PeN7/Kz9xf6XMyMAeCJOAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIGi/egB8Ae/Pbn62esRTtc3vZuaF1TOuopNrJ+8/evTo9uodV8nzX3/+o9UbOBwCgMO1m7/ffenu2eoZT9Pp2em/V2+4qt568a2PZua91TvgUDkBAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQJAAAIEgAAECQAACAIAEAAEECAACCBAAABAkAAAgSAAAQtF89AD63bV45PTv9cPWMp+wbqwdcVadnp6/MzG9X77hKzh+ff/fe7Xt/W72DwyAAOGTXZubm6hGssdt2z2y7zfv/rIs5Xj2Bw+EEAABBAgAAggQAAAQJAAAIEgAAECQAACBIAABAkAAAgCABAABBAgAAggQAAAQJAAAIEgAAECQAACBIAABAkAAAgCABAABBAgAAggQAAAQJAAAIEgAAECQAACBIAABAkAAAgCABAABBAgAAggQAAAQJAAAIEgAAECQAACBIAABAkAAAgCABAABB+9UDOCDHczEzH66eEfPNEeqXeTjrv8cbM/PM4g3wuexWDwAud+fszgfbbLdW7/jU/bsv3725esRVcvrH0z/MNj9cveN/zv9z/q17P7j319U7OAz+LAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACNqvHsDheOPPb5x88q9PXly9o2TbtmurN1xVr/3ptRvH2/H3lo7Y5sbS58MXIAB4Yg/+8eCF/cn+vdU7YGZmf7H//rbbfr96BxwqJwAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABAkAAAgSAAAQJAAAIAgAQAAQQIAAIIEAAAECQAACBIAABC0Xz2Aw3F+fP7xyZz8evWOkm22H83Mc6t3XEVH29FfLnYXv1q94yo5Pz7/ePUGDsdu9QDgcnfO7nywzXZr9Y5P3b/78t2bq0cAXw4nAAAIEgAAECQAACBIAABAkAAAgCABAABBAgAAggQAAAQJAAAIEgAAECQAACBIAABAkAAAgCABAABBAgAAggQAAAQJAAAIEgAAECQAACBIAABAkAAAgCABAABBAgAAggQAAAQJAAAIEgAAECQAACBIAABAkAAAgCABAABBAgAAggQAAAQJAAAIEgAAECQAACBIAABAkAAAgCABAABBAgAAggQAAAQJAAAIEgAAECQAACBIAABAkAAAgCABAABBAgAAggQAAAQJAAAIEgAAECQAACBov3oAcLlttt/sZnd99Y6ZmW3bHqzeAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHDI/gsIyIfvn3a0VgAAAABJRU5ErkJggg==" alt="" aria-hidden="true">Pipfolio</div>
-    <div class="header-navigation"><span class="header-username" title="Your username">${esc(profileUsername || 'Set username in Settings')}</span><nav class="tabs header-tabs" aria-label="Main navigation">${[
+    <div class="header-navigation"><span class="header-username" title="${esc(profileUsername || 'Set username in Settings')}"><bdi dir="auto">${esc(profileUsername || 'Set username in Settings')}</bdi></span><nav class="tabs header-tabs" aria-label="Main navigation">${[
     ['dashboard', 'Dashboard'],
     ['trades', 'Trades'],
     ['review', 'Trade Review'],
@@ -2305,7 +2316,7 @@ function settingsView() {
     <p class="accent-note">Your quote appears in quotation marks on the dashboard and is saved to your account.</p></div>
     <div class="card"><h2>Profile &amp; Account</h2>
     <p>Your journal is linked to your account, even if you change your username.</p>
-    <label class="f"><span>Username</span><input id="profile-username" autocomplete="username" maxlength="100" value="${esc(profileUsername)}" placeholder="Choose a username"></label>
+    <label class="f"><span>Username</span><input id="profile-username" autocomplete="username" maxlength="200" value="${esc(profileUsername)}" placeholder="Choose a username"></label>
     <div class="row" style="margin-top:10px"><button class="btn primary" data-act="saveusername">Save username</button></div>
     <p><strong>Email:</strong> ${esc(currentUser?.email || '')}</p>
     <p id="cloud-status" role="status">${esc(syncMessage)}</p>
@@ -3180,7 +3191,7 @@ const act = {
     saveusername: async () => {
         if(!currentUser || saving) return;
         const username = ($('#profile-username')?.value || '').trim();
-        if(!username || [...username].length > 100) return toast('Username must contain 1–100 characters.', 'error');
+        if(!validUsername(username)) return toast('Username must contain 1–100 characters.', 'error');
         const button = $('[data-act="saveusername"]');
         if(button) button.disabled = true;
         try {
