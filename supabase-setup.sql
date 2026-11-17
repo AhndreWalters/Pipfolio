@@ -1,13 +1,26 @@
 
+-- ============================================================
 -- PIPFOLIO SUPABASE DATABASE SETUP
--- Journals + user profiles + usernames
+-- Journals + User Profiles + Flexible Usernames
+--
+-- Supports:
+-- - Usernames with emojis, spaces and special characters
+-- - Unique usernames
+-- - Username changes
+-- - Automatic profile creation
+-- - Existing user accounts
+-- - Secure journal storage
+-- - Row Level Security (RLS)
+--
 -- Existing journal data is preserved.
+-- ============================================================
 
 begin;
 
--- ============================================
+
+-- ============================================================
 -- 1. JOURNALS
--- ============================================
+-- ============================================================
 
 create table if not exists public.journals (
     user_id uuid primary key
@@ -27,43 +40,61 @@ create table if not exists public.journals (
     )
 );
 
-alter table public.journals enable row level security;
+alter table public.journals
+enable row level security;
 
 revoke all on table public.journals
 from anon, authenticated;
 
 grant select, insert, update
-on table public.journals to authenticated;
+on table public.journals
+to authenticated;
+
+
+-- Journal security policies
 
 drop policy if exists "Read own journal"
 on public.journals;
 
 create policy "Read own journal"
 on public.journals
-for select to authenticated
-using ((select auth.uid()) = user_id);
+for select
+to authenticated
+using (
+    (select auth.uid()) = user_id
+);
+
 
 drop policy if exists "Create own journal"
 on public.journals;
 
 create policy "Create own journal"
 on public.journals
-for insert to authenticated
-with check ((select auth.uid()) = user_id);
+for insert
+to authenticated
+with check (
+    (select auth.uid()) = user_id
+);
+
 
 drop policy if exists "Update own journal"
 on public.journals;
 
 create policy "Update own journal"
 on public.journals
-for update to authenticated
-using ((select auth.uid()) = user_id)
-with check ((select auth.uid()) = user_id);
+for update
+to authenticated
+using (
+    (select auth.uid()) = user_id
+)
+with check (
+    (select auth.uid()) = user_id
+);
 
 
--- ============================================
+-- ============================================================
 -- 2. SAVE JOURNAL FUNCTION
--- ============================================
+-- ============================================================
 
 create or replace function public.save_journal(
     p_payload jsonb,
@@ -78,6 +109,7 @@ declare
     v_user uuid := auth.uid();
     v_revision bigint;
 begin
+
     if v_user is null then
         raise exception 'Sign in first'
             using errcode = '42501';
@@ -100,9 +132,11 @@ begin
             is distinct from 'object'
         or octet_length(p_payload::text)
             > 25 * 1024 * 1024 then
+
         raise exception
             'Invalid or oversized journal payload'
             using errcode = '22023';
+
     end if;
 
     insert into public.journals (
@@ -125,9 +159,11 @@ begin
 
     if v_revision is null
         or v_revision <> p_expected_revision then
+
         raise exception
             'Journal changed on another tab or device. Reload before saving.'
             using errcode = '40001';
+
     end if;
 
     update public.journals
@@ -138,6 +174,7 @@ begin
     where user_id = v_user;
 
     return v_revision + 1;
+
 end;
 $$;
 
@@ -150,9 +187,9 @@ public.save_journal(jsonb, bigint)
 to authenticated;
 
 
--- ============================================
+-- ============================================================
 -- 3. USER PROFILES
--- ============================================
+-- ============================================================
 
 create table if not exists public.profiles (
     id uuid primary key
@@ -164,13 +201,43 @@ create table if not exists public.profiles (
         default now(),
 
     updated_at timestamptz not null
-        default now(),
+        default now()
+);
 
-    constraint username_format check (
-        username is null
-        or username ~ '^[a-z0-9_]{3,20}$'
+
+-- Remove the previous restrictive username rule.
+
+alter table public.profiles
+drop constraint if exists username_format;
+
+
+-- Replace the flexible username length constraint safely.
+
+alter table public.profiles
+drop constraint if exists username_length;
+
+
+-- Allow emojis, spaces, special characters,
+-- uppercase letters and Unicode.
+--
+-- Maximum: 100 PostgreSQL characters.
+-- Empty or whitespace-only usernames are rejected.
+-- NULL remains allowed for existing users.
+
+alter table public.profiles
+add constraint username_length
+check (
+    username is null
+    or (
+        char_length(username) between 1 and 100
+        and length(btrim(username)) > 0
     )
 );
+
+
+-- ============================================================
+-- 4. PROFILE SECURITY
+-- ============================================================
 
 alter table public.profiles
 enable row level security;
@@ -183,39 +250,48 @@ on table public.profiles
 to authenticated;
 
 
--- ============================================
--- 4. PROFILE SECURITY POLICIES
--- ============================================
-
 drop policy if exists "Read own profile"
 on public.profiles;
 
 create policy "Read own profile"
 on public.profiles
-for select to authenticated
-using ((select auth.uid()) = id);
+for select
+to authenticated
+using (
+    (select auth.uid()) = id
+);
+
 
 drop policy if exists "Create own profile"
 on public.profiles;
 
 create policy "Create own profile"
 on public.profiles
-for insert to authenticated
-with check ((select auth.uid()) = id);
+for insert
+to authenticated
+with check (
+    (select auth.uid()) = id
+);
+
 
 drop policy if exists "Update own profile"
 on public.profiles;
 
 create policy "Update own profile"
 on public.profiles
-for update to authenticated
-using ((select auth.uid()) = id)
-with check ((select auth.uid()) = id);
+for update
+to authenticated
+using (
+    (select auth.uid()) = id
+)
+with check (
+    (select auth.uid()) = id
+);
 
 
--- ============================================
+-- ============================================================
 -- 5. AUTOMATIC PROFILE CREATION
--- ============================================
+-- ============================================================
 
 create or replace function
 public.handle_new_user()
@@ -227,13 +303,26 @@ as $$
 declare
     v_username text;
 begin
-    v_username := lower(
-        trim(new.raw_user_meta_data ->> 'username')
+
+    -- Preserve uppercase letters, emojis and symbols.
+    -- Remove only leading/trailing ordinary spaces.
+
+    v_username := btrim(
+        new.raw_user_meta_data ->> 'username'
     );
 
-    if v_username is not null
-        and v_username !~ '^[a-z0-9_]{3,20}$' then
-        raise exception 'Invalid username';
+    -- Reject invalid usernames when provided.
+
+    if v_username is not null then
+
+        if char_length(v_username) < 1
+            or char_length(v_username) > 100 then
+
+            raise exception
+                'Username must contain 1 to 100 characters';
+
+        end if;
+
     end if;
 
     insert into public.profiles (
@@ -243,38 +332,51 @@ begin
     values (
         new.id,
         v_username
-    );
+    )
+    on conflict (id) do nothing;
 
     return new;
+
 end;
 $$;
+
+
+-- Recreate automatic profile trigger.
 
 drop trigger if exists
 on_auth_user_created
 on auth.users;
 
 create trigger on_auth_user_created
-after insert on auth.users
+after insert
+on auth.users
 for each row
 execute function public.handle_new_user();
 
 
--- ============================================
+-- ============================================================
 -- 6. EXISTING USERS
--- ============================================
+-- ============================================================
 
--- Preserve existing accounts and create
--- missing profile records without usernames.
+-- Create missing profiles for previously
+-- registered accounts.
+--
+-- Existing usernames and journal data are preserved.
 
-insert into public.profiles (id, username)
-select u.id, null
+insert into public.profiles (
+    id,
+    username
+)
+select
+    u.id,
+    null
 from auth.users as u
 on conflict (id) do nothing;
 
 
--- ============================================
+-- ============================================================
 -- 7. AUTOMATIC UPDATED TIMESTAMP
--- ============================================
+-- ============================================================
 
 create or replace function
 public.update_profile_timestamp()
@@ -283,19 +385,25 @@ language plpgsql
 set search_path = ''
 as $$
 begin
+
     new.updated_at := now();
+
     return new;
+
 end;
 $$;
+
 
 drop trigger if exists
 on_profile_updated
 on public.profiles;
 
 create trigger on_profile_updated
-before update on public.profiles
+before update
+on public.profiles
 for each row
 execute function
 public.update_profile_timestamp();
+
 
 commit;
