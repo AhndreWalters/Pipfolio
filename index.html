@@ -1106,7 +1106,7 @@ function authScreen(mode = 'signin', message = '') {
         <p id="auth-message" class="auth-status" role="status">${esc(message)}</p>
         ${failedLoad ? `<div class="auth-links"><button type="button" class="btn primary" id="auth-retry">Retry loading</button><button type="button" class="btn" id="auth-signout">Sign out</button></div>`
         : `<form id="auth-form">
-            ${signup ? '<label class="f"><span>Username</span><input name="username" autocomplete="username" required minlength="3" maxlength="20" pattern="[a-zA-Z0-9_]{3,20}" placeholder="3–20 letters, numbers or underscores"></label>' : ''}
+            ${signup ? '<label class="f"><span>Username</span><input name="username" autocomplete="username" required maxlength="100" placeholder="Any name, emojis and symbols welcome"></label>' : ''}
             ${!update ? '<label class="f"><span>Email address</span><input type="email" name="email" autocomplete="email" required maxlength="254"></label>' : ''}
             ${!reset ? `<label class="f"><span>Password</span><input type="password" name="password" autocomplete="${signup||update?'new-password':'current-password'}" required ${signup||update?'minlength="8"':''}></label>` : ''}
             ${signup||update ? '<label class="f"><span>Confirm password</span><input type="password" name="confirm" autocomplete="new-password" minlength="8" required></label>' : ''}
@@ -1131,8 +1131,8 @@ function authScreen(mode = 'signin', message = '') {
         const form = event.target, fields = new FormData(form);
         const email = String(fields.get('email')||'').trim();
         const password = String(fields.get('password')||'');
-        const username = String(fields.get('username')||'').trim().toLowerCase();
-        if(signup && !/^[a-z0-9_]{3,20}$/.test(username)) return say('Username must be 3–20 letters, numbers or underscores.',true);
+        const username = String(fields.get('username')||'').trim();
+        if(signup && (!username || [...username].length > 100)) return say('Username must contain 1–100 characters, including emojis or symbols.',true);
         if((signup||update) && password !== fields.get('confirm')) return say('Passwords do not match.',true);
         const button = $('#auth-submit'); button.disabled = true;
         // Prevent navigation during an authentication request.
@@ -2305,7 +2305,7 @@ function settingsView() {
     <p class="accent-note">Your quote appears in quotation marks on the dashboard and is saved to your account.</p></div>
     <div class="card"><h2>Profile &amp; Account</h2>
     <p>Your journal is linked to your account, even if you change your username.</p>
-    <label class="f"><span>Username</span><input id="profile-username" autocomplete="username" maxlength="20" minlength="3" pattern="[a-zA-Z0-9_]{3,20}" value="${esc(profileUsername)}" placeholder="Choose a username"></label>
+    <label class="f"><span>Username</span><input id="profile-username" autocomplete="username" maxlength="100" value="${esc(profileUsername)}" placeholder="Choose a username"></label>
     <div class="row" style="margin-top:10px"><button class="btn primary" data-act="saveusername">Save username</button></div>
     <p><strong>Email:</strong> ${esc(currentUser?.email || '')}</p>
     <p id="cloud-status" role="status">${esc(syncMessage)}</p>
@@ -3179,8 +3179,8 @@ const act = {
     },
     saveusername: async () => {
         if(!currentUser || saving) return;
-        const username = ($('#profile-username')?.value || '').trim().toLowerCase();
-        if(!/^[a-z0-9_]{3,20}$/.test(username)) return toast('Use 3–20 letters, numbers or underscores.', 'error');
+        const username = ($('#profile-username')?.value || '').trim();
+        if(!username || [...username].length > 100) return toast('Username must contain 1–100 characters.', 'error');
         const button = $('[data-act="saveusername"]');
         if(button) button.disabled = true;
         try {
