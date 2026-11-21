@@ -1369,6 +1369,7 @@
         border-radius: 16px;
       }
       .trade-count-summary {
+        margin: 0 0 12px;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -1705,7 +1706,7 @@
         font-weight: 700;
       }
       .radar-svg {
-        max-height: none;
+        max-height: 340px;
         overflow: visible;
       }
       .card-info-inline {
@@ -3536,7 +3537,1108 @@
           letter-spacing: -0.2px;
         }
       }
-    </style>
+
+      /* Pipfolio neutral black/white surfaces, independent of accent */
+      :root, [data-theme='light'] {
+        --bg:#ffffff; --bg2:#ffffff; --card:#ffffff; --in:#ffffff;
+        --bd:#e5e7eb; --tx:#111111; --mut:#71717a;
+        --hov:#f5f5f5; --acs:#f4f4f5;
+      }
+      [data-theme='dark'] {
+        --bg:#000000; --bg2:#000000; --card:#0d0d0d; --in:#101010;
+        --bd:#292929; --tx:#f5f5f5; --mut:#a1a1aa;
+        --hov:#191919; --acs:#181818;
+      }
+      body {background:var(--bg)}
+      .btn.primary, [data-theme='dark'] .btn.primary {background:var(--ac)!important;border-color:var(--ac)!important;color:var(--acx)!important}
+      .btn.primary:hover, [data-theme='dark'] .btn.primary:hover {background:var(--ac)!important;filter:brightness(.92)}
+      .settings-shell {max-width:1250px;margin:0 auto}
+      .settings-hero {display:flex;align-items:center;justify-content:space-between;margin:5px 0 28px;gap:18px}
+      .settings-hero h1 {font-size:30px;line-height:1.2;letter-spacing:-1px;margin:7px 0}
+      .settings-hero p,.settings-section-head p {color:var(--mut);margin:5px 0 0}
+      .settings-eyebrow {font-size:10px;letter-spacing:.15em;font-weight:750;color:var(--ac)}
+      .settings-hero-icon {font-size:26px;color:var(--mut)}
+      .settings-layout {display:grid;grid-template-columns:205px minmax(0,1fr);gap:28px;align-items:start}
+      .settings-side {position:sticky;top:20px;display:grid;gap:5px}
+      .settings-side a {display:block;padding:12px 14px;border-radius:11px;color:var(--mut);font-weight:550;text-decoration:none}
+      .settings-side a:hover,.settings-side a:focus-visible {background:var(--hov);color:var(--ac)}
+      .settings-content.settings-page {max-width:none;margin:0;gap:18px}
+      .settings-panel {padding:25px!important;scroll-margin-top:20px}
+      .settings-section-head {display:flex;align-items:start;justify-content:space-between;gap:12px;margin-bottom:24px}
+      .settings-section-head h2 {font-size:18px;font-weight:750;letter-spacing:-.3px}
+      .settings-section-icon {font-size:20px;color:var(--mut)}
+      .settings-field-title {font-weight:700;margin:20px 0 10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+      .settings-field-hint {font-size:12px;color:var(--mut);margin:0 0 16px!important}
+      .settings-theme-choices {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;max-width:520px}
+      .settings-theme-option {text-align:left;border:1.5px solid var(--bd);border-radius:14px;background:var(--card);color:var(--tx);padding:12px;cursor:pointer;display:grid;gap:5px;font:inherit}
+      .settings-theme-option.active {border-color:var(--ac);box-shadow:0 0 0 1px var(--ac)}
+      .settings-theme-option:disabled {opacity:1;cursor:default}
+      .settings-theme-option > span:nth-child(2) {font-weight:700;margin-top:5px}
+      .settings-theme-option small {color:var(--mut)}
+      .settings-theme-preview {height:75px;border-radius:8px;display:flex;gap:7px;padding:12px;align-items:flex-start;border:1px solid #ddd}
+      .settings-theme-preview i {display:block;height:35px;flex:1;border-radius:5px}
+      .light-preview {background:#fff}.light-preview i {background:#ededed}
+      .dark-preview {background:#000;border-color:#333}.dark-preview i {background:#252525}
+      .settings-current-accent {display:inline-flex;align-items:center;gap:7px;color:var(--mut);font-size:12px;font-weight:500}
+      .settings-current-accent i {width:13px;height:13px;border-radius:50%;background:var(--swatch);border:1px solid var(--bd)}
+      .settings-page .accent-palette {display:flex;flex-wrap:wrap;gap:11px;max-width:none}
+      .settings-page .accent-swatch {width:34px;height:34px;border-radius:50%;background:var(--swatch);border:2px solid var(--card);box-shadow:0 0 0 1px var(--bd);cursor:pointer;position:relative}
+      .settings-page .accent-swatch.selected {box-shadow:0 0 0 2px var(--ac)}
+      .settings-page .accent-swatch.selected::after {content:'✓';position:absolute;inset:0;display:grid;place-items:center;color:#fff;text-shadow:0 1px 3px #000;font-weight:900}
+      .settings-inline {display:flex;gap:10px;align-items:center;margin-top:7px}
+      .settings-inline input {flex:1;min-width:0}
+      .settings-info-row {display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:16px 0;border-bottom:1px solid var(--bd)}
+      .settings-info-row strong {font-weight:550;overflow-wrap:anywhere}
+      .settings-panel .settings-actions {margin-top:18px}
+      .settings-panel .accs {gap:12px}
+      @media(max-width:760px) {
+        .settings-layout {grid-template-columns:1fr;gap:14px}
+        .settings-side {position:static;display:flex;overflow-x:auto;white-space:nowrap;padding-bottom:7px}
+        .settings-side a {padding:9px 12px;font-size:12px}
+        .settings-panel {padding:17px!important}
+        .settings-hero {margin-bottom:17px}.settings-hero h1 {font-size:26px}
+        .settings-theme-preview {height:60px}
+        .settings-inline {flex-wrap:wrap}.settings-inline .btn {width:100%}
+      }
+
+      /* Consistent typography and restrained, information-first cards */
+      html, body, button, input, select, textarea, dialog, .brand, .tabs, .card, .settings-shell, svg text {
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif !important;
+      }
+      .simple-emoji, .settings-section-icon, .settings-hero-icon {display:none !important}
+      .custom-accent-control {display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:15px;border:1px solid var(--bd);border-radius:13px}
+      .custom-accent-control label {font-weight:650}
+      .custom-accent-control input[type=color] {width:62px;height:42px;padding:4px;cursor:pointer;background:var(--card);border:1px solid var(--bd)}
+      .custom-accent-value {font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums}
+      .card-info-button, .info-button {border:1px solid var(--bd);border-radius:50%;font-style:normal;font-weight:700;background:transparent;color:var(--mut)}
+      .card-info-button:hover, .info-button:hover {color:var(--ac);border-color:var(--ac)}
+    
+      /* Persistent navigation and streamlined settings, November refinement */
+      html { scroll-padding-top: 116px; }
+      .wrap > .top {
+        position: sticky !important;
+        top: 0;
+        z-index: 1000;
+        background: var(--bg);
+        border-bottom: 1px solid var(--bd);
+        padding: 12px 0 !important;
+        margin-bottom: 22px;
+        isolation: isolate;
+      }
+      .wrap > .top::before {
+        content: "";
+        position: absolute;
+        z-index: -1;
+        top: 0; bottom: 0;
+        left: calc((100vw - 100%) / -2);
+        width: 100vw;
+        background: var(--bg);
+        border-bottom: 1px solid var(--bd);
+        pointer-events: none;
+      }
+      .settings-shell { max-width: 1120px; }
+      .settings-hero { margin: 0 0 22px; }
+      .settings-hero h1 { font-size: 28px; }
+      .settings-layout { grid-template-columns: 215px minmax(0, 1fr); gap: 20px; }
+      .settings-side { top: 105px; gap: 5px; padding: 9px; border: 1px solid var(--bd); border-radius: 16px; background: var(--card); }
+      .settings-side a { padding: 12px; font-size: 13px; border-radius: 10px; color: var(--tx); }
+      .settings-side a:hover, .settings-side a:focus-visible { background: var(--hov); color: var(--ac); }
+      .settings-side a:active { background: var(--acs); }
+      .settings-panel { scroll-margin-top: 120px; padding: 23px !important; border-radius: 17px !important; }
+      .settings-section-head { margin-bottom: 18px; }
+      .settings-section-head h2 { font-size: 18px; }
+      .settings-field-title { margin: 18px 0 9px; }
+      .settings-disclosure { margin-top: 7px; }
+      .settings-disclosure > summary { list-style: none; display:flex; justify-content:space-between; align-items:center; gap:12px; padding: 17px 0; font-weight: 650; }
+      .settings-disclosure > summary::-webkit-details-marker { display:none; }
+      .settings-disclosure > summary::after { content: '+'; font-size: 20px; line-height: 1; color: var(--mut); font-weight: 400; }
+      .settings-disclosure[open] > summary::after { content: '−'; }
+      .settings-disclosure > summary:hover { color: var(--ac); }
+      .settings-detail { padding: 5px 0 16px; }
+      .settings-info-row { padding: 14px 0; }
+      .settings-theme-option { transition: border-color .15s ease, box-shadow .15s ease; }
+      .settings-theme-option:not(:disabled):hover { border-color: var(--ac); }
+      .custom-accent-control { padding: 14px; }
+      .settings-panel .btn { min-height: 38px; }
+      @media (max-width: 900px) {
+        .wrap > .top { padding: 10px 0 !important; }
+        .settings-side { top: 135px; }
+      }
+      @media (max-width: 760px) {
+        html { scroll-padding-top: 155px; }
+        .settings-layout { grid-template-columns: 1fr; gap: 12px; }
+        .settings-side { position: sticky; top: 114px; z-index: 50; display: flex; flex-wrap: nowrap; overflow-x: auto; padding: 6px; border-radius: 12px; scrollbar-width: thin; }
+        .settings-side a { flex: 0 0 auto; padding: 9px 11px; }
+        .settings-panel { scroll-margin-top: 185px; padding: 18px !important; }
+        .settings-section-head { flex-wrap: wrap; }
+        .settings-theme-choices { gap: 9px; }
+      }
+
+    
+      /* Final polish: borderless persistent header, softer neutral dark surfaces, unified info controls */
+      [data-theme='dark'] {
+        --bg:#000000; --bg2:#050505; --card:#101114; --in:#131417;
+        --bd:#292b30; --tx:#eceef1; --mut:#a5a8b0;
+        --hov:#1b1d22; --acs:#1a1c20;
+      }
+      .wrap > .top, .wrap > .top::before { border-bottom: 0 !important; box-shadow: none !important; }
+      .info-button, .card-info-button, .refdash .ref-info {
+        box-sizing:border-box !important;
+        display:inline-flex !important;
+        align-items:center !important;
+        justify-content:center !important;
+        flex:0 0 19px !important;
+        width:19px !important; height:19px !important;
+        min-width:19px !important; min-height:19px !important;
+        padding:0 !important; margin:0 !important;
+        border:1px solid var(--bd) !important;
+        border-radius:50% !important;
+        background:transparent !important;
+        color:var(--mut) !important;
+        font-family:Arial, sans-serif !important;
+        font-size:11px !important;
+        font-weight:700 !important;
+        font-style:normal !important;
+        line-height:1 !important;
+        text-align:center !important;
+        vertical-align:middle !important;
+        letter-spacing:0 !important;
+        text-indent:0 !important;
+        transform:none !important;
+      }
+      .info-button:hover, .card-info-button:hover, .refdash .ref-info:hover {color:var(--ac) !important;border-color:var(--ac) !important;}
+      .refdash .ref-info svg {width:12px !important;height:12px !important;display:block !important;flex:none !important;}
+
+
+      /* Dashboard: balanced three-column chart rows */
+      .simple-layout,
+      .simple-chart-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        align-items: stretch;
+      }
+      .simple-layout > .simple-panel,
+      .simple-chart-grid > .simple-panel { min-width: 0; grid-column: auto; }
+      .simple-layout > .simple-panel:first-child .simple-curve { min-height: 260px; }
+      .simple-layout .simple-recent { gap: 10px; }
+      .simple-layout .simple-trade { padding: 8px 0; border-bottom: 1px solid var(--bd); }
+      .simple-layout .simple-trade:last-child { border-bottom: 0; }
+      @media (max-width: 1100px) and (min-width: 701px) {
+        .simple-layout, .simple-chart-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .simple-layout > .simple-panel:last-child,
+        .simple-chart-grid > .simple-panel:last-child { grid-column: 1 / -1; }
+      }
+      @media (max-width: 700px) {
+        .simple-layout, .simple-chart-grid { grid-template-columns: minmax(0, 1fr); }
+        .simple-layout > .simple-panel:last-child,
+        .simple-chart-grid > .simple-panel:last-child { grid-column: auto; }
+      }
+    
+      /* Recent Trades: clean, borderless list */
+      .simple-layout .simple-recent { gap: 0 !important; margin-top: 10px; }
+      .simple-layout .simple-recent .simple-trade,
+      .simple-layout .simple-recent .simple-trade + .simple-trade {
+        border: 0 !important;
+        border-top: 0 !important;
+        border-bottom: 0 !important;
+        outline: 0;
+        box-shadow: none;
+        background: transparent;
+        border-radius: 9px !important;
+        padding: 10px 8px !important;
+        min-height: 55px;
+        gap: 10px;
+      }
+      .simple-layout .simple-recent .simple-trade:hover { background: var(--hov) !important; }
+      .simple-layout .simple-recent .simple-trade > span { min-width: 0; }
+      .simple-layout .simple-recent .simple-trade > strong { margin-left: auto; white-space: nowrap; }
+      .simple-layout .simple-recent .simple-trade small { margin-top: 2px; }
+
+      /* Six equally sized, borderless recent trades, with balanced card padding. */
+      .simple-layout > .simple-panel:has(> .simple-recent) {
+        display: flex;
+        flex-direction: column;
+      }
+      .simple-layout .simple-recent {
+        display: grid !important;
+        flex: 1 1 auto;
+        grid-auto-rows: minmax(52px, 1fr);
+        gap: 0 !important;
+        margin-top: 4px !important;
+        overflow: visible !important;
+        max-height: none !important;
+      }
+      .simple-layout .simple-recent .simple-trade,
+      .simple-layout .simple-recent .simple-trade + .simple-trade {
+        box-sizing: border-box;
+        height: 100% !important;
+        min-height: 52px !important;
+        padding: 5px 8px !important;
+        border: none !important;
+        display: flex;
+        align-items: center;
+      }
+      .simple-layout .simple-recent .simple-trade small { margin-top: 1px !important; }
+    
+/* Unified, reference-inspired Dashboard KPI cards */
+.kpi-stats {gap:12px !important;grid-template-columns:repeat(4,minmax(0,1fr));}
+.kpi-stats .kpi-card {min-height:145px;padding:17px 16px !important;border-radius:13px !important;justify-content:flex-start;gap:0;}
+.kpi-stats .kpi-card .simple-stat-head {margin-bottom:13px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.kpi-stats .kpi-card .simple-label {font-family:inherit !important;font-size:13px !important;font-weight:650 !important;letter-spacing:0 !important;text-transform:none !important;color:var(--tx) !important;}
+.kpi-stats .kpi-card .simple-value {font-size:clamp(21px,1.9vw,27px);font-weight:750;line-height:1.2;margin:3px 0 7px;}
+.kpi-stats .kpi-card .simple-sub {font-size:11px;line-height:1.45;color:var(--mut);}
+.kpi-stats .kpi-gauge {width:112px;max-width:64%;}
+.kpi-stats .kpi-gauge strong {font-size:18px;}
+.kpi-stats .kpi-ratio-track {height:6px;}
+.kpi-stats .kpi-card:has(.kpi-gauge) .kpi-content {margin-top:1px;}
+.kpi-stats .kpi-gauge-side {font-size:11px;}
+/* Topic-specific explanatory icons: consistent size and focus behaviour */
+.info-button.pf-topic-icon,.card-info-button.pf-topic-icon,.refdash .ref-info.pf-topic-icon {width:20px !important;height:20px !important;min-width:20px !important;min-height:20px !important;flex:0 0 20px !important;border:0 !important;background:transparent !important;border-radius:6px !important;color:var(--mut) !important;cursor:help;}
+.pf-topic-icon svg {display:block;width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;pointer-events:none;}
+.pf-topic-icon:hover,.pf-topic-icon:focus-visible {color:var(--ac) !important;}
+@media(max-width:1100px){.kpi-stats{grid-template-columns:repeat(3,minmax(0,1fr)) !important;}}
+@media(max-width:650px){.kpi-stats{grid-template-columns:repeat(2,minmax(0,1fr)) !important;}}
+@media(max-width:380px){.kpi-stats{grid-template-columns:1fr !important;}}
+
+    
+/* Pixel-aligned five-card KPI strip matching the supplied reference */
+.kpi-stats{gap:12px!important;margin:0 0 16px!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;}
+.kpi-stats .kpi-card{box-sizing:border-box;min-width:0;min-height:139px!important;height:139px;padding:15px 16px!important;border:1px solid var(--bd)!important;border-radius:13px!important;background:var(--card);box-shadow:none!important;display:flex;flex-direction:column;gap:0!important;overflow:hidden;}
+.kpi-stats .kpi-card .simple-stat-head{display:flex;align-items:center;gap:12px;min-height:18px;margin:0 0 15px!important;flex-wrap:nowrap;}
+.kpi-stats .kpi-drag{font-size:17px;line-height:16px;color:var(--mut);opacity:.7;flex:0 0 12px;transform:scaleX(.65);}
+.kpi-stats .kpi-card .simple-label{font-family:inherit!important;font-size:11px!important;font-weight:550!important;letter-spacing:.105em!important;text-transform:uppercase!important;color:var(--mut)!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;}
+.kpi-stats .kpi-card .info-wrap{margin-left:auto;flex:0 0 auto;}
+.kpi-stats .kpi-card .pf-topic-icon{width:17px!important;height:17px!important;min-width:17px!important;min-height:17px!important;flex-basis:17px!important;}
+.kpi-stats .kpi-card .pf-topic-icon svg{width:15px;height:15px;}
+.kpi-stats .kpi-card .simple-value{font-size:24px!important;line-height:1.2!important;font-weight:750!important;margin:0 0 2px!important;letter-spacing:-.035em;}
+.kpi-stats .kpi-card .simple-sub{font-size:11px!important;line-height:1.4!important;color:var(--mut)!important;margin:0!important;}
+.kpi-stats .kpi-card .kpi-prior{align-self:flex-start;font-size:10px;font-weight:650;padding:2px 8px;border-radius:12px;background:color-mix(in srgb,currentColor 10%,transparent);margin:1px 0 3px;line-height:1.3;}
+.kpi-stats .kpi-card .kpi-content{min-width:0;}
+.kpi-stats .kpi-card:has(.kpi-gauge) .kpi-content{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-top:0!important;}
+.kpi-stats .kpi-gauge{width:110px!important;max-width:60%!important;}
+.kpi-stats .kpi-gauge strong{font-size:18px!important;bottom:3px!important;}
+.kpi-stats .kpi-gauge-side{font-size:11px!important;line-height:1.45!important;color:var(--mut);}
+.kpi-stats .kpi-ratio{margin-top:3px!important;}
+.kpi-stats .kpi-ratio-track{height:6px!important;border-radius:6px!important;}
+.kpi-stats .kpi-ratio-labels{margin-top:5px!important;font-size:10px!important;gap:2px!important;flex-wrap:nowrap!important;white-space:nowrap;}
+@media(max-width:1150px){.kpi-stats{grid-template-columns:repeat(3,minmax(0,1fr))!important}.kpi-stats .kpi-card{height:145px!important;}}
+@media(max-width:680px){.kpi-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}.kpi-stats .kpi-card{height:148px!important;}}
+@media(max-width:410px){.kpi-stats{grid-template-columns:minmax(0,1fr)!important}.kpi-stats .kpi-card{height:140px!important;}}
+
+/* Profit Factor: concise status badge based on the actual ratio. */
+.kpi-stats .kpi-pf-status {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  width: fit-content;
+  max-width: 100%;
+  margin: 5px 0 3px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, currentColor 10%, transparent);
+  font-size: 10px;
+  line-height: 1.3;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.kpi-stats .kpi-pf-status.neutral { color: var(--mut); }
+
+/* Top KPI headings follow the same typography as other Pipfolio card titles. */
+.kpi-stats .kpi-card .simple-label {
+  font-family: inherit !important;
+  font-size: 16px !important;
+  font-weight: 650 !important;
+  line-height: 1.35 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  color: var(--tx) !important;
+}
+.kpi-stats .kpi-card .simple-stat-head { gap: 8px !important; }
+.kpi-stats .kpi-drag { display: none !important; }
+
+/* Average Win / Loss: neutral descriptions and coloured values. */
+.kpi-stats .kpi-ratio-track { position:relative; background:var(--neg); overflow:hidden; border-radius:999px!important; }
+.kpi-stats .kpi-ratio-track > span { width:var(--ratio-split)!important; border-radius:999px 0 0 999px; background:var(--pos); }
+.kpi-stats .kpi-gauge-side .kpi-wins {color:var(--pos);}
+.kpi-stats .kpi-gauge-side .kpi-losses {color:var(--neg);}
+.kpi-stats .kpi-ratio-track::after { content:none!important; }
+.kpi-stats .kpi-ratio-labels > span { color:var(--mut); }
+.kpi-stats .kpi-ratio-labels strong { font-weight:600; }
+
+
+      /* Four essential KPIs and two complementary analytics cards. */
+      @media (min-width: 1000px) {
+        .simple-stats.kpi-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        .simple-chart-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      }
+
+      /* Trading Calendar and Recent Trades share one balanced row. */
+      .dashboard-calendar-row {
+        display: grid;
+        grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+        gap: 14px;
+        align-items: stretch;
+        margin-bottom: 16px;
+      }
+      .dashboard-calendar-row > .simple-panel { min-width: 0; margin-bottom: 0; }
+      .dashboard-calendar-row > .simple-panel:has(> .simple-recent) { display: flex; flex-direction: column; }
+      .dashboard-calendar-row .simple-recent {
+        display: grid;
+        flex: 1 1 auto;
+        grid-template-rows: repeat(6, minmax(52px, 1fr));
+        margin-top: 12px;
+        gap: 0;
+      }
+      .dashboard-calendar-row .simple-trade {
+        min-height: 52px;
+        height: 100%;
+        padding: 8px 4px;
+        border: 0 !important;
+        border-radius: 8px;
+      }
+      .dashboard-calendar-row .simple-trade:hover { background: var(--hov); }
+      .dashboard-calendar-row .simple-trade > span { min-width: 0; }
+      .dashboard-calendar-row .simple-trade > strong { margin-left: auto; white-space: nowrap; }
+      @media (max-width: 900px) {
+        .dashboard-calendar-row { grid-template-columns: minmax(0, 1fr); }
+        .dashboard-calendar-row .simple-recent { grid-template-rows: repeat(6, minmax(56px, auto)); }
+      }
+
+      /* All trades in the calendar-side card; scroll inside without stretching the dashboard. */
+      .dashboard-calendar-row > .simple-panel:has(> .simple-recent) {
+        min-height: 0;
+        min-width: 0;
+        overflow: hidden;
+      }
+      .dashboard-calendar-row .simple-recent {
+        display: block !important;
+        flex: 1 1 auto;
+        min-height: 0;
+        max-height: 590px;
+        overflow-y: auto !important;
+        overflow-x: hidden;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
+        scrollbar-color: var(--bd) transparent;
+        padding-right: 4px;
+      }
+      .dashboard-calendar-row .simple-recent .simple-trade {
+        width: 100%;
+        height: 58px !important;
+        min-height: 58px !important;
+        flex: 0 0 58px;
+        padding: 7px 6px !important;
+        border: 0 !important;
+        border-radius: 8px;
+        box-shadow: none !important;
+      }
+      .dashboard-calendar-row .simple-recent .simple-trade + .simple-trade {
+        border: 0 !important;
+      }
+      @media (max-width: 900px) {
+        .dashboard-calendar-row .simple-recent { max-height: 420px; }
+      }
+
+      /* Let Recent Trades use every pixel of height supplied by the calendar. */
+      @media (min-width: 901px) {
+        .dashboard-calendar-row > .simple-panel:has(> .simple-recent) {
+          position: relative;
+          min-height: 0;
+          overflow: hidden;
+        }
+        .dashboard-calendar-row .simple-recent {
+          position: absolute;
+          top: 65px;
+          right: 14px;
+          bottom: 18px;
+          left: 18px;
+          width: auto;
+          height: auto;
+          max-height: none !important;
+          margin-top: 0;
+          overflow-y: auto !important;
+          scrollbar-gutter: stable;
+        }
+      }
+
+      /* Wider progress panel and balanced six-axis radar */
+      .simple-layout { grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr) !important; }
+      .simple-layout > .simple-panel { grid-column: auto !important; }
+      .simple-layout > .simple-panel:first-child .simple-curve { min-height: 345px; }
+      .radar-panel { justify-content: flex-start; }
+      .radar-six { width: 100%; max-width: 460px; max-height: none; height: auto; margin: auto; overflow: visible; }
+      @media (max-width: 760px) { .simple-layout { grid-template-columns: minmax(0, 1fr) !important; } .simple-layout > .simple-panel:first-child .simple-curve { min-height: 270px; } }
+
+      /* Recent Trades: fit whole rows only, including when calendar height changes. */
+      .dashboard-calendar-row .simple-recent .simple-trade,
+      .dashboard-calendar-row .simple-recent .simple-trade + .simple-trade {
+        box-sizing: border-box;
+        height: var(--recent-trade-row-height, 58px) !important;
+        min-height: var(--recent-trade-row-height, 58px) !important;
+        max-height: var(--recent-trade-row-height, 58px) !important;
+      }
+      .dashboard-calendar-row .simple-recent {
+        scroll-snap-type: y mandatory;
+        scroll-padding-top: 0;
+      }
+      .dashboard-calendar-row .simple-recent .simple-trade {
+        scroll-snap-align: start;
+        scroll-snap-stop: always;
+      }
+
+      /* Settings: single aligned column, full-width controls, no side navigation */
+      .settings-shell { width:100%; max-width:none; }
+      .settings-layout { display:block; width:100%; }
+      .settings-content.settings-page { width:100%; max-width:none; margin:0; }
+      .settings-panel { width:100%; min-width:0; }
+      .settings-theme-choices { width:100%; max-width:none; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+      .settings-theme-option { width:100%; min-width:0; }
+      .settings-theme-preview { width:100%; }
+      .settings-username { display:block; width:100%; }
+      .settings-username .settings-inline { display:grid; grid-template-columns:minmax(0,1fr) 170px; align-items:stretch; width:100%; gap:12px; }
+      .settings-username .settings-inline input { width:100%; min-width:0; height:42px; }
+      .settings-username .settings-inline .btn { width:100%; min-height:42px; }
+      .custom-accent-control { width:100%; }
+      .settings-info-row { width:100%; }
+      @media (max-width:600px) {
+        .settings-theme-choices { gap:10px; }
+        .settings-theme-option { padding:10px; }
+        .settings-username .settings-inline { grid-template-columns:1fr; }
+        .settings-username .settings-inline .btn { width:100%; }
+      }
+
+
+      /* Full-width, evenly aligned profile and accent controls */
+      .settings-page .settings-username { max-width:none !important; width:100%; }
+      .settings-page .settings-username .settings-inline { display:grid; grid-template-columns:minmax(0,1fr) 190px; width:100%; gap:14px; align-items:stretch; }
+      .settings-page .settings-username .settings-inline input,
+      .settings-page .settings-username .settings-inline .btn { height:44px; min-height:44px; width:100%; margin:0; }
+      .settings-page .custom-accent-control { display:grid; grid-template-columns: minmax(150px, 1fr) 64px minmax(130px, 190px) 90px; align-items:center; gap:14px; width:100%; padding:14px 16px; }
+      .settings-page .custom-accent-control label { min-width:0; }
+      .settings-page .custom-accent-control input[type=color] { width:64px; height:44px; margin:0; }
+      .settings-page .custom-accent-control .btn { width:100%; height:44px; margin:0; }
+      .settings-page .custom-accent-value { text-align:right; font-variant-numeric:tabular-nums; }
+      @media (max-width:650px) {
+        .settings-page .settings-username .settings-inline { grid-template-columns:1fr; }
+        .settings-page .custom-accent-control { grid-template-columns:minmax(0,1fr) 64px; }
+        .settings-page .custom-accent-control .btn { grid-column:1; }
+        .settings-page .custom-accent-value { grid-column:2; grid-row:2; text-align:center; font-size:11px; }
+      }
+
+
+      /* Balanced Settings rows: eliminate dead space without extra content. */
+      @media (min-width: 1001px) {
+        .settings-content.settings-page { align-items: stretch; }
+        .settings-content.settings-page > #settings-appearance,
+        .settings-content.settings-page > #settings-profile { height: 100%; }
+        .settings-content.settings-page > #settings-profile {
+          display: flex;
+          flex-direction: column;
+          gap: 0;
+        }
+        .settings-content.settings-page > #settings-profile .settings-username {
+          margin-top: 8px;
+        }
+        .settings-content.settings-page > #settings-profile .settings-info-row {
+          margin-top: auto;
+          padding-top: 20px;
+          padding-bottom: 20px;
+        }
+        .settings-content.settings-page > #settings-profile .settings-actions {
+          margin-top: 0;
+          padding-top: 16px;
+        }
+        .settings-content.settings-page > #settings-trading,
+        .settings-content.settings-page > #settings-data { height: 100%; }
+      }
+
+      /* Compact Settings layout: paired sections, full-width Trading Accounts. */
+      .settings-content.settings-page {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        align-items: start;
+      }
+      .settings-content.settings-page > .settings-panel { min-width: 0; width: 100%; margin: 0; }
+      .settings-content.settings-page > #settings-accounts { grid-column: 1 / -1; }
+      .settings-page .settings-theme-choices { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .settings-page .settings-username .settings-inline { grid-template-columns: minmax(0, 1fr) 145px; gap: 10px; }
+      .settings-page .custom-accent-control {
+        grid-template-columns: minmax(0, 1fr) 54px minmax(110px, 135px);
+        gap: 10px;
+      }
+      .settings-page .custom-accent-control input[type=color] { width:54px; }
+      .settings-page .custom-accent-value { grid-column: 1 / -1; text-align: right; }
+      @media (max-width: 1000px) {
+        .settings-content.settings-page { grid-template-columns: minmax(0, 1fr); }
+        .settings-content.settings-page > #settings-accounts { grid-column: auto; }
+        .settings-page .settings-username .settings-inline { grid-template-columns: minmax(0,1fr) 170px; }
+        .settings-page .custom-accent-control { grid-template-columns: minmax(0,1fr) 64px minmax(130px,190px) 90px; }
+        .settings-page .custom-accent-value { grid-column:auto; }
+      }
+      @media (max-width: 650px) {
+        .settings-page .settings-username .settings-inline { grid-template-columns: 1fr; }
+        .settings-page .custom-accent-control { grid-template-columns: minmax(0,1fr) 64px; }
+        .settings-page .custom-accent-control .btn { grid-column: 1; }
+        .settings-page .custom-accent-value { grid-column: 2; grid-row: 2; }
+      }
+
+
+      /* Settings redesign: independently stacked columns, no forced-height blank cards. */
+      .settings-content.settings-page {
+        display:grid !important;
+        grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+        align-items:start !important;
+        gap:16px !important;
+      }
+      .settings-masonry-col {display:flex;flex-direction:column;gap:16px;min-width:0;align-self:start;}
+      .settings-masonry-col > .settings-panel {width:100%;height:auto !important;min-height:0 !important;margin:0 !important;display:block !important;}
+      .settings-content.settings-page > #settings-accounts {grid-column:1/-1;align-self:start;height:auto !important;}
+      .settings-masonry-col #settings-profile .settings-info-row {margin-top:16px !important;padding:12px 0 !important;}
+      .settings-masonry-col #settings-profile .settings-actions {margin-top:0 !important;padding-top:12px !important;}
+      .settings-masonry-col #settings-profile .settings-username {margin-top:0 !important;}
+      .settings-masonry-col .settings-section-head {margin-bottom:16px;}
+      .settings-masonry-col .settings-theme-choices {gap:10px;}
+      .settings-masonry-col .settings-theme-option {min-width:0;}
+      .settings-masonry-col .custom-accent-control {padding:12px;}
+      .settings-masonry-col #settings-data .settings-info-row {padding:10px 0;}
+      @media(max-width:1000px) {
+        .settings-content.settings-page {grid-template-columns:minmax(0,1fr) !important;}
+        .settings-content.settings-page > #settings-accounts {grid-column:1;}
+      }
+      @media(max-width:600px) {
+        .settings-masonry-col .settings-username .settings-inline {grid-template-columns:1fr !important;}
+      }
+
+
+      /* Profile & Security: balanced account overview */
+      #settings-profile .profile-overview {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0 20px;}
+      #settings-profile .profile-overview-tile {display:flex;align-items:center;gap:13px;min-width:0;padding:16px;border:1px solid var(--bd);border-radius:16px;background:var(--card);}
+      #settings-profile .profile-overview-icon {display:grid;place-items:center;flex:0 0 28px;color:var(--ac);}
+      #settings-profile .profile-overview-icon svg {width:26px;height:26px;display:block;}
+      #settings-profile .profile-overview-tile strong {display:block;font-size:14px;font-weight:700;color:var(--tx);}
+      #settings-profile .profile-overview-tile small {display:block;margin-top:3px;font-size:12px;line-height:1.4;color:var(--mut);}
+      @media(max-width:650px){#settings-profile .profile-overview {grid-template-columns:1fr;}#settings-profile .profile-overview-tile{padding:12px;}}
+
+
+      /* Settings alignment: two shared grid rows, with perfectly aligned card bottoms. */
+      @media (min-width:1001px) {
+        .settings-content.settings-page {
+          display:grid !important;
+          grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+          grid-template-rows:auto auto auto !important;
+          align-items:stretch !important;
+          gap:16px !important;
+        }
+        .settings-content.settings-page > .settings-masonry-col {display:contents !important;}
+        .settings-content.settings-page #settings-appearance {grid-column:1;grid-row:1;}
+        .settings-content.settings-page #settings-profile {grid-column:2;grid-row:1;}
+        .settings-content.settings-page #settings-trading {grid-column:1;grid-row:2;}
+        .settings-content.settings-page #settings-data {grid-column:2;grid-row:2;}
+        .settings-content.settings-page #settings-accounts {grid-column:1/-1;grid-row:3;}
+        .settings-content.settings-page .settings-panel {
+          height:100% !important;
+          min-height:0 !important;
+          margin:0 !important;
+          width:100%;
+        }
+        .settings-content.settings-page #settings-profile {
+          display:flex !important;
+          flex-direction:column;
+          justify-content:flex-start;
+          gap:0;
+        }
+        .settings-content.settings-page #settings-profile .settings-section-head {margin-bottom:20px;}
+        .settings-content.settings-page #settings-profile .settings-username {margin-bottom:22px !important;}
+        .settings-content.settings-page #settings-profile .settings-info-row {
+          margin-top:0 !important;
+          padding:16px 0 !important;
+        }
+        .settings-content.settings-page #settings-profile .settings-actions {
+          margin-top:0 !important;
+          padding-top:16px !important;
+        }
+      }
+      @media (max-width:1000px) {
+        .settings-content.settings-page {display:grid !important;grid-template-columns:minmax(0,1fr) !important;gap:16px !important;}
+        .settings-content.settings-page > .settings-masonry-col {display:contents !important;}
+        .settings-content.settings-page #settings-appearance {order:1;}
+        .settings-content.settings-page #settings-profile {order:2;}
+        .settings-content.settings-page #settings-trading {order:3;}
+        .settings-content.settings-page #settings-data {order:4;}
+        .settings-content.settings-page #settings-accounts {order:5;grid-column:1 !important;}
+      }
+
+      /* 2026 Settings: compact category navigation, no forced blank rows. */
+      .settings-shell {max-width:1180px;margin:0 auto;width:100%;}
+      .settings-switcher {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:5px;margin:14px 0 16px;border:1px solid var(--bd);border-radius:14px;background:var(--card);}
+      .settings-switch {min-height:43px;padding:10px 12px;border:0;border-radius:10px;background:transparent;color:var(--mut);font:600 13px/1.4 inherit;cursor:pointer;}
+      .settings-switch.selected {background:var(--hov);color:var(--tx);box-shadow:inset 0 0 0 1px var(--bd);}
+      .settings-switch:focus-visible {outline:2px solid var(--ac);outline-offset:2px;}
+      .settings-content.settings-page {display:grid !important;grid-template-columns:repeat(2,minmax(0,1fr)) !important;grid-template-rows:auto !important;align-items:start !important;gap:14px !important;}
+      .settings-content.settings-page > .settings-masonry-col {display:contents !important;}
+      .settings-content.settings-page .settings-panel {height:auto !important;min-height:0 !important;margin:0 !important;grid-row:auto !important;grid-column:auto !important;align-self:start !important;}
+      .settings-content.settings-page .settings-panel[data-settings-group] {display:none !important;}
+      .settings-content.settings-page[data-current-section="personal"] .settings-panel[data-settings-group="personal"],
+      .settings-content.settings-page[data-current-section="trading"] .settings-panel[data-settings-group="trading"],
+      .settings-content.settings-page[data-current-section="data"] .settings-panel[data-settings-group="data"] {display:block !important;}
+      .settings-content.settings-page[data-current-section="personal"] #settings-appearance {grid-column:1 !important;}
+      .settings-content.settings-page[data-current-section="personal"] #settings-profile {grid-column:2 !important;display:block !important;}
+      .settings-content.settings-page[data-current-section="trading"] #settings-trading {grid-column:1/-1 !important;}
+      .settings-content.settings-page[data-current-section="trading"] #settings-accounts {grid-column:1/-1 !important;}
+      .settings-content.settings-page[data-current-section="data"] #settings-data {grid-column:1/-1 !important;}
+      .settings-content.settings-page #settings-profile .settings-info-row {margin-top:14px !important;padding:12px 0 !important;}
+      .settings-content.settings-page #settings-profile .settings-actions {padding-top:12px !important;}
+      .settings-content.settings-page #settings-profile .settings-username {margin:0 !important;}
+      .settings-content.settings-page .settings-section-head {margin-bottom:14px !important;}
+      @media(max-width:800px) {
+        .settings-content.settings-page {grid-template-columns:minmax(0,1fr) !important;}
+        .settings-content.settings-page .settings-panel {grid-column:1 !important;}
+      }
+      @media(max-width:520px) {
+        .settings-switcher {gap:3px;padding:4px;}
+        .settings-switch {padding:8px 4px;font-size:11px;}
+      }
+
+      /* Final Settings alignment: equal-height personal cards, no dead zones. */
+      @media (min-width:801px) {
+        .settings-content.settings-page[data-current-section="personal"] {align-items:stretch !important;}
+        .settings-content.settings-page[data-current-section="personal"] #settings-appearance,
+        .settings-content.settings-page[data-current-section="personal"] #settings-profile {
+          height:100% !important;align-self:stretch !important;display:flex !important;
+          flex-direction:column;justify-content:flex-start;gap:0;
+        }
+        .settings-content.settings-page[data-current-section="personal"] #settings-profile .settings-username {margin-top:0 !important;}
+        .settings-content.settings-page[data-current-section="personal"] #settings-profile .settings-info-row {margin-top:12px !important;}
+        .settings-content.settings-page[data-current-section="personal"] #settings-profile .settings-actions {
+          margin-top:auto !important;padding-top:14px !important;
+        }
+        .settings-content.settings-page[data-current-section="personal"] #settings-appearance .settings-theme-preview {height:57px !important;}
+        .settings-content.settings-page[data-current-section="personal"] #settings-appearance .settings-theme-option {padding:10px !important;}
+        .settings-content.settings-page[data-current-section="personal"] #settings-appearance .custom-accent-control {padding:10px !important;}
+      }
+      .settings-content.settings-page[data-current-section="trading"] #settings-trading {
+        display:block !important; padding-bottom:14px !important;
+      }
+      .settings-content.settings-page[data-current-section="trading"] #settings-trading .settings-disclosure {
+        display:inline-block;vertical-align:top;width:calc(50% - 7px);margin-right:10px;
+      }
+      .settings-content.settings-page[data-current-section="trading"] #settings-trading .settings-disclosure:last-child {margin-right:0;}
+      .settings-content.settings-page[data-current-section="data"] #settings-data {max-width:none;}
+      .settings-content.settings-page[data-current-section="data"] #settings-data .settings-actions {margin-top:8px !important;}
+      @media(max-width:800px) {
+        .settings-content.settings-page[data-current-section="trading"] #settings-trading .settings-disclosure {display:block;width:100%;margin-right:0;}
+      }
+    
+/* Simple Settings: one full-width card per row, all sections visible. */
+.settings-shell {max-width:1180px;margin-inline:auto;}
+.settings-content.settings-page,
+.settings-content.settings-page[data-current-section] {
+  display:flex !important;flex-direction:column !important;gap:14px !important;
+  align-items:stretch !important;grid-template-columns:none !important;
+  grid-template-rows:none !important;
+}
+.settings-content.settings-page > .settings-masonry-col {display:contents !important;}
+.settings-content.settings-page .settings-panel,
+.settings-content.settings-page .settings-panel[data-settings-group] {
+  display:block !important;width:100% !important;height:auto !important;
+  min-height:0 !important;max-width:none !important;align-self:stretch !important;
+  grid-column:auto !important;grid-row:auto !important;margin:0 !important;
+}
+.settings-content.settings-page #settings-appearance {order:1 !important;}
+.settings-content.settings-page #settings-profile {order:2 !important;}
+.settings-content.settings-page #settings-accounts {order:3 !important;}
+.settings-content.settings-page #settings-trading {order:4 !important;}
+.settings-content.settings-page #settings-data {order:5 !important;}
+.settings-content.settings-page #settings-profile {display:block !important;}
+.settings-content.settings-page #settings-profile .settings-info-row {margin-top:12px !important;}
+.settings-content.settings-page #settings-profile .settings-actions {margin-top:0 !important;}
+.settings-content.settings-page #settings-trading .settings-disclosure {display:block !important;width:100% !important;margin:0 !important;}
+.settings-content.settings-page .settings-section-head {margin-bottom:16px !important;}
+@media (min-width:801px) {
+ .settings-content.settings-page #settings-appearance,
+ .settings-content.settings-page #settings-profile {height:auto !important;min-height:0 !important;}
+}
+
+
+/* Settings 2026: compact, consistent single-column layout */
+.settings-shell{max-width:1180px;margin-inline:auto}
+.settings-content.settings-page{display:flex!important;flex-direction:column!important;gap:12px!important;align-items:stretch!important}
+.settings-content.settings-page>.settings-masonry-col{display:contents!important}
+.settings-content.settings-page .settings-panel{width:100%!important;height:auto!important;min-height:0!important;margin:0!important;padding:20px 24px!important;box-sizing:border-box!important;align-self:stretch!important}
+.settings-content.settings-page #settings-appearance{order:1!important}
+.settings-content.settings-page #settings-profile{order:2!important}
+.settings-content.settings-page #settings-accounts{order:3!important}
+.settings-content.settings-page #settings-trading{order:4!important}
+.settings-content.settings-page #settings-data{order:5!important}
+.settings-content.settings-page .settings-section-head{margin-bottom:16px!important;align-items:center!important}
+.settings-content.settings-page .settings-section-head h2{margin:0!important}
+.settings-content.settings-page .settings-section-head p{margin-top:4px!important}
+.settings-content.settings-page .settings-theme-choices{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;max-width:none!important}
+.settings-content.settings-page .settings-theme-option{width:100%!important;min-width:0!important;padding:12px!important}
+.settings-content.settings-page .settings-theme-preview{height:54px!important}
+.settings-content.settings-page .settings-field-title{margin-top:14px!important;margin-bottom:8px!important}
+.settings-content.settings-page .custom-accent-control{display:grid!important;grid-template-columns:minmax(0,1fr) 54px 160px auto!important;gap:12px!important;align-items:center!important;padding:12px 14px!important}
+.settings-content.settings-page .custom-accent-control input[type=color]{width:54px!important;height:40px!important}
+.settings-content.settings-page .custom-accent-control .btn{width:100%!important;height:40px!important}
+.settings-content.settings-page .custom-accent-value{text-align:right!important}
+.settings-content.settings-page #settings-profile .settings-username{margin:0 0 12px!important}
+.settings-content.settings-page #settings-profile .settings-inline{display:grid!important;grid-template-columns:minmax(0,1fr) 160px!important;gap:12px!important}
+.settings-content.settings-page #settings-profile .settings-inline input,.settings-content.settings-page #settings-profile .settings-inline button{height:42px!important;min-height:42px!important;width:100%!important}
+.settings-content.settings-page #settings-profile .settings-info-row{margin:0!important;padding:12px 0!important}
+.settings-content.settings-page #settings-profile .settings-actions{margin:0!important;padding-top:12px!important;gap:10px!important}
+.settings-content.settings-page #settings-trading .settings-disclosure{display:block!important;width:100%!important;margin:0!important}
+.settings-content.settings-page .settings-disclosure summary{padding-block:13px!important}
+.settings-content.settings-page #settings-data .settings-info-row{margin:0!important;padding:10px 0!important}
+.settings-content.settings-page #settings-data .settings-actions{margin:0!important;padding:12px 0!important}
+.settings-content.settings-page .accs{gap:10px!important}
+@media(max-width:700px){
+.settings-content.settings-page .settings-panel{padding:16px!important}
+.settings-content.settings-page .settings-theme-choices{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+.settings-content.settings-page .custom-accent-control{grid-template-columns:minmax(0,1fr) 54px!important}
+.settings-content.settings-page .custom-accent-control .btn{grid-column:1!important}
+.settings-content.settings-page .custom-accent-value{grid-column:2!important;grid-row:2!important}
+.settings-content.settings-page #settings-profile .settings-inline{grid-template-columns:1fr!important}
+.settings-content.settings-page #settings-profile .settings-info-row{flex-wrap:wrap!important;overflow-wrap:anywhere}
+}
+
+/* Settings revamp: one focused section at a time, with button navigation. */
+.settings-revamp {width:100%;max-width:100%;}
+.settings-revamp .settings-new-nav {
+ display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;
+ margin:18px 0 16px;
+}
+.settings-revamp .settings-switch {
+ display:flex;align-items:center;justify-content:center;text-align:center;
+ min-height:48px;padding:11px 12px;border:1px solid var(--bd);
+ border-radius:13px;background:var(--card);color:var(--tx);
+ font:600 13px/1.35 inherit; font-family:inherit;cursor:pointer;
+ transition:background .15s,border-color .15s,color .15s;
+}
+.settings-revamp .settings-switch:hover {background:var(--hov);}
+.settings-revamp .settings-switch.selected {
+ background:var(--acs);border-color:var(--ac);color:var(--ac);
+}
+.settings-revamp .settings-content.settings-page {
+ display:block!important;grid-template-columns:none!important;
+ width:100%;max-width:100%;min-height:0;
+}
+.settings-revamp .settings-content.settings-page > .settings-panel {
+ display:none!important;width:100%!important;height:auto!important;
+ min-height:0!important;margin:0!important;padding:24px!important;
+ grid-column:auto!important;grid-row:auto!important;
+}
+.settings-revamp .settings-content.settings-page[data-current-section="appearance"] > #settings-appearance,
+.settings-revamp .settings-content.settings-page[data-current-section="profile"] > #settings-profile,
+.settings-revamp .settings-content.settings-page[data-current-section="accounts"] > #settings-accounts,
+.settings-revamp .settings-content.settings-page[data-current-section="trading"] > #settings-trading,
+.settings-revamp .settings-content.settings-page[data-current-section="data"] > #settings-data {display:block!important;}
+.settings-revamp .settings-section-head {margin-bottom:22px!important;}
+.settings-revamp .settings-theme-choices {
+ display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ gap:14px!important;max-width:none!important;
+}
+.settings-revamp .settings-theme-option {min-width:0;}
+.settings-revamp .custom-accent-control {
+ display:grid!important;grid-template-columns:minmax(0,1fr) 60px 160px auto!important;
+ align-items:center;gap:12px!important;
+}
+.settings-revamp .custom-accent-control .btn,
+.settings-revamp .custom-accent-value {
+ grid-column:auto!important;grid-row:auto!important;
+}
+.settings-revamp #settings-profile .settings-inline {
+ display:grid!important;grid-template-columns:minmax(0,1fr) 170px!important;gap:12px!important;
+}
+.settings-revamp #settings-profile .settings-info-row {margin-top:18px!important;}
+.settings-revamp .settings-disclosure {
+ border:1px solid var(--bd)!important;border-radius:12px!important;
+ margin:10px 0!important;overflow:hidden;background:var(--card);
+}
+.settings-revamp .settings-disclosure summary {
+ display:flex;align-items:center;min-height:56px;padding:16px!important;
+ border:0!important;cursor:pointer;
+}
+.settings-revamp .settings-disclosure .settings-detail {padding:4px 16px 18px;}
+.settings-revamp #settings-trading .settings-disclosure,
+.settings-revamp #settings-data .settings-disclosure {width:100%!important;}
+.settings-revamp .settings-info-row {gap:12px;flex-wrap:wrap;}
+.settings-revamp #settings-accounts .accs {gap:12px;}
+@media(max-width:900px) {
+ .settings-revamp .settings-new-nav {grid-template-columns:repeat(3,minmax(0,1fr));}
+}
+@media(max-width:600px) {
+ .settings-revamp .settings-new-nav {grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+ .settings-revamp .settings-content.settings-page > .settings-panel {padding:16px!important;}
+ .settings-revamp .settings-theme-choices {grid-template-columns:1fr!important;}
+ .settings-revamp .custom-accent-control {grid-template-columns:minmax(0,1fr) 64px!important;}
+ .settings-revamp .custom-accent-control .btn {grid-column:1!important;}
+ .settings-revamp .custom-accent-value {grid-column:2!important;grid-row:2!important;}
+ .settings-revamp #settings-profile .settings-inline {grid-template-columns:1fr!important;}
+}
+
+/* Final settings polish: unique navigation, deliberate spacing, no duplicate headings. */
+.settings-revamp .settings-new-nav{gap:12px!important;margin:20px 0 20px!important;}
+.settings-revamp .settings-layout{display:block!important;min-width:0!important;}
+.settings-revamp .settings-content.settings-page{display:block!important;gap:0!important;}
+.settings-revamp .settings-content.settings-page > section.settings-panel[data-settings-group]{display:none!important;}
+.settings-revamp .settings-content.settings-page[data-current-section="appearance"] > section#settings-appearance,
+.settings-revamp .settings-content.settings-page[data-current-section="profile"] > section#settings-profile,
+.settings-revamp .settings-content.settings-page[data-current-section="accounts"] > section#settings-accounts,
+.settings-revamp .settings-content.settings-page[data-current-section="trading"] > section#settings-trading,
+.settings-revamp .settings-content.settings-page[data-current-section="data"] > section#settings-data{display:block!important;}
+.settings-revamp .settings-content.settings-page > section.settings-panel{padding:24px!important;border-radius:18px!important;}
+.settings-revamp .settings-content.settings-page .settings-section-head{margin:0 0 20px!important;gap:16px!important;}
+.settings-revamp .settings-content.settings-page .settings-section-head h2{display:none!important;}
+.settings-revamp .settings-content.settings-page .settings-section-head p{margin:0!important;color:var(--mut);}
+.settings-revamp .settings-content.settings-page .settings-disclosure{margin:0 0 12px!important;}
+.settings-revamp .settings-content.settings-page .settings-disclosure:last-child{margin-bottom:0!important;}
+.settings-revamp #settings-accounts .accs{display:grid!important;gap:14px!important;}
+.settings-revamp #settings-accounts .acc{margin:0!important;padding:16px!important;}
+.settings-revamp #settings-profile .settings-actions,
+.settings-revamp #settings-data .settings-actions{margin-top:16px!important;gap:10px!important;}
+.settings-revamp .settings-switch{font-size:13px;font-weight:600;line-height:1.4;}
+.settings-revamp .settings-theme-choices{gap:14px!important;margin-bottom:20px!important;}
+.settings-revamp .settings-field-title{margin:18px 0 8px!important;}
+.settings-revamp .custom-accent-control{margin-top:12px!important;}
+@media(max-width:600px){.settings-revamp .settings-new-nav{gap:8px!important;margin:14px 0 16px!important;}.settings-revamp .settings-content.settings-page > section.settings-panel{padding:16px!important;}}
+
+/* Final layout repair: predictable spacing, non-overlapping account cards and visible headings. */
+.settings-revamp .settings-content.settings-page .settings-section-head h2 {
+ display:block!important;margin:0 0 5px!important;font-size:19px!important;line-height:1.3!important;
+}
+.settings-revamp .settings-content.settings-page .settings-section-head {
+ display:flex!important;align-items:center!important;justify-content:space-between!important;
+ gap:16px!important;margin-bottom:22px!important;min-height:0!important;
+}
+.settings-revamp .settings-content.settings-page > section.settings-panel {
+ box-sizing:border-box!important;overflow:visible!important;
+ padding:24px!important;margin:0!important;height:auto!important;min-height:0!important;
+}
+.settings-revamp #settings-accounts .accs {
+ display:flex!important;flex-direction:column!important;gap:16px!important;
+ align-items:stretch!important;margin-top:12px!important;
+}
+.settings-revamp #settings-accounts .accs > * {
+ position:relative!important;flex:0 0 auto!important;display:block!important;
+ margin:0!important;transform:none!important;min-height:0!important;
+ width:100%!important;box-sizing:border-box!important;
+}
+.settings-revamp #settings-accounts .acc {
+ border:1px solid var(--bd)!important;border-radius:14px!important;
+ padding:16px!important;margin:0!important;overflow:visible!important;
+}
+.settings-revamp .settings-content.settings-page .settings-disclosure {
+ margin:0 0 14px!important;position:relative!important;
+}
+.settings-revamp .settings-content.settings-page .settings-disclosure:last-child {margin-bottom:0!important;}
+.settings-revamp .settings-content.settings-page .settings-disclosure summary {min-height:52px!important;}
+.settings-revamp .settings-new-nav {margin-bottom:22px!important;}
+.settings-revamp .settings-content.settings-page .settings-info-row,
+.settings-revamp .settings-content.settings-page .settings-actions {margin-top:16px!important;}
+@media(max-width:600px){
+ .settings-revamp .settings-content.settings-page > section.settings-panel{padding:16px!important;}
+ .settings-revamp .settings-content.settings-page .settings-section-head{flex-wrap:wrap!important;}
+}
+
+/* 2026-11-21: canonical Settings tab isolation and spacing repair. */
+.settings-revamp .settings-content.settings-page > section.settings-panel:not([style*="display:block"]) {display:none!important;}
+.settings-revamp .settings-layout {margin:0!important;padding:0!important;}
+.settings-revamp .settings-new-nav {margin:18px 0 20px!important;gap:12px!important;}
+.settings-revamp .settings-content.settings-page > section.settings-panel {margin:0!important;border-radius:16px!important;}
+.settings-revamp #settings-accounts .accs {display:flex!important;flex-direction:column!important;gap:16px!important;margin-top:18px!important;}
+.settings-revamp #settings-accounts .accs > * {margin:0!important;min-height:0!important;}
+.settings-revamp #settings-trading .settings-disclosure + .settings-disclosure,
+.settings-revamp #settings-data .settings-disclosure + .settings-disclosure {margin-top:14px!important;}
+.settings-revamp .settings-section-head h2 {display:block!important;}
+.settings-revamp .settings-switch {white-space:normal;min-width:0;}
+@media(max-width:600px){.settings-revamp .settings-new-nav{gap:9px!important;margin-bottom:16px!important;}}
+
+      /* Dashboard: four KPI cards fill the available width without an empty fifth slot. */
+      .simple-stats.kpi-stats {
+        display: grid;
+        width: 100%;
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        gap: 12px;
+      }
+      .simple-stats.kpi-stats > .kpi-card { width: 100%; min-width: 0; }
+      @media (max-width: 900px) {
+        .simple-stats.kpi-stats { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+      }
+      @media (max-width: 520px) {
+        .simple-stats.kpi-stats { grid-template-columns: minmax(0, 1fr) !important; }
+      }
+
+    
+      /* Neutral black card surfaces — no navy tint in dark mode */
+      [data-theme='dark'] {
+        --bg: #000000;
+        --bg2: #080808;
+        --card: #151515;
+        --in: #101010;
+        --bd: #303030;
+        --hov: #202020;
+        --acs: #1b1b1b;
+      }
+      [data-theme='dark'] .card,
+      [data-theme='dark'] .refdash .ref-card,
+      [data-theme='dark'] .simple-panel,
+      [data-theme='dark'] .simple-stat,
+      [data-theme='dark'] .acc,
+      [data-theme='dark'] .settings-panel,
+      [data-theme='dark'] .settings-side,
+      [data-theme='dark'] .settings-side a,
+      [data-theme='dark'] .tabs {
+        background-color: #151515;
+        border-color: #303030;
+      }
+      [data-theme='dark'] .settings-side a:hover,
+      [data-theme='dark'] .simple-trade:hover {
+        background-color: #202020;
+      }
+
+    
+/* Full-width trading calendar */
+.dashboard-calendar-row {grid-template-columns:minmax(0,1fr)!important;}
+.dashboard-calendar-row > #cal {width:100%;min-width:0;}
+
+/* Display explanatory tooltips in a fixed overlay, outside clipped cards. */
+.info-wrap > .info-tooltip { display: none !important; }
+.pf-floating-info {
+  position: fixed; z-index: 2147483000; box-sizing: border-box;
+  width: max-content; max-width: min(340px, calc(100vw - 20px));
+  padding: 12px 14px; border: 1px solid var(--bd); border-radius: 12px !important;
+  background: var(--card); color: var(--tx); box-shadow: 0 12px 32px #0005;
+  font: 12px/1.55 system-ui, sans-serif; overflow-wrap: anywhere;
+  pointer-events: none; white-space: normal; opacity: 1; visibility: visible;
+}
+.pf-floating-info[hidden] { display: none !important; }
+
+    
+      /* Align the Trading Performance help icon beside its title. */
+      .performance-title-with-info {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+      }
+      .performance-title-with-info h2 { margin: 0; }
+      .performance-title-with-info .info-wrap { flex-shrink: 0; }
+
+      /* Dashboard: explanatory icons occupy the top-right header position. */
+      .simple-panel-title > .info-wrap { margin-left: auto; flex: 0 0 auto; }
+      .simple-panel-title > h2 { min-width: 0; }
+      .dashboard-calendar-row .cal-h > .info-wrap { margin-left: auto; flex: 0 0 auto; }
+    
+      /* Trade Review: headings with accessible right-aligned help icons */
+      .review-section-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; width:100%; min-width:0; }
+      .review-section-heading .info-wrap { margin-left:auto; flex:0 0 auto; }
+      .review-section-heading h2 { margin:0; }
+      .review-page-heading { display:flex; align-items:center; gap:9px; }
+      .review-page-heading .info-wrap { flex:0 0 auto; }
+    
+      /* Settings: show contextual help only for the main section titles. */
+      /* Keep one help icon beside the Trading Accounts heading only. */
+      #settings-accounts .acc .info-wrap,
+      #settings-accounts .acc .info-button,
+      #settings-accounts .acc .ref-info,
+      #settings-accounts .acc .card-info-inline,
+      #settings-accounts .acc .card-info-floating,
+      #settings-accounts .acc .account-type-info {
+        display: none !important;
+      }
+      #settings-accounts .settings-section-head h2 .card-info-inline {
+        display: inline-flex !important;
+        margin-left: 9px;
+        vertical-align: middle;
+      }
+      #settings-accounts .settings-section-head h2 .info-button {
+        display: inline-grid !important;
+      }
+
+/* Coloured contextual help icons — colour is decorative; tooltips and actions are unchanged. */
+:root { --help-blue:#4b9cff; --help-green:#31b985; --help-purple:#a78bfa; --help-orange:#e8a44b; --help-pink:#e879aa; --help-teal:#25b8ba; --help-red:#ed7777; }
+.info-button.pf-topic-icon, .card-info-button.pf-topic-icon, .refdash .ref-info.pf-topic-icon {
+  --help-ink:var(--help-blue);
+  color:var(--help-ink) !important;
+  background:color-mix(in srgb,var(--help-ink) 12%,transparent) !important;
+  border-radius:6px !important;
+  transition:background .15s ease,color .15s ease,transform .15s ease;
+}
+/* Assign distinct hues by meaning rather than repeating a single generic colour. */
+.pf-topic-icon[aria-label*="Win"],.pf-topic-icon[aria-label*="Profit"],.pf-topic-icon[aria-label*="Progress"],.pf-topic-icon[aria-label*="Growth"] {--help-ink:var(--help-green);}
+.pf-topic-icon[aria-label*="Performance"],.pf-topic-icon[aria-label*="Strategy"],.pf-topic-icon[aria-label*="Analytics"] {--help-ink:var(--help-purple);}
+.pf-topic-icon[aria-label*="Calendar"],.pf-topic-icon[aria-label*="Month"],.pf-topic-icon[aria-label*="Time"],.pf-topic-icon[aria-label*="Session"] {--help-ink:var(--help-orange);}
+.pf-topic-icon[aria-label*="Discipline"],.pf-topic-icon[aria-label*="Psychology"],.pf-topic-icon[aria-label*="Emotion"],.pf-topic-icon[aria-label*="Review"] {--help-ink:var(--help-pink);}
+.pf-topic-icon[aria-label*="Accounts"],.pf-topic-icon[aria-label*="Account"],.pf-topic-icon[aria-label*="Pair"],.pf-topic-icon[aria-label*="Trade"] {--help-ink:var(--help-teal);}
+.pf-topic-icon[aria-label*="Risk"],.pf-topic-icon[aria-label*="Loss"],.pf-topic-icon[aria-label*="Drawdown"],.pf-topic-icon[aria-label*="Erase"],.pf-topic-icon[aria-label*="Delete"] {--help-ink:var(--help-red);}
+.pf-topic-icon[aria-label*="Settings"],.pf-topic-icon[aria-label*="Appearance"],.pf-topic-icon[aria-label*="Theme"],.pf-topic-icon[aria-label*="Backup"],.pf-topic-icon[aria-label*="Data"] {--help-ink:var(--help-blue);}
+.pf-topic-icon[aria-label*="Factor"],.pf-topic-icon[aria-label*="Ratio"],.pf-topic-icon[aria-label*="Average"] {--help-ink:var(--help-orange);}
+.pf-topic-icon:hover,.pf-topic-icon:focus-visible {
+  color:var(--help-ink) !important;
+  background:color-mix(in srgb,var(--help-ink) 23%,transparent) !important;
+}
+.pf-topic-icon svg {stroke:currentColor !important;}
+
+
+/* Refined help controls: distinct subject icons with a consistent information badge. */
+.info-button.pf-topic-icon, .card-info-button.pf-topic-icon, .refdash .ref-info.pf-topic-icon {
+  position:relative !important; width:26px !important; height:26px !important;
+  min-width:26px !important; min-height:26px !important; flex:0 0 26px !important;
+  display:inline-grid !important; place-items:center !important;
+  border:1px solid color-mix(in srgb,var(--help-ink, var(--ac)) 32%,transparent) !important;
+  border-radius:9px !important;
+  background:color-mix(in srgb,var(--help-ink, var(--ac)) 11%,var(--card)) !important;
+  color:var(--help-ink,var(--ac)) !important;
+  cursor:help !important; vertical-align:middle !important;
+  transition:background .16s ease,border-color .16s ease,transform .16s ease,box-shadow .16s ease !important;
+}
+.pf-topic-icon svg {width:17px !important;height:17px !important;stroke-width:1.8 !important;}
+.pf-topic-icon::after {
+  content:'i'; position:absolute; right:-4px; bottom:-4px;
+  width:11px;height:11px;border-radius:50%;
+  display:grid;place-items:center;
+  font:700 8px/1 system-ui,sans-serif;
+  background:var(--help-ink,var(--ac));color:var(--card);
+  border:1.5px solid var(--card);pointer-events:none;
+}
+.pf-topic-icon:hover, .pf-topic-icon:focus-visible {
+  background:color-mix(in srgb,var(--help-ink,var(--ac)) 21%,var(--card)) !important;
+  border-color:var(--help-ink,var(--ac)) !important;
+  transform:translateY(-1px);box-shadow:0 2px 8px #0002;
+}
+.pf-topic-icon:focus-visible {outline:2px solid var(--help-ink,var(--ac)) !important;outline-offset:3px !important;}
+@media (prefers-reduced-motion:reduce){.pf-topic-icon{transition:none !important;}.pf-topic-icon:hover{transform:none;}}
+
+/* Pipfolio monochrome icon system: refined outline glyphs, no colour accents or badges. */
+.info-button.pf-topic-icon, .card-info-button.pf-topic-icon, .refdash .ref-info.pf-topic-icon {
+  --help-ink: var(--mut) !important;
+  width:24px !important; height:24px !important;
+  min-width:24px !important; min-height:24px !important; flex:0 0 24px !important;
+  padding:2px !important; border:1px solid transparent !important;
+  border-radius:7px !important; background:transparent !important;
+  color:var(--mut) !important; box-shadow:none !important;
+  transform:none !important; opacity:.88;
+  transition:opacity .16s ease,background .16s ease,color .16s ease !important;
+}
+.pf-topic-icon svg {width:19px !important;height:19px !important;stroke:currentColor !important;stroke-width:1.65 !important;stroke-linecap:round;stroke-linejoin:round;fill:none !important;}
+.pf-topic-icon::after,.pf-topic-icon::before {content:none !important;display:none !important;}
+.info-button.pf-topic-icon:hover,.card-info-button.pf-topic-icon:hover,.refdash .ref-info.pf-topic-icon:hover,
+.info-button.pf-topic-icon:focus-visible,.card-info-button.pf-topic-icon:focus-visible,.refdash .ref-info.pf-topic-icon:focus-visible {
+  color:var(--tx) !important; background:var(--hov) !important;
+  border-color:transparent !important;box-shadow:none !important;transform:none !important;opacity:1;
+}
+.pf-topic-icon:focus-visible {outline:2px solid var(--mut) !important;outline-offset:2px !important;}
+
+
+/* Settings title: grey gear-shaped contextual help, aligned with heading. */
+.settings-title-row {display:flex;align-items:center;gap:11px;}
+.settings-title-row h1 {margin:0;}
+.settings-title-help {display:inline-grid;place-items:center;width:30px;height:30px;padding:4px;border:0;border-radius:8px;background:transparent;color:var(--mut);cursor:help;}
+.settings-title-help:hover,.settings-title-help:focus-visible {color:var(--tx);background:var(--hov);}
+.settings-title-help:focus-visible {outline:2px solid var(--mut);outline-offset:2px;}
+</style>
   </head>
   <body>
     <noscript>
@@ -3551,6 +4653,119 @@
     <input type="file" id="file" accept=".json,.csv,application/json,text/csv" hidden />
     <!-- Supabase client and application code -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+      // Distinct, context-matched icons for explanatory controls across Pipfolio.
+      (() => {
+        const paths = {
+          coins:'<circle cx="9" cy="9" r="6"/><path d="M13 4a7 7 0 1 1-6 12M9 6v6m-2-4h4m-4 3h4"/>',
+          target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+          scales:'<path d="M12 3v18M5 7h14M7 7l-4 7h8l-4-7ZM17 7l-4 7h8l-4-7ZM8 21h8"/>',
+          ratio:'<path d="M4 7h16M4 17h16M8 4v6M16 14v6"/><circle cx="12" cy="12" r="2"/>',
+          calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/>',
+          calendarCheck:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18m4 5 2 2 4-4"/>',
+          chart:'<path d="M3 3v18h18m-15-5 5-5 4 3 5-7"/>',
+          trend:'<path d="m3 17 6-6 4 3 8-8m-6 0h6v6"/>',
+          radar:'<path d="m12 2 8.7 5v10L12 22l-8.7-5V7L12 2Zm0 0v20M3.3 7l17.4 10M20.7 7 3.3 17"/>',
+          bars:'<path d="M4 20V11h4v9m4 0V4h4v16m4 0v-7h2v7M2 20h21"/>',
+          candlestick:'<path d="M5 2v20m-3-14h6v8H2zm10-6v20m-3-16h6v8h-6zm10-6v20m-3-10h6v8h-6z"/>',
+          pie:'<path d="M12 3v9h9A9 9 0 1 1 12 3Z"/><path d="M15 3a9 9 0 0 1 6 6h-6V3Z"/>',
+          currency:'<circle cx="12" cy="12" r="9"/><path d="M15 8c-1-1-2-1.5-3.5-1.5-2 0-3.5 1-3.5 2.5 0 3.8 7 1.2 7 5 0 1.5-1.5 2.5-3.5 2.5-1.5 0-2.8-.5-3.6-1.5M12 5v14"/>',
+          wallet:'<rect x="3" y="6" width="18" height="15" rx="2"/><path d="M3 9V5a2 2 0 0 1 2-2h13m3 9h-6a2 2 0 0 0 0 4h6"/>',
+          receipt:'<path d="M5 3h14v18l-3-2-4 2-4-2-3 2V3Zm3 5h8M8 12h8M8 16h5"/>',
+          calculator:'<rect x="5" y="2" width="14" height="20" rx="2"/><path d="M8 6h8v4H8zm0 8h2m4 0h2m-8 4h2m4 0h2"/>',
+          shield:'<path d="M12 2 4 6v6c0 5 3 8 8 10 5-2 8-5 8-10V6l-8-4Z"/><path d="m9 12 2 2 4-4"/>',
+          user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+          users:'<circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2m2-14a3 3 0 0 1 0 6m0 3a5 5 0 0 1 4 5"/>',
+          key:'<circle cx="8" cy="15" r="5"/><path d="m12 11 9-9m-5 1 5 5m-3-3-3-3"/>',
+          palette:'<path d="M12 3a9 9 0 1 0 0 18h2a2 2 0 0 0 1-4 2 2 0 0 1 1-4h2a4 4 0 0 0 4-4 9 9 0 0 0-10-6Z"/><circle cx="7" cy="11" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="16" cy="8" r="1"/>',
+          sliders:'<path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3"/><circle cx="16" cy="17" r="3"/>',
+          settings:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3M5 5l2 2m10 10 2 2m0-14-2 2M7 17l-2 2"/>',
+          database:'<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 4 18 4 18 0V5M3 12c0 4 18 4 18 0"/>',
+          download:'<path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/>',
+          upload:'<path d="M12 17V5m-5 5 5-5 5 5M4 17v4h16v-4"/>',
+          refresh:'<path d="M20 7V3l-4 4m4 0a8 8 0 0 0-14-2M4 17v4l4-4m-4 0a8 8 0 0 0 14 2"/>',
+          trash:'<path d="M4 7h16M9 7V4h6v3m-9 0 1 14h10l1-14M10 11v6m4-6v6"/>',
+          notebook:'<rect x="5" y="3" width="16" height="18" rx="2"/><path d="M9 3v18M3 7h4m-4 5h4m-4 5h4m9-9h4m-4 4h4"/>',
+          clipboard:'<rect x="5" y="5" width="14" height="17" rx="2"/><path d="M9 5V3h6v2m-6 7 2 2 4-4m-6 8h6"/>',
+          brain:'<path d="M12 6a4 4 0 0 0-7-2 4 4 0 0 0-2 6 4 4 0 0 0 0 7 4 4 0 0 0 7 3l2-2V6Zm0 0a4 4 0 0 1 7-2 4 4 0 0 1 2 6 4 4 0 0 1 0 7 4 4 0 0 1-7 3l-2-2"/>',
+          pulse:'<path d="M2 12h5l3-7 4 14 3-7h5"/>',
+          compass:'<circle cx="12" cy="12" r="9"/><path d="m15 9-2 5-4 1 2-5 4-1Z"/>',
+          clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+          info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/>'
+        };
+        // Order matters: exact headings precede broader category matches.
+        const exact = {
+          'net p&l':'currency','trade win %':'target','profit factor':'scales',
+          'avg win / loss':'ratio','average win/loss':'ratio','your progress':'trend',
+          'trading performance':'radar','performance by pair':'candlestick',
+          'monthly p&l':'bars','trading calendar':'calendarCheck',
+          'trade review':'notebook','strategy performance':'compass',
+          'trade discipline':'brain','trading accounts':'wallet',
+          'profile & security':'shield','trading preferences':'sliders',
+          'appearance':'palette','data & backups':'database',
+          'risk calculator':'calculator','trades':'candlestick',
+          'settings':'settings','dashboard':'chart',
+          'trade outcomes':'pie','backup and restore':'download',
+          'account':'user','preferences':'sliders',
+          'recent trades':'clock','trading psychology':'brain',
+          'trading checklist':'clipboard','trading sessions':'clock',
+          'sample data':'notebook','erase journal':'trash',
+          'export':'download','import':'upload','sync':'refresh'
+        };
+        const select = (label) => {
+          const t = String(label || '').replace(/^About\s+/i,'').trim().toLowerCase().replace(/\s+/g,' ');
+          if (exact[t]) return exact[t];
+          const rules = [
+            [/password|login|security|authentication|privacy/, 'key'],
+            [/profile|username|personal/, 'user'],
+            [/account|balance|deposit|withdrawal|capital/, 'wallet'],
+            [/commission|fee|cost|expense/, 'receipt'],
+            [/net p&l|profit and loss|net profit|revenue/, 'currency'],
+            [/win rate|win %|win percentage|accuracy|success/, 'target'],
+            [/profit factor|risk.reward|risk ratio|avg win|average win|payoff/, 'scales'],
+            [/risk calculator|position size|lot size/, 'calculator'],
+            [/drawdown|recovery|growth|equity|progress/, 'trend'],
+            [/calendar|day win|trading day|date/, 'calendarCheck'],
+            [/month|weekly|week/, 'bars'],
+            [/strategy|setup|method/, 'compass'],
+            [/discipline|emotion|psychology|mindset|mistake/, 'brain'],
+            [/review|journal|note/, 'notebook'],
+            [/checklist|plan followed|rules/, 'clipboard'],
+            [/performance by pair|currency pair|symbol|instrument|trade|position|order/, 'candlestick'],
+            [/performance|analytics|statistics|metric|chart/, 'chart'],
+            [/session|time/, 'clock'],
+            [/theme|appearance|accent|colour|color/, 'palette'],
+            [/preference|filter|configuration/, 'sliders'],
+            [/backup|export|download/, 'download'],
+            [/import|upload/, 'upload'],
+            [/restore|sync|reload|refresh/, 'refresh'],
+            [/data|storage|database/, 'database'],
+            [/erase|delete|clear|reset/, 'trash'],
+            [/settings/, 'settings']
+          ];
+          return rules.find(([re]) => re.test(t))?.[1] || 'info';
+        };
+        const update = () => {
+          document.querySelectorAll('.info-button:not(.pf-topic-icon), .card-info-button:not(.pf-topic-icon), .refdash .ref-info:not(.pf-topic-icon)').forEach(button => {
+            const label = button.getAttribute('aria-label') || button.getAttribute('data-chart-title') || button.closest('.card,.acc,section')?.querySelector('h1,h2,h3,.simple-label')?.textContent || '';
+            const name = select(label);
+            button.classList.add('pf-topic-icon');
+            button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' + paths[name] + '</svg>';
+            button.removeAttribute('title'); // Avoid native tooltips obscuring the complete help text.
+            if (!button.getAttribute('aria-label')) button.setAttribute('aria-label', 'About ' + (label || 'this section'));
+          });
+        };
+        let queued = false;
+        const observer = new MutationObserver(() => {
+          if (queued) return;
+          queued = true;
+          queueMicrotask(() => { queued = false; update(); });
+        });
+        observer.observe(document.body, {subtree:true, childList:true});
+        update();
+      })();
+
+    </script>
     <script>
       'use strict';
 
@@ -3860,55 +5075,6 @@
         document.documentElement.dataset.theme = t;
       }
       setTheme('light', false);
-      const ACCENT_OPTIONS = [
-        ['Sky Blue', '#4bace5'],
-        ['Ocean Blue', '#2563eb'],
-        ['Royal Blue', '#1d4ed8'],
-        ['Navy', '#1e3a8a'],
-        ['Midnight Blue', '#172554'],
-        ['Ice Blue', '#bae6fd'],
-        ['Powder Blue', '#93c5fd'],
-        ['Cyan', '#0891b2'],
-        ['Electric Cyan', '#06b6d4'],
-        ['Turquoise', '#2dd4bf'],
-        ['Teal', '#0d9488'],
-        ['Deep Teal', '#115e59'],
-        ['Mint', '#a7f3d0'],
-        ['Emerald', '#059669'],
-        ['Forest Green', '#166534'],
-        ['Green', '#16a34a'],
-        ['Lime', '#84cc16'],
-        ['Sage', '#a3b18a'],
-        ['Olive', '#717d31'],
-        ['Amber', '#ca8a04'],
-        ['Gold', '#eab308'],
-        ['Butter Yellow', '#fde68a'],
-        ['Orange', '#ea580c'],
-        ['Peach', '#fdba74'],
-        ['Coral', '#fb7185'],
-        ['Red', '#e11d48'],
-        ['Crimson', '#be123c'],
-        ['Burgundy', '#881337'],
-        ['Rose', '#f43f5e'],
-        ['Blush Pink', '#fbcfe8'],
-        ['Pink', '#db2777'],
-        ['Hot Pink', '#ec4899'],
-        ['Magenta', '#c026d3'],
-        ['Lavender', '#c4b5fd'],
-        ['Lilac', '#a78bfa'],
-        ['Purple', '#9333ea'],
-        ['Violet', '#7c3aed'],
-        ['Indigo', '#6366f1'],
-        ['Deep Indigo', '#3730a3'],
-        ['Mocha', '#92400e'],
-        ['Chocolate', '#78350f'],
-        ['Sand', '#d6b98c'],
-        ['Slate', '#64748b'],
-        ['Graphite', '#334155'],
-        ['Silver', '#cbd5e1'],
-        ['Black', '#000000'],
-        ['White', '#ffffff'],
-      ];
       // Appearance preferences
       const DEFAULT_QUOTE = 'A little progress, one trade at a time.';
       function dashboardQuote() {
@@ -3921,74 +5087,24 @@
         return 'rgb(' + a.join(',') + ')';
       }
       function validAccent(c) {
-        return ACCENT_OPTIONS.some((o) => o[1] === c);
+        return typeof c === 'string' && /^#[0-9a-fA-F]{6}$/.test(c);
       }
       function applyAccent(c, save = true) {
         if (!validAccent(c)) c = '#4bace5';
         const root = document.documentElement;
-        const rgb = c.match(/[a-f0-9]{2}/gi).map((v) => parseInt(v, 16));
+        const rgb = c.match(/[a-f0-9]{2}/gi).map(v => parseInt(v, 16));
         const dark = root.dataset.theme === 'dark';
-        const white = [255, 255, 255],
-          ink = [12, 20, 31];
-        const themeVars =
-          c === '#000000' || c === '#ffffff'
-            ? dark
-              ? {
-                  '--bg': '#0b0b0b',
-                  '--bg2': '#121212',
-                  '--card': '#181818',
-                  '--bd': '#343434',
-                  '--acs': '#292929',
-                  '--hov': '#252525',
-                  '--mut': '#a6a6a6',
-                  '--tx': '#f5f5f5',
-                }
-              : {
-                  '--bg': '#f7f7f7',
-                  '--bg2': '#eeeeee',
-                  '--card': '#ffffff',
-                  '--bd': '#dedede',
-                  '--acs': '#eeeeee',
-                  '--hov': '#f2f2f2',
-                  '--mut': '#6b7280',
-                  '--tx': '#171717',
-                }
-            : dark
-              ? {
-                  '--bg': cssRgb(rgbMix(ink, rgb, 0.105)),
-                  '--bg2': cssRgb(rgbMix(ink, rgb, 0.17)),
-                  '--card': cssRgb(rgbMix([22, 28, 39], rgb, 0.16)),
-                  '--bd': cssRgb(rgbMix([52, 62, 76], rgb, 0.35)),
-                  '--acs': cssRgb(rgbMix([32, 39, 53], rgb, 0.32)),
-                  '--hov': cssRgb(rgbMix([32, 39, 53], rgb, 0.2)),
-                  '--mut': cssRgb(rgbMix([168, 184, 201], rgb, 0.08)),
-                  '--tx': '#eef5ff',
-                }
-              : {
-                  '--bg': cssRgb(rgbMix(white, rgb, 0.065)),
-                  '--bg2': cssRgb(rgbMix(white, rgb, 0.12)),
-                  '--card': '#ffffff',
-                  '--bd': cssRgb(rgbMix(white, rgb, 0.34)),
-                  '--acs': cssRgb(rgbMix(white, rgb, 0.18)),
-                  '--hov': cssRgb(rgbMix(white, rgb, 0.11)),
-                  '--mut': cssRgb(rgbMix([105, 119, 135], rgb, 0.12)),
-                  '--tx': '#244052',
-                };
-        root.dataset.neutralAccent = c === '#000000' || c === '#ffffff' ? 'true' : 'false';
-        root.style.setProperty(
-          '--ac',
-          c === '#ffffff' && !dark ? '#202020' : c === '#000000' && dark ? '#ffffff' : c,
-        );
-        root.style.setProperty('--accent-rgb', rgb.join(','));
-        const luminance = rgb.reduce(
-          (sum, v, i) =>
-            sum +
-            [0.2126, 0.7152, 0.0722][i] *
-              (v / 255 <= 0.04045 ? v / 255 / 12.92 : Math.pow((v / 255 + 0.055) / 1.055, 2.4)),
-          0,
-        );
-        root.style.setProperty('--acx', luminance > 0.3 ? '#111827' : '#ffffff');
-        for (const [key, value] of Object.entries(themeVars)) root.style.setProperty(key, value);
+        // Accent colours never change the background, surfaces, borders or typography.
+        const visibleAccent = c === '#ffffff' && !dark ? '#202020'
+          : c === '#000000' && dark ? '#ffffff' : c;
+        const visibleRgb = visibleAccent.match(/[a-f0-9]{2}/gi).map(v => parseInt(v, 16));
+        const luminance = visibleRgb.reduce((sum, v, i) => sum +
+          [0.2126, 0.7152, 0.0722][i] *
+          (v / 255 <= .04045 ? v / 255 / 12.92 : Math.pow((v / 255 + .055) / 1.055, 2.4)), 0);
+        root.style.setProperty('--ac', visibleAccent);
+        root.style.setProperty('--accent-rgb', visibleRgb.join(','));
+        root.style.setProperty('--acx', luminance > .3 ? '#111827' : '#ffffff');
+        root.dataset.neutralAccent = (c === '#000000' || c === '#ffffff') ? 'true' : 'false';
       }
       applyAccent(preferences.accent, false);
       // Data
@@ -4748,6 +5864,11 @@
         }
         const winningDays = [...dayTotals.values()].filter((v) => v > 0).length;
         const dayWinRate = dayTotals.size ? (100 * winningDays) / dayTotals.size : 0;
+        const latestCloseDay = s.ts.length ? s.ts[s.ts.length - 1].t.xdt.slice(0, 10) : '';
+        const earlierCloseDays = [...new Set(s.ts.map(x => x.t.xdt.slice(0, 10)).filter(d => d < latestCloseDay))].sort();
+        const priorDay = earlierCloseDays.at(-1);
+        const priorDayNet = priorDay ? s.ts.filter(x => x.t.xdt.slice(0, 10) === priorDay).reduce((total,x) => total+x.net,0) : null;
+        const priorDayDelta = priorDayNet === null ? '' : `<div class="kpi-prior ${s.net-priorDayNet >= 0 ? 'pos' : 'neg'}">${s.net-priorDayNet >= 0 ? '▲' : '▼'} ${money(Math.abs(s.net-priorDayNet))} vs prior day</div>`;
         const avgWin = s.w.length ? profit / s.w.length : 0;
         const avgLoss = s.l.length ? loss / s.l.length : 0;
         const avgRatio = avgLoss ? avgWin / avgLoss : null;
@@ -4758,29 +5879,34 @@
             label: 'Net P&L',
             value: money(s.net),
             color: cls(s.net),
-            sub: `${s.n} closed trades · ${money(s.ts.reduce((sum, x) => sum + (Number(x.t.commission) || 0), 0))} commissions`,
+            sub: `${s.n} closed trades · ${money(s.ts.reduce((sum, x) => sum + (Number(x.t.commission) || 0), 0))} fees`,
+            prior: priorDayDelta,
             help: 'Total profit or loss from closed trades after recorded costs.',
           },
           {
             label: 'Trade Win %',
-            content: gauge(s.wr, `${s.w.length} W<br>${s.be} BE<br>${s.l.length} L`),
+            content: gauge(s.wr, `<span class="kpi-wins">${s.w.length} W</span><br>${s.be} BE<br><span class="kpi-losses">${s.l.length} L</span>`),
             help: 'Winning closed trades divided by all closed trades, including breakeven trades.',
           },
           {
             label: 'Profit Factor',
             value: s.pf === null ? '—' : s.pf === Infinity ? '∞' : s.pf.toFixed(2),
             sub: 'Gross profit ÷ gross loss',
-            help: 'Gross profits from winning trades divided by absolute gross losses.',
-          },
-          {
-            label: 'Day Win %',
-            content: gauge(dayWinRate, `${dayTotals.size} days`),
-            help: 'Percentage of close dates with a positive total net P&L.',
+            prior: s.pf === null
+              ? '<div class="kpi-pf-status neutral">No Closed Trades Yet</div>'
+              : s.pf === Infinity
+                ? '<div class="kpi-pf-status pos">▲ No Losing Trades</div>'
+                : s.pf > 1
+                  ? '<div class="kpi-pf-status pos">▲ Above Break-Even</div>'
+                  : s.pf < 1
+                    ? '<div class="kpi-pf-status neg">▼ Below Break-Even</div>'
+                    : '<div class="kpi-pf-status neutral">At Break-Even</div>',
+            help: 'Gross profits from winning trades divided by absolute gross losses. Above 1 means gross profits exceed gross losses; this does not necessarily mean net profitability after fees.',
           },
           {
             label: 'Avg Win / Loss',
             value: avgRatio === null ? '—' : avgRatio.toFixed(2),
-            content: `<div class="kpi-ratio"><div class="kpi-ratio-track"><span style="width:${avgWin + avgLoss ? (100 * avgWin) / (avgWin + avgLoss) : 50}%"></span></div><div class="kpi-ratio-labels"><span class="pos">${money(avgWin)} avg win</span><span class="neg">${money(-avgLoss)} avg loss</span></div></div>`,
+            content: `<div class="kpi-ratio"><div class="kpi-ratio-track" style="--ratio-split:${avgWin + avgLoss ? (100 * avgWin) / (avgWin + avgLoss) : 50}%"><span></span></div><div class="kpi-ratio-labels"><span><strong class="pos">${money(avgWin)}</strong> avg win</span><span><strong class="neg">${money(-avgLoss)}</strong> avg loss</span></div></div>`,
             help: 'Average winning trade divided by absolute average losing trade.',
           },
         ];
@@ -4840,122 +5966,54 @@
           .slice(0, 5);
         const maxPair = Math.max(1, ...pairEntries.map((x) => Math.abs(x[1])));
         const pairChart = `<div class="simple-pairs">${pairEntries.map(([pair, val]) => `<div class="simple-pair-row"><div class="simple-pair-top"><strong>${pairHTML(pair)}</strong><span class="${cls(val)}">${money(val)}</span></div><div class="simple-pair-track"><span class="${val < 0 ? 'is-loss' : ''}" style="width:${Math.max(2, (Math.abs(val) / maxPair) * 100)}%"></span></div></div>`).join('')}</div>`;
-        // Six independently normalized indicators (0–100). This is a descriptive
-        // journal profile, not a prediction or a standardized trading rating.
+        // Six trade-derived dimensions, normalised for visual comparison only.
         const clamp100 = (value) => Math.max(0, Math.min(100, Number.isFinite(value) ? value : 0));
-        const positiveMonths = [...months.values()].filter((v) => v > 0).length;
         const averageWin = s.w.length ? profit / s.w.length : 0;
         const averageLoss = s.l.length ? loss / s.l.length : 0;
         const payoff = averageLoss > 0 ? averageWin / averageLoss : averageWin > 0 ? 3 : 0;
+        const dayValues = [...dayTotals.values()];
+        const consistency = dayValues.length ? 100 * dayValues.filter(v => v > 0).length / dayValues.length : 0;
+        const recovery = drawdown > 0 ? clamp100((Math.max(0, s.net) / drawdown / 3) * 100) : s.net > 0 ? 100 : 0;
         const radarMetrics = [
-          {
-            label: 'Win rate',
-            value: clamp100(s.wr),
-            description: 'Percentage of closed trades that were profitable.',
-          },
-          {
-            label: 'Profit factor',
-            value: clamp100(((s.pf === Infinity ? 3 : s.pf || 0) / 3) * 100),
-            description:
-              'Gross profit divided by gross loss. A profit factor of 3 or more scores 100.',
-          },
-          {
-            label: 'Payoff ratio',
-            value: clamp100((payoff / 3) * 100),
-            description:
-              'Average winning trade divided by average losing trade. A ratio of 3 or more scores 100.',
-          },
-          {
-            label: 'Drawdown control',
-            value: clamp100(100 * (1 - drawdown / Math.max(1, profit + loss))),
-            description:
-              'Lower peak-to-trough drawdown relative to total traded P&L scores higher.',
-          },
-          {
-            label: 'Recovery',
-            value: clamp100(
-              drawdown === 0 ? (s.net > 0 ? 100 : 0) : (Math.max(0, s.net) / (drawdown * 3)) * 100,
-            ),
-            description:
-              'Positive net P&L relative to maximum drawdown. Three times drawdown scores 100.',
-          },
-          {
-            label: 'Consistency',
-            value: clamp100(months.size ? (positiveMonths / months.size) * 100 : 0),
-            description: 'Share of active trading months that finished with positive net P&L.',
-          },
+          { label: 'Win %', value: clamp100(s.wr) },
+          { label: 'Profit Factor', value: clamp100(((s.pf === Infinity ? 3 : s.pf || 0) / 3) * 100) },
+          { label: 'Avg Win/Loss', value: clamp100((payoff / 3) * 100) },
+          { label: 'Drawdown', value: clamp100(100 * (1 - drawdown / Math.max(1, profit + loss))) },
+          { label: 'Recovery', value: recovery },
+          { label: 'Consistency', value: clamp100(consistency) },
         ];
-        const radarCx = 200,
-          radarCy = 176,
-          radarRadius = 113;
+        const radarCx = 220, radarCy = 188, radarRadius = 119;
         const radarPoint = (index, fraction) => {
           const angle = -Math.PI / 2 + (index * 2 * Math.PI) / radarMetrics.length;
-          return [
-            radarCx + Math.cos(angle) * radarRadius * fraction,
-            radarCy + Math.sin(angle) * radarRadius * fraction,
-          ];
+          return [radarCx + Math.cos(angle) * radarRadius * fraction, radarCy + Math.sin(angle) * radarRadius * fraction];
         };
-        const radarPoly = (fraction) =>
-          radarMetrics
-            .map((_, i) =>
-              radarPoint(i, fraction)
-                .map((n) => n.toFixed(1))
-                .join(','),
-            )
-            .join(' ');
-        const radarShape = radarMetrics
-          .map((m, i) =>
-            radarPoint(i, m.value / 100)
-              .map((n) => n.toFixed(1))
-              .join(','),
-          )
-          .join(' ');
+        const radarPoly = fraction => radarMetrics.map((_, i) => radarPoint(i, fraction).map(n => n.toFixed(1)).join(',')).join(' ');
+        const radarShape = radarMetrics.map((m, i) => radarPoint(i, m.value / 100).map(n => n.toFixed(1)).join(',')).join(' ');
         const radarScore = radarMetrics.reduce((sum, m) => sum + m.value, 0) / radarMetrics.length;
-        const radarChart = `<div class="radar-score"><strong>${radarScore.toFixed(0)}</strong><span>/100</span><span class="radar-score-label">Profile score</span></div>
-      <svg class="radar-svg" viewBox="0 0 400 360" role="group" aria-label="Trading performance profile; focus each information circle to see details">
-        ${[0.25, 0.5, 0.75, 1].map((f) => `<polygon points="${radarPoly(f)}" fill="none" stroke="var(--bd)" stroke-width="1"/>`).join('')}
-        ${radarMetrics
-          .map((_, i) => {
-            const [x, y] = radarPoint(i, 1);
-            return `<line x1="${radarCx}" y1="${radarCy}" x2="${x}" y2="${y}" stroke="var(--bd)"/>`;
-          })
-          .join('')}
-        <polygon points="${radarShape}" fill="var(--ac)" fill-opacity=".19" stroke="var(--ac)" stroke-width="2.5" stroke-linejoin="round"/>
-        ${radarMetrics
-          .map((m, i) => {
-            const [x, y] = radarPoint(i, m.value / 100);
-            return `<circle cx="${x}" cy="${y}" r="3.5" fill="var(--ac)" stroke="var(--card)" stroke-width="1.5"/>`;
-          })
-          .join('')}
-        ${radarMetrics
-          .map((m, i) => {
-            const [x, y] = radarPoint(i, 1.28);
-            const anchor = x < radarCx - 10 ? 'end' : x > radarCx + 10 ? 'start' : 'middle';
-            const valueY = y + 15;
-            const iconX =
-              anchor === 'end'
-                ? x + 13
-                : anchor === 'start'
-                  ? x - 13
-                  : x + (m.label.length * 5.5) / 2 + 13;
-            return `<g class="radar-axis-info chart-pop-target" data-chart-title="${m.label}: ${m.value.toFixed(0)}/100" data-chart-detail="${m.description}" tabindex="0" role="img" aria-label="${m.label}: ${m.value.toFixed(0)} out of 100. ${m.description}"><text x="${x}" y="${y}" fill="var(--mut)" font-size="11" text-anchor="${anchor}" dominant-baseline="middle">${m.label}</text><text x="${x}" y="${valueY}" fill="var(--tx)" font-size="12" font-weight="700" text-anchor="${anchor}" dominant-baseline="middle">${m.value.toFixed(0)}/100</text><circle cx="${iconX}" cy="${y}" r="8" fill="var(--card)" stroke="var(--ac)" stroke-width="1.4"/><text x="${iconX}" y="${y + 0.5}" font-size="10" font-weight="700" text-anchor="middle" dominant-baseline="middle" fill="var(--ac)">i</text></g>`;
-          })
-          .join('')}
-      </svg>`;
-        const recent = [...s.ts].reverse().slice(0, 5);
+        const radarChart = `<svg class="radar-svg radar-six" viewBox="0 0 440 380" role="img" aria-label="Six-axis trading performance radar chart, custom score ${radarScore.toFixed(0)} out of 100">
+          ${[0.25, 0.5, 0.75, 1].map(f => `<polygon points="${radarPoly(f)}" fill="none" stroke="var(--bd)" stroke-width="1"/>`).join('')}
+          ${radarMetrics.map((_, i) => { const [x, y] = radarPoint(i, 1); return `<line x1="${radarCx}" y1="${radarCy}" x2="${x}" y2="${y}" stroke="var(--bd)"/>`; }).join('')}
+          <polygon points="${radarShape}" fill="var(--ac)" fill-opacity=".20" stroke="var(--ac)" stroke-width="2.5" stroke-linejoin="round"/>
+          ${radarMetrics.map((m, i) => { const [x, y] = radarPoint(i, 1.30); const anchor = x < radarCx - 12 ? 'end' : x > radarCx + 12 ? 'start' : 'middle'; return `<text x="${x}" y="${y}" fill="var(--mut)" font-size="12" text-anchor="${anchor}" dominant-baseline="middle">${m.label}</text>`; }).join('')}
+          <circle cx="${radarCx}" cy="${radarCy}" r="27" fill="var(--card)" fill-opacity=".94" stroke="var(--bd)" stroke-width="1"/>
+          <text x="${radarCx}" y="${radarCy - 1}" fill="var(--tx)" text-anchor="middle" dominant-baseline="middle" font-size="21" font-weight="750">${radarScore.toFixed(0)}</text>
+          <text x="${radarCx}" y="${radarCy + 15}" fill="var(--mut)" text-anchor="middle" font-size="9">/ 100</text>
+        </svg>`;
         return `${head}${mixed ? '<p class="notice-mixed">Accounts have different currencies. Select one account for meaningful money totals.</p>' : ''}
-      <div class="simple-stats kpi-stats">${metricCards.map((m, i) => `<div class="card simple-stat kpi-card"><div class="simple-stat-head"><div class="simple-label">${m.label}</div><span class="info-wrap"><button type="button" class="info-button" aria-label="About ${m.label}">i</button><span class="info-tooltip" role="tooltip">${m.help}</span></span></div>${m.value !== undefined ? `<div class="simple-value ${m.color || ''}">${m.value}</div>` : ''}${m.content ? `<div class="kpi-content">${m.content}</div>` : ''}${m.sub ? `<div class="simple-sub">${m.sub}</div>` : ''}</div>`).join('')}</div>
+      <div class="simple-stats kpi-stats">${metricCards.map((m, i) => `<div class="card simple-stat kpi-card"><div class="simple-stat-head"><div class="simple-label">${m.label}</div><span class="info-wrap"><button type="button" class="info-button" aria-label="About ${m.label}">i</button><span class="info-tooltip" role="tooltip">${m.help}</span></span></div>${m.value !== undefined ? `<div class="simple-value ${m.color || ''}">${m.value}</div>` : ''}${m.prior || ''}${m.content ? `<div class="kpi-content">${m.content}</div>` : ''}${m.sub ? `<div class="simple-sub">${m.sub}</div>` : ''}</div>`).join('')}</div>
       <div class="simple-layout">
-        <section class="card simple-panel"><div class="simple-panel-title"><h2>Your Progress</h2><span class="simple-sub">Cumulative trading P&L</span></div><div class="simple-curve" data-progress-values="${esc(JSON.stringify(progressValues))}" data-progress-dates="${esc(JSON.stringify(progressDates))}" data-progress-money="${mixed ? 'mixed' : 'single'}">${curve}</div></section>
-        <section class="card simple-panel radar-panel"><div class="simple-panel-title"><h2>Trading Performance Profile</h2><span class="simple-sub">Six normalized indicators</span></div>${radarChart}</section>
+        <section class="card simple-panel"><div class="simple-panel-title"><h2>Your Progress</h2><span class="info-wrap"><button type="button" class="info-button" aria-label="About Your Progress">i</button><span class="info-tooltip" role="tooltip">Shows cumulative net profit and loss across your closed trades in chronological order.</span></span></div><div class="simple-curve" data-progress-values="${esc(JSON.stringify(progressValues))}" data-progress-dates="${esc(JSON.stringify(progressDates))}" data-progress-money="${mixed ? 'mixed' : 'single'}">${curve}</div></section>
+        <section class="card simple-panel radar-panel"><div class="simple-panel-title"><h2>Trading Performance</h2><span class="info-wrap"><button type="button" class="info-button" aria-label="About Trading Performance">i</button><span class="info-tooltip" role="tooltip">Six trade-derived indicators: Win Rate, Profit Factor, Average Win/Loss, Drawdown Control, Recovery and Consistency. Values are scaled to 0–100 using custom formulas. The centre score is their simple average, not an industry-standard rating or prediction.</span></span></div>${radarChart}</section>
+
       </div>
       <div class="simple-chart-grid">
-        <section class="card simple-panel"><div class="simple-panel-title"><h2>Performance by Pair</h2><span class="simple-sub">Top 5 by absolute P&L</span></div>${pairChart}</section>
-        <section class="card simple-panel"><div class="simple-panel-title"><h2>Monthly P&L</h2><span class="simple-sub">Last 6 active months</span></div>${monthChart}</section>
-        <section class="card simple-panel"><div class="simple-panel-title"><h2>Trade Outcomes</h2><span class="simple-sub">Win / loss / breakeven</span></div>${outcomeChart}</section>
-        <section class="card simple-panel"><div class="simple-panel-title"><h2>Recent Trades</h2><button class="btn" data-act="view" data-v="trades">View all</button></div><div class="simple-recent">${recent.map((x) => `<button class="simple-trade" data-act="detail" data-id="${esc(x.t.id)}"><span><strong class="recent-pair-with-logo">${pairHTML(x.t.pair)}</strong><small>${esc(x.t.xdt.slice(0, 10))} · ${esc(x.t.side)}</small></span><strong class="${cls(x.net)}">${money(x.net)}</strong></button>`).join('')}</div></section>
+        <section class="card simple-panel"><div class="simple-panel-title"><h2>Performance by Pair</h2><span class="info-wrap"><button type="button" class="info-button" aria-label="About Performance by Pair">i</button><span class="info-tooltip" role="tooltip">Shows the five instruments with the largest absolute net profit or loss across closed trades.</span></span></div>${pairChart}</section>
+        <section class="card simple-panel"><div class="simple-panel-title"><h2>Monthly P&L</h2><span class="info-wrap"><button type="button" class="info-button" aria-label="About Monthly P&L">i</button><span class="info-tooltip" role="tooltip">Shows net profit and loss for the six most recent months with closed trades.</span></span></div>${monthChart}</section>
       </div>
-      <section class="card simple-panel simple-calendar" id="cal">${calendar()}</section>`;
+      <div class="dashboard-calendar-row">
+        <section class="card simple-panel simple-calendar" id="cal">${calendar()}</section>
+
+      </div>`;
       }
 
       // Chart calculations and rendering
@@ -5544,7 +6602,7 @@
           'Avg win / loss':
             'Average winning-trade net P&L ÷ absolute average losing-trade net P&L. A missing loss average displays —.',
           'Edge score':
-            'Six-part radar score using win rate, capped profit factor ÷ 3, capped average win/loss ratio ÷ 3, drawdown score, recovery score, and consistency score. Overall score = 100 × average of the six normalized components. Drawdown score = max(0, 1 − absolute worst relative drawdown ÷ 20); recovery = min(1, max(0, net P&L) ÷ maximum drawdown ÷ 3), or 0 when maximum drawdown is zero; consistency = max(0, 1 − min(1, standard deviation of daily P&L ÷ (absolute average daily P&L + 100))). This is the dashboard’s existing custom score, not a standard trading metric.',
+            'Four-axis radar chart showing Win Rate, Profit Factor, Payoff Ratio and Drawdown Control, each scaled to 0–100. The displayed score is the average of these four custom components; it is not a standardised rating or prediction.',
           'Daily net cumulative P&L':
             'Running sum of net P&L grouped by trade close date, in date order. Each point = previous cumulative P&L + that day’s net P&L. The lower bars show relative drawdown from the prior cumulative peak.',
           'Net daily P&L':
@@ -5793,9 +6851,10 @@
         trade${trades > 1 ? 's' : ''} \u00b7 ${green} green and ${red} red
         day${green + red === 1 ? '' : 's'}`
           : 'No closed trades in this month.';
-        return `<div class="cal-h"><div><h2 class="ref-calendar-title">Trading Calendar <span class="info-wrap"><button type="button" class="info-button" aria-label="About Trading Calendar" aria-describedby="tip-trading-calendar">i</button><span class="info-tooltip" role="tooltip" id="tip-trading-calendar">Shows the net profit or loss for trades closed on each day. The monthly summary includes closed trades and profitable and losing trading days.</span></span></h2>
+        return `<div class="cal-h"><div><h2 class="ref-calendar-title">Trading Calendar</h2>
     <div class="sub">${name} \u00b7 daily results by close date</div></div>
     <div class="cal-nav">
+    <span class="info-wrap"><button type="button" class="info-button" aria-label="About Trading Calendar" aria-describedby="tip-trading-calendar">i</button><span class="info-tooltip" role="tooltip" id="tip-trading-calendar">Shows the net profit or loss for trades closed on each day. The monthly summary includes closed trades and profitable and losing trading days.</span></span>
     <button class="btn icon" data-act="calprevy" aria-label="Previous year"
         ${y <= CAL_MIN ? 'disabled' : ''}>\u00ab</button>
     <button class="btn icon" data-act="calprev" aria-label="Previous month"
@@ -6144,22 +7203,7 @@
         if (!fl.length)
           return `<div class="card empty"><h2>No Matching Trades</h2>
         <p>Try a different search, account or result filter.</p></div>`;
-        return `<div class="card tw trade-list"><table class="trade-table" aria-label="Recorded trades"><thead><tr><th>Entry</th>
-    <th>Pair</th><th>Side</th><th>Account</th><th>Duration</th>
-    <th class="n">Pips</th><th class="n">Net P&L</th><th>Result</th></tr></thead>
-    <tbody>${fl
-      .map(
-        (x) => `<tr data-act="detail" data-id="${esc(x.t.id)}" tabindex="0">
-        <td data-label="Entry">${fdt(x.t.dt)}</td><td data-label="Instrument" class="trade-pair-with-logo"><b>${pairHTML(x.t.pair)}</b></td>
-        <td data-label="Side">${x.t.side}</td><td data-label="Account">${esc(
-          acc(x.t.account)?.name || '',
-        )}</td><td data-label="Duration">${x.dur || '\u2014'}</td><td data-label="Pips" class="n ${cls(x.pips)}">${x.pips ?? '\u2014'}</td>
-        <td data-label="Net P&L" class="n ${cls(x.net)}">${
-          x.net == null ? '\u2014' : fm(x.net, 1, ccy(x.t))
-        }</td><td data-label="Result"><span class="badge ${x.res}">${x.res}</span></td></tr>`,
-      )
-      .join('')}</tbody></table></div>
-    ${
+        return `${
       count
         ? (() => {
             const totals = new Map();
@@ -6179,7 +7223,22 @@
             return `<div class="count trade-count-summary"><span>Showing ${fl.length} of ${total} trade${total !== 1 ? 's' : ''}</span><span><strong>Shown Net P&L:</strong> ${summary}</span></div>`;
           })()
         : ''
-    }`;
+    }
+    <div class="card tw trade-list"><table class="trade-table" aria-label="Recorded trades"><thead><tr><th>Entry</th>
+    <th>Pair</th><th>Side</th><th>Account</th><th>Duration</th>
+    <th class="n">Pips</th><th class="n">Net P&L</th><th>Result</th></tr></thead>
+    <tbody>${fl
+      .map(
+        (x) => `<tr data-act="detail" data-id="${esc(x.t.id)}" tabindex="0">
+        <td data-label="Entry">${fdt(x.t.dt)}</td><td data-label="Instrument" class="trade-pair-with-logo"><b>${pairHTML(x.t.pair)}</b></td>
+        <td data-label="Side">${x.t.side}</td><td data-label="Account">${esc(
+          acc(x.t.account)?.name || '',
+        )}</td><td data-label="Duration">${x.dur || '\u2014'}</td><td data-label="Pips" class="n ${cls(x.pips)}">${x.pips ?? '\u2014'}</td>
+        <td data-label="Net P&L" class="n ${cls(x.net)}">${
+          x.net == null ? '\u2014' : fm(x.net, 1, ccy(x.t))
+        }</td><td data-label="Result"><span class="badge ${x.res}">${x.res}</span></td></tr>`,
+      )
+      .join('')}</tbody></table></div>`;
       }
       function accCard(a) {
         const mine = S.trades.filter((t) => t.account === a.id),
@@ -6229,45 +7288,40 @@
     <button class="btn" data-act="flowadd" data-id="${esc(a.id)}" data-t="Withdrawal">Withdraw</button>
     </div></div></div>${flows}</div></details></div>`;
       }
-      // Settings page
+      // Settings page: compact, single-section navigation.
+      let settingsSection = "appearance";
       function settingsView() {
-        return `<div class="page-h"><h1>Settings</h1></div><div class="stack settings-page">
-    <section class="card"><h2>Account</h2>
-        <div class="settings-row"><label class="f settings-username" for="profile-username"><span>Username</span>
-            <input id="profile-username" autocomplete="username" maxlength="200" value="${esc(profileUsername)}" placeholder="Choose a username"></label>
-            <button class="btn primary" data-act="saveusername">Save username</button></div>
-        <div class="settings-row settings-email"><span class="lbl">Email</span><span>${esc(currentUser?.email || '')}</span></div>
-        <div class="row settings-actions"><button class="btn" data-act="chpw">Change password</button>
-            <button class="btn" data-act="lock">Sign out</button></div>
-    </section>
-    <section class="card"><div class="page-h settings-heading"><h2>Trading accounts</h2>
-        <button class="btn primary" data-act="accadd">Add account</button></div>
-        <div class="accs">${S.settings.accounts.map(accCard).join('')}</div>
-    </section>
-    <section class="card"><h2>Preferences</h2>
-        <div class="settings-row"><span>Theme</span><button class="btn" data-act="theme">Switch to ${preferences.theme === 'dark' ? 'light' : 'dark'} mode</button></div>
-        <details class="settings-disclosure"><summary>Accent colour</summary><div class="settings-detail">
-            <div class="accent-palette" role="group" aria-label="Choose accent colour">${ACCENT_OPTIONS.map(([name, color]) => `<button type="button" class="accent-swatch" style="--swatch:${color}" data-act="accent" data-color="${color}" title="${name}" aria-label="${name} accent" aria-pressed="${preferences.accent === color}"></button>`).join('')}</div>
-        </div></details>
-        <details class="settings-disclosure"><summary>Trading checklist</summary><div class="settings-detail">
-            <label class="f" for="checklist-editor"><span class="lbl">One rule per line</span><textarea id="checklist-editor" maxlength="1500">${esc((S.settings.checklist || []).join('\n'))}</textarea></label>
-            <button class="btn primary" data-act="savechecklist">Save checklist</button>
-        </div></details>
-        <details class="settings-disclosure"><summary>Dashboard quote</summary><div class="settings-detail">
-            <label class="f" for="custom-dashboard-quote"><span class="lbl">Your motivational quote</span><textarea id="custom-dashboard-quote" maxlength="240" placeholder="Write your own motivational quote">${esc(dashboardQuote())}</textarea></label>
-            <div class="row"><button class="btn primary" data-act="savequote">Save quote</button><button class="btn" data-act="resetquote">Reset to default</button></div>
-        </div></details>
-    </section>
-    <section class="card"><h2>Data &amp; backups</h2>
-        <div class="settings-row"><span id="cloud-status" role="status" class="lbl">${esc(syncMessage)}</span><button class="btn" data-act="reload">Reload journal</button></div>
-        <p>Download a backup or import a backup or broker CSV.</p>
-        <div class="row"><button class="btn" data-act="export">Export backup</button><button class="btn" data-act="import">Import file</button></div>
-        ${sampleCard()}
-        <details class="settings-disclosure settings-danger"><summary>Erase journal</summary><div class="settings-detail">
-            <p>Deletes your journal on every device. Your login stays active. Export a backup first.</p>
-            <button class="btn danger" data-act="erase">Erase journal</button>
-        </div></details>
-    </section></div>`;
+        const dark = preferences.theme === 'dark';
+        return `<div class="settings-shell settings-revamp">
+          <header class="settings-hero"><div><div class="settings-title-row"><h1>Settings</h1><button type="button" class="settings-title-help chart-pop-target" aria-label="About Settings" data-chart-title="Settings" data-chart-detail="Manage your journal appearance, profile and security, trading accounts, trading preferences, and data backups."><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-1.86 1.86-.06-.06A1.7 1.7 0 0 0 16 18.4a1.7 1.7 0 0 0-1 1.56V21h-6v-1.04A1.7 1.7 0 0 0 8 18.4a1.7 1.7 0 0 0-1.88.34l-.06.06-1.86-1.86.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1H2v-4h1.04A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.88L4.2 7.06 6.06 5.2l.06.06A1.7 1.7 0 0 0 8 5.6a1.7 1.7 0 0 0 1-1.56V3h6v1.04A1.7 1.7 0 0 0 16 5.6a1.7 1.7 0 0 0 1.88-.34l.06-.06 1.86 1.86-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.56 1H22v4h-1.04A1.7 1.7 0 0 0 19.4 15Z"/></svg></button></div><p>Manage your workspace, accounts and journal in one place.</p></div></header>
+          <nav class="settings-new-nav" aria-label="Settings sections"><button type="button" class="settings-switch ${settingsSection === 'appearance' ? 'selected' : ''}" data-settings-section="appearance" aria-pressed="${settingsSection === 'appearance'}" aria-controls="settings-appearance">Appearance</button><button type="button" class="settings-switch ${settingsSection === 'profile' ? 'selected' : ''}" data-settings-section="profile" aria-pressed="${settingsSection === 'profile'}" aria-controls="settings-profile">Profile & Security</button><button type="button" class="settings-switch ${settingsSection === 'accounts' ? 'selected' : ''}" data-settings-section="accounts" aria-pressed="${settingsSection === 'accounts'}" aria-controls="settings-accounts">Trading Accounts</button><button type="button" class="settings-switch ${settingsSection === 'trading' ? 'selected' : ''}" data-settings-section="trading" aria-pressed="${settingsSection === 'trading'}" aria-controls="settings-trading">Trading Preferences</button><button type="button" class="settings-switch ${settingsSection === 'data' ? 'selected' : ''}" data-settings-section="data" aria-pressed="${settingsSection === 'data'}" aria-controls="settings-data">Data & Backups</button></nav>
+          <div class="settings-layout"><div class="settings-content settings-page" data-current-section="${settingsSection}">
+          <section class="card settings-panel" id="settings-appearance" style="display:${settingsSection === 'appearance' ? 'block' : 'none'} !important" data-settings-group="personal"><div class="settings-section-head"><div><h2>Appearance</h2><p>Choose your display mode and personal accent.</p></div></div>
+            <div class="settings-field-title">Display Mode</div><div class="settings-theme-choices">
+              <button class="settings-theme-option ${!dark ? 'active' : ''}" data-act="theme" ${!dark ? 'disabled' : ''} aria-pressed="${!dark}"><span class="settings-theme-preview light-preview"><i></i><i></i><i></i></span><span>☀ Light</span><small>White background</small></button>
+              <button class="settings-theme-option ${dark ? 'active' : ''}" data-act="theme" ${dark ? 'disabled' : ''} aria-pressed="${dark}"><span class="settings-theme-preview dark-preview"><i></i><i></i><i></i></span><span>☾ Dark</span><small>Black background</small></button>
+            </div>
+            <div class="settings-field-title">Accent Colour <span class="settings-current-accent" style="--swatch:${preferences.accent}"><i></i>${esc(preferences.accent.toUpperCase())}</span></div>
+            <p class="settings-field-hint">Updates buttons, charts and highlights. Your background stays ${dark ? 'black' : 'white'}.</p>
+            <div class="custom-accent-control"><label for="custom-accent">Custom Accent Colour</label><input id="custom-accent" type="color" value="${esc(preferences.accent)}" aria-label="Pick a custom accent colour"><button class="btn primary" data-act="customaccent">Apply Colour</button><span class="custom-accent-value">${esc(preferences.accent.toUpperCase())}</span></div>
+          </section>
+<section class="card settings-panel" id="settings-profile" style="display:${settingsSection === 'profile' ? 'block' : 'none'} !important" data-settings-group="personal"><div class="settings-section-head"><div><h2>Profile &amp; Security</h2><p>Manage your identity and account access.</p></div></div>
+            <label class="f settings-username" for="profile-username"><span>Username</span><div class="settings-inline"><input id="profile-username" autocomplete="username" maxlength="200" value="${esc(profileUsername)}" placeholder="Choose a username"><button class="btn primary" data-act="saveusername">Save username</button></div></label>
+            <div class="settings-info-row"><span>Email address</span><strong>${esc(currentUser?.email || '')}</strong></div>
+            <div class="row settings-actions"><button class="btn" data-act="chpw">Change password</button><button class="btn" data-act="lock">Sign out</button></div>
+          </section>
+<section class="card settings-panel" id="settings-accounts" style="display:${settingsSection === 'accounts' ? 'block' : 'none'} !important" data-settings-group="trading"><div class="settings-section-head"><div><h2>Trading Accounts</h2><p>Manage the accounts linked to your journal.</p></div><button class="btn primary" data-act="accadd">+ Add account</button></div><div class="accs">${S.settings.accounts.map(accCard).join('')}</div></section>
+<section class="card settings-panel" id="settings-trading" style="display:${settingsSection === 'trading' ? 'block' : 'none'} !important" data-settings-group="trading"><div class="settings-section-head"><div><h2>Trading Preferences</h2><p>Personalise your trading routine and dashboard.</p></div></div>
+            <details class="settings-disclosure"><summary>Trading Checklist</summary><div class="settings-detail"><label class="f" for="checklist-editor"><span class="lbl">One rule per line</span><textarea id="checklist-editor" maxlength="1500">${esc((S.settings.checklist || []).join('\n'))}</textarea></label><button class="btn primary" data-act="savechecklist">Save checklist</button></div></details>
+            <details class="settings-disclosure"><summary>Dashboard Quote</summary><div class="settings-detail"><label class="f" for="custom-dashboard-quote"><span class="lbl">Your motivational quote</span><textarea id="custom-dashboard-quote" maxlength="240" placeholder="Write your own motivational quote">${esc(dashboardQuote())}</textarea></label><div class="row"><button class="btn primary" data-act="savequote">Save quote</button><button class="btn" data-act="resetquote">Reset to default</button></div></div></details>
+          </section>
+<section class="card settings-panel" id="settings-data" style="display:${settingsSection === 'data' ? 'block' : 'none'} !important" data-settings-group="data"><div class="settings-section-head"><div><h2>Data &amp; Backups</h2><p>Keep your journal synchronised and protected.</p></div></div>
+            <div class="settings-info-row"><span id="cloud-status" role="status">${esc(syncMessage)}</span><button class="btn" data-act="reload">Reload journal</button></div>
+            <div class="row settings-actions"><button class="btn" data-act="export">Export backup</button><button class="btn" data-act="import">Import file</button></div>
+            ${sampleCard()}
+            <details class="settings-disclosure settings-danger"><summary>Erase Journal</summary><div class="settings-detail"><p>Deletes your journal on every device. Your login stays active. Export a backup first.</p><button class="btn danger" data-act="erase">Erase journal</button></div></details>
+          </section>
+          </div></div></div>`;
       }
       // Trading review extensions
       const EMOTIONS = [
@@ -6365,11 +7419,11 @@
           for (const m of t.mistakes || []) mistakeCounts.set(m, (mistakeCounts.get(m) || 0) + 1);
         }
         const most = (m) => [...m].sort((a, b) => b[1] - a[1])[0]?.[0] || '—';
-        return `<div class="card review-analytics"><h2>Strategy Performance</h2><p class="review-hint">Closed trades only. Net results may combine account currencies; compare within the same currency for accurate totals.</p><div class="tw"><table><thead><tr><th>Strategy</th><th>Trades</th><th>Win Rate</th><th>Profit Factor</th><th>Net P&L</th><th>Expectancy</th></tr></thead><tbody>${rows}</tbody></table></div><h2 style="margin-top:22px">Trade Discipline</h2><p class="review-hint">A quick view of your emotions and how consistently you follow your plan.</p><div class="discipline-stats"><div><span>Plan Followed</span><strong>${rated.length ? Math.round((followed / rated.length) * 100) + '%' : '—'}</strong><small>${rated.length} reviewed trades</small></div><div><span>Most Common Emotion</span><strong>${esc(most(emotionCounts))}</strong></div><div><span>Most Common Mistake</span><strong>${esc(most(mistakeCounts))}</strong></div></div></div>`;
+        return `<div class="card review-analytics"><div class="review-section-heading"><h2>Strategy Performance</h2><span class="info-wrap"><button type="button" class="info-button" aria-label="About Strategy Performance">i</button><span class="info-tooltip" role="tooltip">Compares closed trades by strategy, including trade count, win rate, profit factor, net P&amp;L and expectancy. Results may include different account currencies.</span></span></div><p class="review-hint">Closed trades only. Net results may combine account currencies; compare within the same currency for accurate totals.</p><div class="tw"><table><thead><tr><th>Strategy</th><th>Trades</th><th>Win Rate</th><th>Profit Factor</th><th>Net P&L</th><th>Expectancy</th></tr></thead><tbody>${rows}</tbody></table></div><div class="review-section-heading" style="margin-top:22px"><h2>Trade Discipline</h2><span class="info-wrap"><button type="button" class="info-button" aria-label="About Trade Discipline">i</button><span class="info-tooltip" role="tooltip">Summarises whether you followed your trading plan, plus your most frequently recorded emotion and trading mistake.</span></span></div><p class="review-hint">A quick view of your emotions and how consistently you follow your plan.</p><div class="discipline-stats"><div><span>Plan Followed</span><strong>${rated.length ? Math.round((followed / rated.length) * 100) + '%' : '—'}</strong><small>${rated.length} reviewed trades</small></div><div><span>Most Common Emotion</span><strong>${esc(most(emotionCounts))}</strong></div><div><span>Most Common Mistake</span><strong>${esc(most(mistakeCounts))}</strong></div></div></div>`;
       }
       function reviewView() {
-        return `<div class="page-h"><div><h1>Trade Review</h1><p class="subl">Review your strategies and trading discipline.</p></div><button class="btn primary" data-act="riskcalc">Risk Calculator</button></div>
- ${strategyPanel() || '<div class="card review-analytics"><h2>Strategy Performance</h2><p class="review-hint">Add and close trades with a strategy to see your review here.</p></div>'}`;
+        return `<div class="page-h"><div><div class="review-page-heading"><h1>Trade Review</h1><span class="info-wrap"><button type="button" class="info-button" aria-label="About Trade Review">i</button><span class="info-tooltip" role="tooltip">Review strategy results and trading discipline from your recorded trades. Use the Risk Calculator to estimate position size based on your chosen risk.</span></span></div><p class="subl">Review your strategies and trading discipline.</p></div><button class="btn primary" data-act="riskcalc">Risk Calculator</button></div>
+ ${strategyPanel() || '<div class="card review-analytics"><div class="review-section-heading"><h2>Strategy Performance</h2><span class="info-wrap"><button type="button" class="info-button" aria-label="About Strategy Performance">i</button><span class="info-tooltip" role="tooltip">Compares closed trades by strategy, including trade count, win rate, profit factor, net P&amp;L and expectancy. Results may include different account currencies.</span></span></div><p class="review-hint">Add and close trades with a strategy to see your review here.</p></div>'}`;
       }
       function riskCalculator() {
         openDlg(
@@ -7427,6 +8481,11 @@
           )
             render();
         },
+        customaccent: async () => {
+          const color = $('#custom-accent')?.value;
+          if (!validAccent(color)) return toast('Choose a valid colour', 'error');
+          if (await commit(S.trades, S.settings, { ...preferences, accent: color })) render();
+        },
         accent: async (d) => {
           if (await commit(S.trades, S.settings, { ...preferences, accent: d.color })) render();
         },
@@ -7657,6 +8716,23 @@
         chpw: () => authScreen('update'),
       };
       document.addEventListener('click', (e) => {
+        const category = e.target.closest('[data-settings-section]');
+        if (!category) return;
+        settingsSection = category.dataset.settingsSection;
+        const page = document.querySelector('.settings-content.settings-page');
+        if (page) page.dataset.currentSection = settingsSection;
+        if (page) page.querySelectorAll(':scope > section.settings-panel').forEach(panel => {
+          const active = panel.id === `settings-${settingsSection}`;
+          panel.style.setProperty('display', active ? 'block' : 'none', 'important');
+          panel.hidden = !active;
+        });
+        document.querySelectorAll('.settings-switch').forEach(button => {
+          const selected = button.dataset.settingsSection === settingsSection;
+          button.classList.toggle('selected', selected);
+          button.setAttribute('aria-pressed', String(selected));
+        });
+      });
+      document.addEventListener('click', (e) => {
         const a = e.target.closest('[data-act]');
         if (a && act[a.dataset.act] && ready && !saving)
           Promise.resolve(act[a.dataset.act](a.dataset)).catch((error) =>
@@ -7710,7 +8786,7 @@
           'Displays your net trading profit or loss for each of the last six active months.',
         'trade outcomes':
           'Shows the proportion of winning, losing, and breakeven closed trades. Hover over each doughnut segment for the count and percentage.',
-        'trading performance profile':
+        'trading performance':
           'A six-axis view of trading results. Hover over the information markers beside the radar labels for the score and its meaning.',
         'trading calendar':
           'Shows daily net profit or loss based on trade closing dates. Navigate months to review previous trading activity.',
@@ -7743,13 +8819,22 @@
         const root = document.querySelector('#app');
         if (!root) return;
         root.querySelectorAll('.card, .ref-card, .acc').forEach((card) => {
+          // Settings: information controls belong to major section headings only.
+          // Only the Trading Accounts section heading receives an information icon;
+          // individual trading-account cards remain free of information icons.
+          if (card.closest('#settings-accounts') && !card.matches('#settings-accounts')) return;
+          if (card.closest('.settings-shell') && !card.matches('.settings-panel')) return;
+          if (card.id === 'cal') return; // Calendar has its own help icon beside the year navigation.
+          if (card.matches('.review-analytics') && card.querySelector('.review-section-heading .info-button')) return; // Review sections already have contextual info controls.
           if (card.matches('.tw') && card.querySelector('table')) return;
           if (card.closest('.lock')) return;
           if (card.matches('.acc') && card.querySelector('.account-type-info')) return;
           if (card.querySelector(':scope > .card-info-floating')) return;
-          const titleEl = card.querySelector(
-            '.simple-panel-title h2, .ref-title, .cal-h h2, .page-h h2, :scope > h2, :scope > h3, .acc-h h2, .acc-h h3, .simple-label',
-          );
+          const titleEl = card.matches('.settings-panel')
+            ? card.querySelector('.settings-section-head h2')
+            : card.querySelector(
+                '.simple-panel-title h2, .ref-title, .cal-h h2, .page-h h2, :scope > h2, :scope > h3, .acc-h h2, .acc-h h3, .simple-label',
+              );
           const raw = (titleEl?.textContent || '').replace(/\s+/g, ' ').trim();
           const title =
             raw ||
@@ -7770,7 +8855,8 @@
           if (
             titleEl?.closest('.simple-stat-head')?.querySelector('.info-button') ||
             titleEl?.querySelector('.info-button') ||
-            titleEl?.parentElement?.querySelector('.info-button')
+            titleEl?.parentElement?.querySelector('.info-button') ||
+            card.querySelector('.review-section-heading .info-button')
           )
             return;
           const b = document.createElement('button');
@@ -7806,6 +8892,55 @@
       cardInfoObserver.observe(document.getElementById('app'), { childList: true, subtree: true });
       addCardInfo();
 
+
+      // Harmonise heading capitalisation throughout the app without changing trade data.
+      function harmoniseHeadings() {
+        const acronyms = new Set(['P&L','ROI','RR','R:R','USD','TP','SL','ID','CSV','FX','API','DOM']);
+        document.querySelectorAll('#app h1, #app h2, #app h3, #app h4, #app .ref-title-text, #app .simple-label, #app .settings-field-title').forEach(el => {
+          const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+          while (walker.nextNode()) {
+            const node = walker.currentNode;
+            if (!node.nodeValue.trim()) continue;
+            const formatted = node.nodeValue.replace(/\b[A-Za-z][A-Za-z&:]*\b/g, word => {
+              if (acronyms.has(word.toUpperCase())) return word.toUpperCase();
+              return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+            });
+            if (formatted !== node.nodeValue) node.nodeValue = formatted;
+          }
+        });
+      }
+      let headingsQueued = false;
+      new MutationObserver(() => {
+        if (headingsQueued) return;
+        headingsQueued = true;
+        queueMicrotask(() => {headingsQueued = false; harmoniseHeadings();});
+      }).observe(document.getElementById('app'), {childList:true,subtree:true});
+      harmoniseHeadings();
+      document.addEventListener('input', e => { if (e.target.id === 'custom-accent') { const label = document.querySelector('.custom-accent-value'); if (label) label.textContent = e.target.value.toUpperCase(); } });
+
+      // Keep every visible Recent Trades row whole, even as calendar details expand.
+      // The row height is distributed evenly across the available list viewport.
+      let recentRowResizeObserver = null;
+      let observedRecentList = null;
+      function fitRecentTradeRows() {
+        const list = document.querySelector('.dashboard-calendar-row .simple-recent');
+        if (list === observedRecentList) return;
+        if (recentRowResizeObserver) recentRowResizeObserver.disconnect();
+        observedRecentList = list;
+        if (!list || !window.ResizeObserver) return;
+        recentRowResizeObserver = new ResizeObserver(() => {
+          const available = list.clientHeight;
+          if (!available) return;
+          const minRow = 58;
+          const count = Math.max(1, Math.floor(available / minRow));
+          const rowHeight = available / count;
+          list.style.setProperty('--recent-trade-row-height', `${rowHeight}px`);
+        });
+        recentRowResizeObserver.observe(list);
+      }
+      const recentListMutationObserver = new MutationObserver(fitRecentTradeRows);
+      recentListMutationObserver.observe(document.getElementById('app'), {childList:true, subtree:true});
+      fitRecentTradeRows();
       // Start
       dlg.addEventListener('cancel', (event) => {
         if (saving) event.preventDefault();
@@ -7817,6 +8952,55 @@
         }
       });
       startCloud();
+
+      // Shared tooltip portal: keeps every card's help text visible even when
+      // the card, dashboard grid or viewport edge clips its original tooltip.
+      (() => {
+        const floating = document.createElement('div');
+        floating.className = 'pf-floating-info';
+        floating.setAttribute('role', 'tooltip');
+        floating.hidden = true;
+        document.body.appendChild(floating);
+        let activeButton = null;
+        const hide = () => { floating.hidden = true; activeButton = null; };
+        const show = (button) => {
+          const tip = button.closest('.info-wrap')?.querySelector('.info-tooltip');
+          if (!tip) return;
+          activeButton = button;
+          floating.textContent = tip.textContent.trim();
+          floating.hidden = false;
+          floating.style.left = '0px';
+          floating.style.top = '0px';
+          const rect = button.getBoundingClientRect();
+          const box = floating.getBoundingClientRect();
+          const margin = 10;
+          const left = Math.max(margin, Math.min(window.innerWidth - box.width - margin, rect.left + rect.width / 2 - box.width / 2));
+          let top = rect.bottom + 9;
+          if (top + box.height > window.innerHeight - margin) top = rect.top - box.height - 9;
+          top = Math.max(margin, Math.min(window.innerHeight - box.height - margin, top));
+          floating.style.left = left + 'px';
+          floating.style.top = top + 'px';
+        };
+        document.addEventListener('pointerover', (event) => {
+          const button = event.target.closest?.('.info-wrap > .info-button');
+          if (button && button !== activeButton) show(button);
+        });
+        document.addEventListener('pointerout', (event) => {
+          if (activeButton && event.target.closest?.('.info-wrap') &&
+              !event.target.closest('.info-wrap').contains(event.relatedTarget)) hide();
+        });
+        document.addEventListener('focusin', (event) => {
+          const button = event.target.closest?.('.info-wrap > .info-button');
+          if (button) show(button);
+        });
+        document.addEventListener('focusout', (event) => {
+          if (activeButton && event.target === activeButton) hide();
+        });
+        document.addEventListener('keydown', (event) => { if (event.key === 'Escape') hide(); });
+        window.addEventListener('scroll', hide, true);
+        window.addEventListener('resize', hide);
+      })();
+
     </script>
   </body>
 </html>
