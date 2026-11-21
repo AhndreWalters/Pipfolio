@@ -4784,7 +4784,7 @@
         loadingUser = null,
         loadTask = null;
       let recoveryMode = /(?:[?#&])type=recovery(?:&|$)/.test(location.hash + location.search);
-      const defaultPreferences = () => ({ theme: 'light', accent: '#4bace5', quote: '' });
+      const defaultPreferences = () => ({ theme: 'light', accent: '#C0C0C0', quote: '' });
       let preferences = defaultPreferences();
       let syncMessage = 'Saved to your account';
       let profileUsername = '';
@@ -5090,7 +5090,7 @@
         return typeof c === 'string' && /^#[0-9a-fA-F]{6}$/.test(c);
       }
       function applyAccent(c, save = true) {
-        if (!validAccent(c)) c = '#4bace5';
+        if (!validAccent(c)) c = '#C0C0C0';
         const root = document.documentElement;
         const rgb = c.match(/[a-f0-9]{2}/gi).map(v => parseInt(v, 16));
         const dark = root.dataset.theme === 'dark';
@@ -5315,7 +5315,7 @@
       function cleanPreferences(p) {
         return {
           theme: p?.theme === 'dark' ? 'dark' : 'light',
-          accent: validAccent(p?.accent) ? p.accent : '#4bace5',
+          accent: validAccent(p?.accent) ? p.accent : '#C0C0C0',
           quote: typeof p?.quote === 'string' ? p.quote.slice(0, 240) : '',
         };
       }
